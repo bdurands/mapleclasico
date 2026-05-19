@@ -23,10 +23,10 @@ services:
   db:
     image: mysql:8.4.0
     environment:
-      MYSQL_DATABASE: "cosmic"
-      MYSQL_ROOT_PASSWORD: ""
-      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_DATABASE: "clasico"
+      MYSQL_ROOT_PASSWORD: "cl@s1c0"
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
     ports:
-      - "3307:3306"
+      - "4141:3306"
     volumes:
       - ./database/docker-db-data:/var/lib/mysql
