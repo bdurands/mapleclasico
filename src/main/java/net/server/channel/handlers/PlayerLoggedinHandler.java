@@ -454,6 +454,9 @@ public final class PlayerLoggedinHandler extends AbstractPacketHandler {
             if (newcomer) {
                 player.setLoginTime(System.currentTimeMillis());
             }
+
+            c.sendPacket(PacketCreator.damageSkinCatalog(player));
+            c.sendPacket(PacketCreator.damageSkinInventory(player));
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

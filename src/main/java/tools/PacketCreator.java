@@ -7459,4 +7459,42 @@ public class PacketCreator {
         return p;
     }
 
+    public static Packet damageSkinCatalog(client.Character chr) {
+        OutPacket p = OutPacket.create(SendOpcode.DAMAGE_SKIN_CATALOG);
+        var catalog = client.DamageSkinCatalog.getAll();
+        p.writeShort(catalog.size());
+        for (var e : catalog.entrySet()) {
+            p.writeInt(e.getKey());
+            p.writeLong(e.getValue());
+        }
+        return p;
+    }
+
+    public static Packet damageSkinInventory(client.Character chr) {
+        OutPacket p = OutPacket.create(SendOpcode.DAMAGE_SKIN_INVENTORY);
+        var owned = chr.getDamageSkinInventory().getOwnedIds();
+        p.writeInt(chr.getActiveDamageSkin());
+        p.writeShort(owned.size());
+        for (int skinId : owned) {
+            p.writeInt(skinId);
+        }
+        return p;
+    }
+
+    public static Packet damageSkinResult(int op, boolean success, int skinId, int mesos) {
+        OutPacket p = OutPacket.create(SendOpcode.DAMAGE_SKIN_RESULT);
+        p.writeByte(op);
+        p.writeByte(success ? 1 : 0);
+        p.writeInt(skinId);
+        p.writeInt(mesos);
+        return p;
+    }
+
+    public static Packet damageSkinBroadcast(int characterId, int activeSkinId) {
+        OutPacket p = OutPacket.create(SendOpcode.DAMAGE_SKIN_BROADCAST);
+        p.writeInt(characterId);
+        p.writeInt(activeSkinId);
+        return p;
+    }
+
 }

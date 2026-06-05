@@ -627,6 +627,12 @@ public final class UseCashItemHandler extends AbstractPacketHandler {
 
                 client.sendPacket(PacketCreator.enableActions());
             }, SECONDS.toMillis(3));
+        } else if (itemType == 591) {
+            if (itemId == 5910000) {
+                c.sendPacket(PacketCreator.damageSkinCatalog(player));
+            } else {
+                c.sendPacket(PacketCreator.enableActions());
+            }
         } else {
             log.warn("NEW CASH ITEM TYPE: {}, packet: {}", itemType, p);
             c.sendPacket(PacketCreator.enableActions());

@@ -1,0 +1,131 @@
+00:24:25.248 [main] INFO  server.Server - Cosmic v83 starting up.
+00:24:25.321 [main] INFO  tools.DatabaseConnection - Initializing database connection pool. Connecting to:'jdbc:mysql://localhost:4141/clasico' with user:'root'
+00:24:25.329 [main] INFO  hikari.HikariDataSource - HikariPool-1 - Starting...
+00:24:25.644 [main] INFO  pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@50fe837a
+00:24:25.645 [main] INFO  hikari.HikariDataSource - HikariPool-1 - Start completed.
+00:24:25.700 [main] INFO  tools.DatabaseConnection - Connection pool initialized in 379 ms
+00:24:27.998 [pool-2-thread-5] INFO  client.DamageSkinCatalog - DamageSkinCatalog: 0 new rows from WZ, 0 total in catalog
+00:24:28.538 [main] INFO  server.Server - Starting world 0
+00:24:29.750 [main] INFO  channel.Channel - Channel 1: Listening on port 7575
+00:24:29.819 [main] INFO  channel.Channel - Channel 2: Listening on port 7576
+00:24:29.884 [main] INFO  channel.Channel - Channel 3: Listening on port 7577
+00:24:29.917 [main] INFO  server.Server - Finished loading world 0
+00:24:29.971 [main] INFO  server.Server - Listening on port 8484
+00:24:29.971 [main] INFO  server.Server - Cosmic is now online after 4726 ms.
+09:11:54.024 [HikariPool-1:housekeeper] WARN  pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=8h35m58s99ms100µs900ns).
+10:11:05.007 [nioEventLoopGroup-9-2] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:11:05.006 [nioEventLoopGroup-9-1] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:11:22.405 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 127.0.0.1
+10:11:31.967 [nioEventLoopGroup-3-1] INFO  command.CommandsExecutor - Chr Admin used command HideCommand
+10:11:46.062 [nioEventLoopGroup-3-1] INFO  command.CommandsExecutor - Chr Admin used command GmShopCommand
+10:12:12.393 [pool-3-thread-7] DEBUG client.Character - Attempting to save chr Admin
+10:15:12.714 [nioEventLoopGroup-9-3] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:15:12.714 [nioEventLoopGroup-9-4] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:15:24.483 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 127.0.0.1
+10:15:49.923 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command OnlineTwoCommand
+10:15:55.072 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command SpawnCommand
+10:15:58.715 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command KillAllCommand
+10:16:09.719 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command GmShopCommand
+10:16:31.044 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command HideCommand
+10:16:48.159 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command JobCommand
+10:16:52.643 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command MaxSkillCommand
+10:16:54.591 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command MaxStatCommand
+10:17:02.234 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command GmShopCommand
+10:17:04.157 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command GmShopCommand
+10:17:29.862 [pool-3-thread-2] DEBUG client.Character - Attempting to save chr Admin
+10:18:19.537 [nioEventLoopGroup-9-5] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:18:19.538 [nioEventLoopGroup-9-6] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:18:43.212 [nioEventLoopGroup-3-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 127.0.0.1
+10:18:57.086 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command GmShopCommand
+10:19:13.084 [pool-3-thread-2] DEBUG client.Character - Attempting to save chr Admin
+10:19:26.075 [nioEventLoopGroup-9-7] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:19:26.075 [nioEventLoopGroup-9-8] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:19:34.244 [nioEventLoopGroup-3-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 127.0.0.1
+10:19:54.525 [nioEventLoopGroup-3-4] INFO  command.CommandsExecutor - Chr Admin used command GmShopCommand
+10:20:42.016 [pool-3-thread-8] DEBUG client.Character - Attempting to save chr Admin
+10:42:41.548 [nioEventLoopGroup-9-10] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:42:41.548 [nioEventLoopGroup-9-9] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:42:54.909 [nioEventLoopGroup-3-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 127.0.0.1
+10:42:56.675 [nioEventLoopGroup-3-5] WARN  client.Client - Exception caught by Admin
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:401)
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:434)
+	at io.netty.buffer.AdaptivePoolingAllocator$AdaptiveByteBuf.setBytes(AdaptivePoolingAllocator.java:1357)
+	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1139)
+	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:350)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:152)
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)
+	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:381)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:575)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:550)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:491)
+	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:468)
+	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:206)
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:177)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1073)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+10:42:56.682 [pool-3-thread-16] DEBUG client.Character - Attempting to save chr Admin
+10:43:42.663 [nioEventLoopGroup-9-11] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:43:42.663 [nioEventLoopGroup-9-12] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:43:51.680 [nioEventLoopGroup-3-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 127.0.0.1
+10:43:53.945 [nioEventLoopGroup-3-6] WARN  client.Client - Exception caught by Admin
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:401)
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:434)
+	at io.netty.buffer.AdaptivePoolingAllocator$AdaptiveByteBuf.setBytes(AdaptivePoolingAllocator.java:1357)
+	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1139)
+	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:350)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:152)
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)
+	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:381)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:575)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:550)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:491)
+	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:468)
+	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:206)
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:177)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1073)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+10:43:53.948 [pool-3-thread-12] DEBUG client.Character - Attempting to save chr Admin
+10:44:13.806 [nioEventLoopGroup-9-14] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:44:13.806 [nioEventLoopGroup-9-13] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:44:29.946 [nioEventLoopGroup-9-14] INFO  creator.CharacterFactory - Account admin created chr with name Ellincito
+10:44:31.152 [nioEventLoopGroup-3-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 127.0.0.1
+10:56:25.881 [nioEventLoopGroup-9-15] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:56:25.881 [nioEventLoopGroup-9-16] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
+10:56:25.882 [pool-3-thread-1] DEBUG client.Character - Attempting to save chr Ellincito
+10:56:33.846 [nioEventLoopGroup-3-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 127.0.0.1
+10:56:36.137 [nioEventLoopGroup-3-8] WARN  client.Client - Exception caught by Admin
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:401)
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:434)
+	at io.netty.buffer.AdaptivePoolingAllocator$AdaptiveByteBuf.setBytes(AdaptivePoolingAllocator.java:1357)
+	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1139)
+	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:350)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:152)
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)
+	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:381)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:575)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:550)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:491)
+	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:468)
+	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:206)
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:177)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1073)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+10:56:36.141 [pool-3-thread-2] DEBUG client.Character - Attempting to save chr Admin
+10:57:38.261 [Thread-0] INFO  server.Server - Shutting down the server!
+10:57:38.261 [Thread-0] INFO  channel.Channel - Shutting down channel 1 in world 0
+10:57:38.276 [Thread-0] INFO  channel.Channel - Successfully shut down channel 1 in world 0
+10:57:38.276 [Thread-0] INFO  channel.Channel - Shutting down channel 2 in world 0
+10:57:38.288 [Thread-0] INFO  channel.Channel - Successfully shut down channel 2 in world 0
+10:57:38.288 [Thread-0] INFO  channel.Channel - Shutting down channel 3 in world 0
+10:57:38.294 [Thread-0] INFO  channel.Channel - Successfully shut down channel 3 in world 0
+10:57:38.294 [Thread-0] INFO  world.World - Finished shutting down world 0
+10:57:38.295 [Thread-0] INFO  server.Server - Worlds and channels are offline.

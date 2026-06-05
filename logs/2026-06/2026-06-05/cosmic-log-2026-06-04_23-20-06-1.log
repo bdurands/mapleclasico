@@ -1,0 +1,22 @@
+23:20:06.140 [main] INFO  server.Server - Cosmic v83 starting up.
+23:20:06.213 [main] INFO  tools.DatabaseConnection - Initializing database connection pool. Connecting to:'jdbc:mysql://localhost:4141/clasico' with user:'root'
+23:20:06.223 [main] INFO  hikari.HikariDataSource - HikariPool-1 - Starting...
+23:20:06.541 [main] INFO  pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@50fe837a
+23:20:06.543 [main] INFO  hikari.HikariDataSource - HikariPool-1 - Start completed.
+23:20:06.605 [main] INFO  tools.DatabaseConnection - Connection pool initialized in 391 ms
+23:20:15.259 [main] INFO  server.Server - Starting world 0
+23:20:16.587 [main] INFO  channel.Channel - Channel 1: Listening on port 7575
+23:20:16.653 [main] INFO  channel.Channel - Channel 2: Listening on port 7576
+23:20:16.718 [main] INFO  channel.Channel - Channel 3: Listening on port 7577
+23:20:16.743 [main] INFO  server.Server - Finished loading world 0
+23:20:16.795 [main] INFO  server.Server - Listening on port 8484
+23:20:16.795 [main] INFO  server.Server - Cosmic is now online after 10660 ms.
+00:23:16.778 [Thread-0] INFO  server.Server - Shutting down the server!
+00:23:16.783 [Thread-0] INFO  channel.Channel - Shutting down channel 1 in world 0
+00:23:16.810 [Thread-0] INFO  channel.Channel - Successfully shut down channel 1 in world 0
+00:23:16.810 [Thread-0] INFO  channel.Channel - Shutting down channel 2 in world 0
+00:23:16.825 [Thread-0] INFO  channel.Channel - Successfully shut down channel 2 in world 0
+00:23:16.825 [Thread-0] INFO  channel.Channel - Shutting down channel 3 in world 0
+00:23:16.837 [Thread-0] INFO  channel.Channel - Successfully shut down channel 3 in world 0
+00:23:16.837 [Thread-0] INFO  world.World - Finished shutting down world 0
+00:23:16.838 [Thread-0] INFO  server.Server - Worlds and channels are offline.

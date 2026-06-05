@@ -2312,6 +2312,13 @@ public class MapleMap {
 
         chr.setMapId(mapid);
         chr.updateActiveEffects();
+
+        chr.getMap().broadcastMessage(chr, PacketCreator.damageSkinBroadcast(chr.getId(), chr.getActiveDamageSkin()), false);
+        for (Character mapChr : getCharacters()) {
+            if (mapChr != chr) {
+                chr.getClient().sendPacket(PacketCreator.damageSkinBroadcast(mapChr.getId(), mapChr.getActiveDamageSkin()));
+            }
+        }
         
         if (this.getHPDec() > 0) {
             getWorldServer().addPlayerHpDecrease(chr);

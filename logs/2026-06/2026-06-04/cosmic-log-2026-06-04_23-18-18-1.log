@@ -1,0 +1,23 @@
+23:18:18.370 [main] INFO  server.Server - Cosmic v83 starting up.
+23:18:18.467 [main] INFO  tools.DatabaseConnection - Initializing database connection pool. Connecting to:'jdbc:mysql://localhost:4141/clasico' with user:'root'
+23:18:18.474 [main] INFO  hikari.HikariDataSource - HikariPool-1 - Starting...
+23:19:19.144 [main] WARN  pool.PoolBase - HikariPool-1 - Pool is empty, failed to create/setup connection (bfdd1ede-26fd-42cc-a4b2-7a20fc5f0fc4)
+java.sql.SQLSyntaxErrorException: Unknown database 'clasico'
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:112)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:114)
+	at com.mysql.cj.jdbc.ConnectionImpl.createNewIO(ConnectionImpl.java:833)
+	at com.mysql.cj.jdbc.ConnectionImpl.<init>(ConnectionImpl.java:416)
+	at com.mysql.cj.jdbc.ConnectionImpl.getInstance(ConnectionImpl.java:238)
+	at com.mysql.cj.jdbc.NonRegisteringDriver.connect(NonRegisteringDriver.java:180)
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:139)
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:368)
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:205)
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:483)
+	at com.zaxxer.hikari.pool.HikariPool.checkFailFast(HikariPool.java:571)
+	at com.zaxxer.hikari.pool.HikariPool.<init>(HikariPool.java:101)
+	at com.zaxxer.hikari.HikariDataSource.<init>(HikariDataSource.java:80)
+	at tools.DatabaseConnection.initializeConnectionPool(DatabaseConnection.java:89)
+	at net.server.Server.init(Server.java:869)
+	at net.server.Server.main(Server.java:1005)
+23:19:48.574 [main] ERROR tools.DatabaseConnection - Failed to initialize database connection pool. Gave up after 90 seconds.
+23:19:48.574 [Thread-0] INFO  server.Server - Shutting down the server!

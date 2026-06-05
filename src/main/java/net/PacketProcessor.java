@@ -49,6 +49,8 @@ import net.server.channel.handlers.CloseChalkboardHandler;
 import net.server.channel.handlers.CloseRangeDamageHandler;
 import net.server.channel.handlers.CoconutHandler;
 import net.server.channel.handlers.CouponCodeHandler;
+import net.server.channel.handlers.DamageSkinApplyHandler;
+import net.server.channel.handlers.DamageSkinPurchaseHandler;
 import net.server.channel.handlers.DamageSummonHandler;
 import net.server.channel.handlers.DenyAllianceRequestHandler;
 import net.server.channel.handlers.DenyGuildRequestHandler;
@@ -425,6 +427,8 @@ public final class PacketProcessor {
         registerHandler(RecvOpcode.PLAYER_MAP_TRANSFER, new PlayerMapTransitionHandler());
         registerHandler(RecvOpcode.USE_MAPLELIFE, new UseMapleLifeHandler());
         registerHandler(RecvOpcode.USE_CATCH_ITEM, new UseCatchItemHandler());
+        registerHandler(RecvOpcode.DAMAGE_SKIN_APPLY, new DamageSkinApplyHandler());
+        registerHandler(RecvOpcode.DAMAGE_SKIN_PURCHASE, new DamageSkinPurchaseHandler());
         registerHandler(RecvOpcode.FIELD_DAMAGE_MOB, new FieldDamageMobHandler());
         registerHandler(RecvOpcode.MOB_DAMAGE_MOB_FRIENDLY, new MobDamageMobFriendlyHandler());
         registerHandler(RecvOpcode.PARTY_SEARCH_REGISTER, new PartySearchRegisterHandler());
