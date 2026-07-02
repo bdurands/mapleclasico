@@ -1998,4 +1998,100 @@
         <string name="name" value="Skin Damage"/>
         <string name="desc" value="It damages the skin"/>
     </imgdir>
+    <imgdir name="5201000">
+        <string name="name" value="Box of Metal Balls"/>
+        <string name="desc" value="200 balls in the box."/>
+    </imgdir>
+    <imgdir name="5201001">
+        <string name="name" value="Box of Metal Balls"/>
+        <string name="desc" value="500 balls in the box."/>
+    </imgdir>
+    <imgdir name="5210000">
+        <string name="name" value="Pro-Adult Ticket"/>
+        <string name="desc" value="When in possession, temporarily doubles the EXP gained."/>
+    </imgdir>
+    <imgdir name="5210001">
+        <string name="name" value="Pro-Adult Ticket"/>
+        <string name="desc" value="When in possession during a specific time period, all EXP gained will be double."/>
+    </imgdir>
+    <imgdir name="5210002">
+        <string name="name" value="Pro-Adult Ticket"/>
+        <string name="desc" value="When in possession during a specific time period, all EXP gained will be double."/>
+    </imgdir>
+    <imgdir name="5210003">
+        <string name="name" value="Pro-Adult Ticket"/>
+        <string name="desc" value="When in possession during a specific time period, all EXP gained will be double."/>
+    </imgdir>
+    <imgdir name="5210004">
+        <string name="name" value="Pro-Adult Ticket"/>
+        <string name="desc" value="When in possession during a specific time period, all EXP gained will be double."/>
+    </imgdir>
+    <imgdir name="5210005">
+        <string name="name" value="Pro-Adult Ticket"/>
+        <string name="desc" value="When in possession during a specific time period, all EXP gained will be double."/>
+    </imgdir>
+    <imgdir name="5211001">
+        <string name="name" value="From NEXON"/>
+        <string name="desc" value="Please refrain from breaking Maplestory client apart."/>
+    </imgdir>
+    <imgdir name="5211002">
+        <string name="name" value="Special Coupon - 5 days"/>
+        <string name="desc" value="Hold on to this coupon to #cearn 2x EXP from all monsters#. This coupon is valid for 5 days after the initial possession, and please be aware that if the character has multiple coupons of the same kind, they will all kick in at once."/>
+    </imgdir>
+    <imgdir name="5211003">
+        <string name="name" value="one-time 2x EXP coupon"/>
+        <string name="desc" value="This coupon allows users to earn #c2x Exp (double experience)# for xx minutes after the purchaser activate the coupon."/>
+    </imgdir>
+    <imgdir name="5211047">
+        <string name="name" value="2x EXP 3 Hours Special Coupon "/>
+        <string name="desc" value="This coupon allows users to earn #c2x Exp (double experience)#. The coupon will be activated immediately after purchase, and the double experience effect will be available for 3 hours upon purchase."/>
+    </imgdir>
+    <imgdir name="5240016">
+        <string name="name" value="Caramel Beetle"/>
+        <string name="desc" value="A caramel beetle plucked right from a myserious tree. Only the #cJr. Reaper# appreciates such delicacy. Restores Fullness and #cincreases 100 Closeness#."/>
+    </imgdir>
+    <imgdir name="5240019">
+        <string name="name" value="Hedgehog Food											Is this supposed to be for the Porcupine?"/>
+        <string name="desc" value="A nutritious blend of formulas only for #cHedgehogs#. Restores Fullness and #cincreases 100 Closeness#.."/>
+    </imgdir>
+    <imgdir name="5251004">
+        <string name="name" value="Simple Wedding Ticket"/>
+        <string name="desc" value="A ticket that allows for a simple wedding. #cThe bride and groom may each invite 5 well-wishers and receive a 1 Carat Wedding Ring.#"/>
+    </imgdir>
+    <imgdir name="5251005">
+        <string name="name" value="Sweet Wedding Ticket"/>
+        <string name="desc" value="A ticket that allows for a sweet wedding. #cThe bride and groom may each invite 15 well-wishers, take a Wedding Photo, and receive a 2 Carat Wedding Ring.#"/>
+    </imgdir>
+    <imgdir name="5251006">
+        <string name="name" value="Premium Wedding Ticket"/>
+        <string name="desc" value="A ticket that allows for a lavish, premier wedding. #cThe bride and groom may each invite 30 well-wishers, take a Wedding Photo, and receive a 3 Carat Wedding Ring.#"/>
+    </imgdir>
+    <imgdir name="5360009">
+        <string name="name" value="2X Drop Card - Type 1"/>
+        <string name="desc" value="This coupon allows users to earn #c2x Exp (double experience)#. The coupon will be activated immediately after purchase, and the double experience effect will be available for 24 hours upon purchase."/>
+    </imgdir>
+    <imgdir name="5360010">
+        <string name="name" value="2X Drop Card - Type 1"/>
+        <string name="desc" value="This coupon allows users to earn #c2x Exp (double experience)#. The coupon will be activated immediately after purchase, and the double experience effect will be available for 24 hours upon purchase."/>
+    </imgdir>
+    <imgdir name="5360011">
+        <string name="name" value="2X Drop Card - Type 1"/>
+        <string name="desc" value="This coupon allows users to earn #c2x Exp (double experience)#. The coupon will be activated immediately after purchase, and the double experience effect will be available for 24 hours upon purchase."/>
+    </imgdir>
+    <imgdir name="5360012">
+        <string name="name" value="2X Drop Card - Type 1"/>
+        <string name="desc" value="This coupon allows users to earn #c2x Drop (double drop rate)# from monsters. The coupon will be activated immediately after purchase, and the double experience effect will be available for 24 hours upon purchase."/>
+    </imgdir>
+    <imgdir name="5360013">
+        <string name="name" value="2X Drop Card - Type 1"/>
+        <string name="desc" value="This coupon allows users to earn #c2x Drop (double drop rate)# from monsters. The coupon will be activated immediately after purchase, and the double experience effect will be available for 24 hours upon purchase."/>
+    </imgdir>
+    <imgdir name="5360014">
+        <string name="name" value="2x Drop 3 Hours Special Card"/>
+        <string name="desc" value="This coupon allows users to earn #c2x Drop (double drop)#. The coupon will be activated immediately after purchase, and the double drop effect will be available for 3 hours upon purchase."/>
+    </imgdir>
+    <imgdir name="5920000">
+        <string name="name" value="Salon save"/>
+        <string name="desc" value="Can preserve hairstyling and beauty"/>
+    </imgdir>
 </imgdir>

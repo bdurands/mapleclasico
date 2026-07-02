@@ -105,4 +105,12 @@
         <sqlFile path="db/tables/025-damage-skin.sql"/>
     </changeSet>
 
+    <changeSet id="26" author="beauty">
+        <sqlFile path="db/tables/026-beauty.sql"/>
+    </changeSet>
+
+    <changeSet id="27" author="beauty">
+        <sqlFile path="db/tables/027-beauty-unlock.sql"/>
+    </changeSet>
+
 </databaseChangeLog>

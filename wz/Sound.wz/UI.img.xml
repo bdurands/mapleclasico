@@ -32,4 +32,7 @@
     <sound name="VegaFail"/>
     <sound name="VegaTwinkling"/>
     <sound name="anvil"/>
+    <sound name="Apply"/>
+    <sound name="Lock"/>
+    <sound name="Unlock"/>
 </imgdir>
