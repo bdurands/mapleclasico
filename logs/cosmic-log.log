@@ -1,52 +1,147 @@
-11:16:02.485 [main] INFO  server.Server - Cosmic v83 starting up.
-11:16:02.562 [main] INFO  tools.DatabaseConnection - Initializing database connection pool. Connecting to:'jdbc:mysql://localhost:4141/clasico' with user:'root'
-11:16:02.570 [main] INFO  hikari.HikariDataSource - HikariPool-1 - Starting...
-11:16:02.882 [main] INFO  pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@50fe837a
-11:16:02.883 [main] INFO  hikari.HikariDataSource - HikariPool-1 - Start completed.
-11:16:02.938 [main] INFO  tools.DatabaseConnection - Connection pool initialized in 376 ms
-11:16:05.585 [pool-2-thread-5] INFO  client.DamageSkinCatalog - DamageSkinCatalog: 0 new rows from WZ, 641 total in catalog
-11:16:05.823 [main] INFO  server.Server - Starting world 0
-11:16:07.019 [main] INFO  channel.Channel - Channel 1: Listening on port 7575
-11:16:07.092 [main] INFO  channel.Channel - Channel 2: Listening on port 7576
-11:16:07.164 [main] INFO  channel.Channel - Channel 3: Listening on port 7577
-11:16:07.196 [main] INFO  server.Server - Finished loading world 0
-11:16:07.249 [main] INFO  server.Server - Listening on port 8484
-11:16:07.250 [main] INFO  server.Server - Cosmic is now online after 4767 ms.
-11:16:13.449 [nioEventLoopGroup-9-1] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
-11:16:13.449 [nioEventLoopGroup-9-2] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
-11:16:31.371 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 127.0.0.1
-11:16:33.681 [nioEventLoopGroup-3-1] WARN  client.Client - Exception caught by Admin
-java.net.SocketException: Connection reset
-	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:401)
-	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:434)
-	at io.netty.buffer.AdaptivePoolingAllocator$AdaptiveByteBuf.setBytes(AdaptivePoolingAllocator.java:1357)
-	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1139)
-	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:350)
-	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:152)
-	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)
-	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:381)
-	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:575)
-	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:550)
-	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:491)
-	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:468)
-	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:206)
-	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:177)
-	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1073)
-	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
-	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
-	at java.base/java.lang.Thread.run(Thread.java:1583)
-11:16:33.688 [pool-3-thread-3] DEBUG client.Character - Attempting to save chr Admin
-11:22:05.919 [nioEventLoopGroup-9-3] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
-11:22:05.919 [nioEventLoopGroup-9-4] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
-11:22:17.430 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 127.0.0.1
-11:22:28.097 [nioEventLoopGroup-9-5] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
-11:22:28.097 [nioEventLoopGroup-9-6] DEBUG netty.LoginServerInitializer - Client connected to login server from 127.0.0.1 
-11:22:28.099 [pool-3-thread-16] DEBUG client.Character - Attempting to save chr Ellincito
-11:22:38.517 [nioEventLoopGroup-3-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 127.0.0.1
-11:23:04.502 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command HideCommand
-11:23:06.233 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command HealCommand
-11:23:12.056 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command GotoCommand
-11:23:15.018 [nioEventLoopGroup-3-3] ERROR life.LifeFactory - [SEVERE] MOB 10010 failed to load.
+15:06:59.163 [main] INFO  server.Server - Cosmic v83 starting up.
+15:06:59.444 [main] INFO  tools.DatabaseConnection - Initializing database connection pool. Connecting to:'jdbc:mysql://localhost:4141/clasico' with user:'root'
+15:06:59.460 [main] INFO  hikari.HikariDataSource - HikariPool-1 - Starting...
+15:07:00.226 [main] INFO  pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@61bcd567
+15:07:00.226 [main] INFO  hikari.HikariDataSource - HikariPool-1 - Start completed.
+15:07:00.354 [main] INFO  tools.DatabaseConnection - Connection pool initialized in 910 ms
+15:07:12.440 [main] INFO  server.Server - Starting world 0
+15:07:14.077 [pool-2-thread-5] INFO  client.DamageSkinCatalog - DamageSkinCatalog: 641 new rows from WZ, 641 total in catalog
+15:07:15.061 [main] INFO  channel.Channel - Channel 1: Listening on port 7575
+15:07:15.147 [main] INFO  channel.Channel - Channel 2: Listening on port 7576
+15:07:15.237 [main] INFO  channel.Channel - Channel 3: Listening on port 7577
+15:07:15.272 [main] INFO  server.Server - Finished loading world 0
+15:07:15.444 [main] INFO  server.Server - Listening on port 8484
+15:07:15.444 [main] INFO  server.Server - Cosmic is now online after 16296 ms.
+16:18:24.381 [nioEventLoopGroup-9-1] DEBUG netty.LoginServerInitializer - Client connected to login server from 138.84.38.200 
+16:18:41.975 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 138.84.38.200
+16:18:59.476 [nioEventLoopGroup-3-1] INFO  command.CommandsExecutor - Chr Admin used command HideCommand
+16:24:04.861 [TimerManager-Worker-3] DEBUG client.Character - Attempting to save chr Admin
+16:24:13.423 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 138.84.38.200
+16:26:53.756 [nioEventLoopGroup-9-2] DEBUG netty.LoginServerInitializer - Client connected to login server from 138.84.38.200 
+17:07:12.830 [TimerManager-Worker-2] DEBUG client.Character - Attempting to autosave chr Admin
+17:37:48.029 [nioEventLoopGroup-9-3] DEBUG netty.LoginServerInitializer - Client connected to login server from 38.25.15.221 
+17:39:17.074 [nioEventLoopGroup-9-4] DEBUG netty.LoginServerInitializer - Client connected to login server from 38.25.15.221 
+17:39:36.605 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command OnlineTwoCommand
+17:39:59.621 [nioEventLoopGroup-9-4] INFO  creator.CharacterFactory - Account xbenjA created chr with name ElBenja
+17:40:22.777 [nioEventLoopGroup-3-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 38.25.15.221
+17:40:33.590 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command HideCommand
+17:45:45.932 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command SetGmLevelCommand
+17:46:04.370 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+17:48:40.671 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command LevelCommand
+17:48:47.031 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command RatesCommand
+17:48:47.969 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+17:48:55.578 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command MaxSkillCommand
+17:50:18.172 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+17:57:21.208 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command LevelCommand
+18:02:11.816 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command SearchCommand
+18:02:18.894 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command ItemDropCommand
+18:02:20.925 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command ItemDropCommand
+18:02:51.285 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command SpawnCommand
+18:03:08.520 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command EmpowerMeCommand
+18:03:15.832 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command StatStrCommand
+18:03:20.583 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+18:03:28.051 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+18:03:42.630 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command GiveMesosCommand
+18:04:28.632 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command SpawnCommand
+18:04:40.023 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command SpawnCommand
+18:04:51.070 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+18:05:15.117 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+18:05:15.570 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command ClearDropsCommand
+18:05:18.804 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+18:05:26.695 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command ItemCommand
+18:05:31.570 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command EmpowerMeCommand
+18:05:42.430 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+18:05:58.837 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command ItemCommand
+18:07:12.886 [TimerManager-Worker-1] DEBUG client.Character - Attempting to autosave chr Admin
+18:07:12.933 [TimerManager-Worker-1] DEBUG client.Character - Attempting to autosave chr ElBenja
+18:11:04.231 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command GiveMesosCommand
+18:11:11.684 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command GiveNxCommand
+18:12:48.027 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command GotoCommand
+18:12:51.136 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command GotoCommand
+18:12:56.824 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command EmpowerMeCommand
+18:14:03.543 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command LevelCommand
+18:14:38.084 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+18:14:40.818 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+18:14:57.287 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+18:44:35.077 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command GotoCommand
+18:45:26.545 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command GotoCommand
+18:45:40.890 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command EmpowerMeCommand
+18:45:46.468 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command GmShopCommand
+18:46:25.702 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+18:46:35.155 [TimerManager-Worker-3] DEBUG client.Character - Attempting to save chr ElBenja
+18:46:39.452 [nioEventLoopGroup-3-3] DEBUG handlers.CashOperationHandler - Chr ElBenja bought cash item Transparent Claw (SN 20800083) for 2700
+18:46:57.140 [nioEventLoopGroup-3-3] DEBUG handlers.CashOperationHandler - Chr ElBenja bought cash item The Flaming Cape (SN 21100046) for 3500
+18:47:06.639 [nioEventLoopGroup-3-3] DEBUG handlers.CashOperationHandler - Chr ElBenja bought cash item Return of Angel Wing (SN 50500070) for 8000
+18:47:18.202 [nioEventLoopGroup-3-3] DEBUG handlers.CashOperationHandler - Chr ElBenja bought cash item Dracula Cloak (SN 21100025) for 4500
+18:47:29.470 [nioEventLoopGroup-3-3] DEBUG handlers.CashOperationHandler - Chr ElBenja bought cash item Dragon Disc (SN 20800236) for 5000
+18:47:32.361 [nioEventLoopGroup-3-3] DEBUG handlers.CashOperationHandler - Chr ElBenja bought cash item Shooting Star Medal (SN 20800271) for 4600
+18:47:35.548 [nioEventLoopGroup-3-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 38.25.15.221
+18:47:43.314 [nioEventLoopGroup-3-4] INFO  command.CommandsExecutor - Chr ElBenja used command HideCommand
+18:47:46.627 [TimerManager-Worker-4] DEBUG client.Character - Attempting to save chr ElBenja
+18:47:53.689 [nioEventLoopGroup-3-4] DEBUG handlers.CashOperationHandler - Chr ElBenja bought cash item Luxury Wristwatch (SN 20700046) for 2600
+18:47:56.631 [nioEventLoopGroup-3-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 38.25.15.221
+18:48:01.319 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command HideCommand
+18:48:08.350 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+18:48:11.600 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+18:48:12.897 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+18:48:15.178 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+18:49:18.272 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+18:49:25.413 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command ItemCommand
+18:49:29.710 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command ItemCommand
+18:49:31.054 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command ItemCommand
+18:49:31.898 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command ItemCommand
+18:49:35.945 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command RechargeCommand
+18:49:47.508 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command ItemCommand
+18:49:48.648 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command ItemCommand
+18:49:49.148 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command ItemCommand
+18:49:49.758 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command ItemCommand
+18:49:54.789 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command RechargeCommand
+18:49:56.508 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+18:50:10.837 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command LevelCommand
+18:50:15.899 [nioEventLoopGroup-3-5] INFO  command.CommandsExecutor - Chr ElBenja used command EmpowerMeCommand
+18:50:26.587 [TimerManager-Worker-4] DEBUG client.Character - Attempting to save chr ElBenja
+18:50:33.275 [nioEventLoopGroup-3-5] DEBUG handlers.CashOperationHandler - Chr ElBenja bought cash item White Label Ring (SN 20900009) for 4000
+18:50:37.791 [nioEventLoopGroup-3-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 38.25.15.221
+18:50:43.744 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command HideCommand
+18:55:23.874 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command EmpowerMeCommand
+19:07:12.921 [TimerManager-Worker-1] DEBUG client.Character - Attempting to autosave chr Admin
+19:07:12.968 [TimerManager-Worker-1] DEBUG client.Character - Attempting to autosave chr ElBenja
+19:07:55.954 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command EmpowerMeCommand
+19:08:06.220 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command ZakumCommand
+19:08:11.376 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:08:20.783 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:08:29.022 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command ZakumCommand
+19:08:33.209 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:08:40.285 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:08:51.312 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:09:00.921 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:09:30.900 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command ClearDropsCommand
+19:18:01.680 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:18:15.368 [nioEventLoopGroup-3-6] INFO  command.CommandsExecutor - Chr ElBenja used command ItemCommand
+19:21:39.149 [TimerManager-Worker-1] DEBUG client.Character - Attempting to save chr ElBenja
+19:21:44.743 [nioEventLoopGroup-3-6] DEBUG handlers.CashOperationHandler - Chr ElBenja bought cash item Flaming (SN 50300012) for 1000
+19:21:48.399 [nioEventLoopGroup-3-6] DEBUG handlers.CashOperationHandler - Chr ElBenja bought cash item Panicky (SN 50300010) for 1000
+19:21:54.165 [nioEventLoopGroup-3-6] DEBUG handlers.CashOperationHandler - Chr ElBenja bought cash item Constant Sigh (SN 50300015) for 1000
+19:21:57.290 [nioEventLoopGroup-3-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 38.25.15.221
+19:22:01.243 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command HideCommand
+19:23:58.713 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command StatLukCommand
+19:28:27.768 [nioEventLoopGroup-9-5] DEBUG netty.LoginServerInitializer - Client connected to login server from 190.237.1.245 
+19:30:39.708 [nioEventLoopGroup-9-5] INFO  creator.CharacterFactory - Account frnk created chr with name Manglor
+19:30:48.630 [nioEventLoopGroup-3-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 190.237.1.245
+19:31:24.130 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SummonCommand
+19:32:24.803 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command GiveMesosCommand
+19:32:27.459 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command GiveMesosCommand
+19:32:32.756 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command GiveNxCommand
+19:32:39.366 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:32:48.991 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:33:03.289 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:33:14.616 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:33:17.928 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:33:21.395 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:33:30.598 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:33:55.083 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command BuffMapCommand
+19:34:07.364 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:34:16.568 [nioEventLoopGroup-3-7] ERROR life.LifeFactory - [SEVERE] MOB 1001011 failed to load.
 java.lang.NullPointerException: Cannot invoke "tools.Pair.getLeft()" because "mobStats" is null
 	at server.life.LifeFactory.getMonster(LifeFactory.java:256)
 	at client.command.commands.gm3.SpawnCommand.execute(SpawnCommand.java:45)
@@ -77,22 +172,572 @@ java.lang.NullPointerException: Cannot invoke "tools.Pair.getLeft()" because "mo
 	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
 	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
 	at java.base/java.lang.Thread.run(Thread.java:1583)
-11:23:15.018 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command SpawnCommand
-11:23:16.693 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command SpawnCommand
-11:24:06.185 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command ItemCommand
-11:24:37.203 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command SpawnCommand
-11:28:04.542 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command KillAllCommand
-11:28:07.559 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command ClearDropsCommand
-11:28:09.973 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command PapCommand
-11:29:52.948 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command ClearDropsCommand
-12:16:05.960 [TimerManager-Worker-4] DEBUG client.Character - Attempting to autosave chr Admin
-12:20:59.407 [Thread-0] INFO  server.Server - Shutting down the server!
-12:20:59.408 [Thread-0] INFO  channel.Channel - Shutting down channel 1 in world 0
-12:20:59.410 [Thread-0] DEBUG client.Character - Attempting to save chr Admin
-12:20:59.613 [Thread-0] INFO  channel.Channel - Successfully shut down channel 1 in world 0
-12:20:59.614 [Thread-0] INFO  channel.Channel - Shutting down channel 2 in world 0
-12:20:59.618 [Thread-0] INFO  channel.Channel - Successfully shut down channel 2 in world 0
-12:20:59.618 [Thread-0] INFO  channel.Channel - Shutting down channel 3 in world 0
-12:20:59.624 [Thread-0] INFO  channel.Channel - Successfully shut down channel 3 in world 0
-12:20:59.624 [Thread-0] INFO  world.World - Finished shutting down world 0
-12:20:59.625 [Thread-0] INFO  server.Server - Worlds and channels are offline.
+19:34:16.583 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:34:19.943 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:34:26.302 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:34:54.090 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:35:04.156 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:35:09.415 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:35:13.842 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:35:48.304 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:36:16.625 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command BuffMapCommand
+19:36:25.956 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:36:34.073 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ClearDropsCommand
+19:36:57.106 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:37:15.435 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command GotoCommand
+19:37:30.888 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SummonCommand
+19:37:38.758 [TimerManager-Worker-2] DEBUG client.Character - Attempting to save chr Manglor
+19:37:43.680 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command GmShopCommand
+19:37:51.524 [nioEventLoopGroup-3-8] INFO  command.CommandsExecutor - Chr Manglor used command StatLukCommand
+19:38:05.649 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:38:09.633 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:38:19.821 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:38:23.160 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:38:23.539 [nioEventLoopGroup-3-8] INFO  autoban.AutobanFactory - Autoban alert - chr MangLor caused GENERAL- for killing a Silver Slime which is over 30 levels higher.
+19:38:27.656 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command LevelCommand
+19:38:34.217 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:38:51.545 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command LevelCommand
+19:39:00.420 [nioEventLoopGroup-3-8] INFO  command.CommandsExecutor - Chr Manglor used command StatLukCommand
+19:39:16.733 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command BuffMapCommand
+19:39:19.119 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:39:21.527 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:39:26.870 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:39:28.908 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:39:37.557 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:39:39.670 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:39:53.670 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:40:00.529 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:40:03.799 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:40:06.632 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:40:16.539 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SummonCommand
+19:40:25.664 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command LevelCommand
+19:40:30.259 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:40:31.337 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:40:42.054 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:40:44.890 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:40:56.782 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SummonCommand
+19:41:04.003 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:41:36.716 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+19:41:37.326 [TimerManager-Worker-2] DEBUG client.Character - Attempting to save chr Manglor
+19:41:47.076 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+19:41:47.529 [TimerManager-Worker-1] DEBUG client.Character - Attempting to save chr Manglor
+19:42:16.421 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command MaxSkillCommand
+19:42:48.734 [nioEventLoopGroup-3-8] INFO  command.CommandsExecutor - Chr Manglor used command StatLukCommand
+19:43:12.719 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:43:19.781 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:43:25.079 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:43:29.641 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:43:33.001 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:43:36.157 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:43:39.360 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:43:46.360 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:43:54.767 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command JobCommand
+19:44:07.173 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:44:10.486 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:44:16.986 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:44:19.376 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:44:24.471 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:44:33.564 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:44:37.361 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:44:44.190 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:44:47.455 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:44:48.705 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:44:49.502 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:44:54.534 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:44:55.299 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:45:13.831 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:45:20.440 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:45:22.597 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:45:26.253 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:45:27.659 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:45:34.893 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:45:40.441 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:45:41.190 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:45:48.940 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:45:56.378 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:45:59.671 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SpawnCommand
+19:46:01.848 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:46:14.302 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command StatLukCommand
+19:46:20.865 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command BuffMapCommand
+19:46:51.975 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:47:00.740 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:47:06.459 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:47:08.022 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:47:08.678 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:47:15.256 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:47:27.038 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:47:54.288 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:48:03.944 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:06.554 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:48:12.679 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:16.523 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:19.194 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:19.929 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:20.569 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:23.819 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:25.438 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:30.407 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:31.251 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:32.813 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:35.532 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command OnlineTwoCommand
+19:48:36.188 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:37.032 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:39.157 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:39.875 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:40.751 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:42.094 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:42.672 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:43.454 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:44.219 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:44.903 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:45.532 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:48:46.250 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:49:01.763 [nioEventLoopGroup-3-8] INFO  command.CommandsExecutor - Chr Manglor used command StatLukCommand
+19:49:12.860 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:49:19.766 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:49:23.361 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:49:28.235 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:49:31.497 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:49:33.797 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:49:34.423 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:49:35.110 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:49:41.173 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:49:43.286 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:49:45.501 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:49:46.532 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:49:48.423 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:49:50.460 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:50:01.532 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:50:47.624 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:50:55.611 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:50:59.908 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:51:29.658 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command PinkbeanCommand
+19:51:34.609 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command KillAllCommand
+19:55:14.185 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:55:21.419 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:55:24.076 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:56:57.825 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command BuffMapCommand
+19:57:15.263 [TimerManager-Worker-1] DEBUG client.Character - Attempting to save chr Manglor
+19:57:19.560 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 190.237.1.245
+19:57:37.091 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:57:46.326 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:57:56.623 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:58:04.092 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:58:06.561 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:58:11.733 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+19:58:20.921 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+19:58:36.890 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+20:03:45.602 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command GotoCommand
+20:03:56.946 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SummonCommand
+20:04:47.462 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command BuffMapCommand
+20:05:33.337 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command EmpowerMeCommand
+20:06:45.680 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ClearDropsCommand
+20:06:51.961 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+20:07:04.430 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+20:07:12.977 [TimerManager-Worker-4] DEBUG client.Character - Attempting to autosave chr Admin
+20:07:13.009 [TimerManager-Worker-4] DEBUG client.Character - Attempting to autosave chr ElBenja
+20:07:13.321 [TimerManager-Worker-4] DEBUG client.Character - Attempting to autosave chr Manglor
+20:07:14.446 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+20:07:16.024 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+20:07:16.696 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+20:07:18.868 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+20:07:20.618 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+20:07:21.946 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+20:07:22.555 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+20:07:23.696 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+20:07:24.681 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+20:07:25.493 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+20:07:26.196 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ItemDropCommand
+20:07:38.446 [TimerManager-Worker-1] DEBUG client.Character - Attempting to save chr Manglor
+20:07:40.743 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 190.237.1.245
+20:09:05.993 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command SearchCommand
+20:19:52.231 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command FameCommand
+20:19:57.028 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command FameCommand
+20:20:02.888 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command FameCommand
+20:20:12.200 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command FameCommand
+20:20:23.919 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command FameCommand
+20:20:52.720 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command FameCommand
+20:21:01.752 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command FameCommand
+20:21:10.471 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command FameCommand
+20:22:19.237 [nioEventLoopGroup-3-7] WARN  client.Client - Error in packet handler GeneralChatHandler. Chr ElBenja on map 220000000, account xbenjA. Packet: ByteBufInPacket[31001200216C6576656C206D616E676C6F7220323030_00]
+java.lang.NumberFormatException: For input string: "manglor"
+	at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:67)
+	at java.base/java.lang.Integer.parseInt(Integer.java:662)
+	at java.base/java.lang.Integer.parseInt(Integer.java:778)
+	at client.command.commands.gm2.LevelCommand.execute(LevelCommand.java:45)
+	at client.command.CommandsExecutor.handleInternal(CommandsExecutor.java:290)
+	at client.command.CommandsExecutor.handle(CommandsExecutor.java:250)
+	at net.server.channel.handlers.GeneralChatHandler.handlePacket(GeneralChatHandler.java:54)
+	at client.Client.channelRead(Client.java:221)
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)
+	at io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:434)
+	at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:346)
+	at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:333)
+	at io.netty.handler.codec.ReplayingDecoder.callDecode(ReplayingDecoder.java:349)
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:290)
+	at io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:249)
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)
+	at io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:293)
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)
+	at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429)
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:167)
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)
+	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:381)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:575)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:550)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:491)
+	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:468)
+	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:206)
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:177)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1073)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+20:22:26.378 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command LevelCommand
+20:22:32.346 [nioEventLoopGroup-3-7] WARN  client.Client - Error in packet handler GeneralChatHandler. Chr ElBenja on map 220000000, account xbenjA. Packet: ByteBufInPacket[31001200216C6576656C206D616E676C6F7220313230_00]
+java.lang.NumberFormatException: For input string: "manglor"
+	at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:67)
+	at java.base/java.lang.Integer.parseInt(Integer.java:662)
+	at java.base/java.lang.Integer.parseInt(Integer.java:778)
+	at client.command.commands.gm2.LevelCommand.execute(LevelCommand.java:45)
+	at client.command.CommandsExecutor.handleInternal(CommandsExecutor.java:290)
+	at client.command.CommandsExecutor.handle(CommandsExecutor.java:250)
+	at net.server.channel.handlers.GeneralChatHandler.handlePacket(GeneralChatHandler.java:54)
+	at client.Client.channelRead(Client.java:221)
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:357)
+	at io.netty.channel.CombinedChannelDuplexHandler$DelegatingChannelHandlerContext.fireChannelRead(CombinedChannelDuplexHandler.java:434)
+	at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:346)
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:318)
+	at io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:249)
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)
+	at io.netty.handler.timeout.IdleStateHandler.channelRead(IdleStateHandler.java:293)
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:355)
+	at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1429)
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:918)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:167)
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)
+	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:381)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:575)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:550)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:491)
+	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:468)
+	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:206)
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:177)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1073)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+20:22:57.941 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command ReachCommand
+20:23:01.550 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command GotoCommand
+20:23:04.034 [nioEventLoopGroup-3-7] INFO  command.CommandsExecutor - Chr ElBenja used command GotoCommand
+20:23:30.004 [pool-3-thread-11] DEBUG client.Character - Attempting to save chr Manglor
+20:23:52.691 [pool-3-thread-14] DEBUG client.Character - Attempting to save chr ElBenja
+20:32:38.377 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command OnlineTwoCommand
+21:07:13.022 [TimerManager-Worker-4] DEBUG client.Character - Attempting to autosave chr Admin
+21:33:41.312 [nioEventLoopGroup-3-2] INFO  command.CommandsExecutor - Chr Admin used command OnlineTwoCommand
+21:33:43.531 [nioEventLoopGroup-3-2] WARN  client.Client - Exception caught by Admin
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:401)
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:434)
+	at io.netty.buffer.AdaptivePoolingAllocator$AdaptiveByteBuf.setBytes(AdaptivePoolingAllocator.java:1357)
+	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1139)
+	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:350)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:152)
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)
+	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:381)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:575)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:550)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:491)
+	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:468)
+	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:206)
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:177)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1073)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+21:33:43.531 [pool-3-thread-11] DEBUG client.Character - Attempting to save chr Admin
+01:10:57.291 [nioEventLoopGroup-3-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:10:58.869 [nioEventLoopGroup-7-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:11:00.557 [nioEventLoopGroup-9-6] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:11:02.385 [nioEventLoopGroup-5-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:11:29.397 [nioEventLoopGroup-7-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:11:29.600 [nioEventLoopGroup-3-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:11:30.600 [nioEventLoopGroup-9-7] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:11:31.069 [nioEventLoopGroup-5-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:11:51.366 [nioEventLoopGroup-3-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:11:51.397 [nioEventLoopGroup-9-8] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:11:52.429 [nioEventLoopGroup-7-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:11:52.843 [nioEventLoopGroup-5-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:12:14.843 [nioEventLoopGroup-9-1] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:12:15.359 [nioEventLoopGroup-7-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:12:16.109 [nioEventLoopGroup-5-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:12:16.406 [nioEventLoopGroup-3-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:12:39.718 [nioEventLoopGroup-5-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:12:39.984 [nioEventLoopGroup-7-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:12:40.015 [nioEventLoopGroup-9-2] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:12:40.531 [nioEventLoopGroup-3-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:13:03.782 [nioEventLoopGroup-9-3] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:13:03.859 [nioEventLoopGroup-3-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:13:03.891 [nioEventLoopGroup-5-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:13:04.484 [nioEventLoopGroup-7-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:13:26.657 [nioEventLoopGroup-5-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:13:27.938 [nioEventLoopGroup-9-4] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:13:28.235 [nioEventLoopGroup-7-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:13:29.797 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:13:52.032 [nioEventLoopGroup-9-5] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:13:52.313 [nioEventLoopGroup-5-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:13:52.641 [nioEventLoopGroup-7-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:13:53.704 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:14:16.376 [nioEventLoopGroup-7-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:14:16.438 [nioEventLoopGroup-3-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:14:16.454 [nioEventLoopGroup-9-6] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:14:16.516 [nioEventLoopGroup-5-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:14:41.548 [nioEventLoopGroup-7-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:14:41.782 [nioEventLoopGroup-5-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:14:42.657 [nioEventLoopGroup-3-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:14:43.220 [nioEventLoopGroup-9-7] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:15:03.611 [nioEventLoopGroup-7-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:15:04.689 [nioEventLoopGroup-3-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:15:05.939 [nioEventLoopGroup-5-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:15:06.626 [nioEventLoopGroup-9-8] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:15:31.329 [nioEventLoopGroup-7-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:15:31.830 [nioEventLoopGroup-3-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:15:32.673 [nioEventLoopGroup-9-1] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:15:32.673 [nioEventLoopGroup-5-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:16:04.861 [nioEventLoopGroup-7-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:16:05.252 [nioEventLoopGroup-9-2] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:16:06.674 [nioEventLoopGroup-3-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:16:07.267 [nioEventLoopGroup-5-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:16:29.533 [nioEventLoopGroup-9-3] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:16:29.955 [nioEventLoopGroup-5-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:16:31.940 [nioEventLoopGroup-3-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:16:32.205 [nioEventLoopGroup-7-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:16:58.268 [nioEventLoopGroup-5-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:16:58.815 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:16:58.924 [nioEventLoopGroup-9-4] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:17:00.612 [nioEventLoopGroup-7-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:17:21.268 [nioEventLoopGroup-5-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:17:22.065 [nioEventLoopGroup-9-5] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:17:22.065 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:17:22.878 [nioEventLoopGroup-7-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:17:45.518 [nioEventLoopGroup-3-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:17:45.565 [nioEventLoopGroup-9-6] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:17:45.565 [nioEventLoopGroup-5-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:17:46.659 [nioEventLoopGroup-7-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:18:08.753 [nioEventLoopGroup-3-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:18:08.997 [nioEventLoopGroup-7-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:18:09.091 [nioEventLoopGroup-9-7] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:18:10.294 [nioEventLoopGroup-5-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:18:32.123 [nioEventLoopGroup-9-8] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:18:32.232 [nioEventLoopGroup-7-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:18:32.310 [nioEventLoopGroup-5-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:18:32.560 [nioEventLoopGroup-3-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:18:59.232 [nioEventLoopGroup-7-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:19:00.014 [nioEventLoopGroup-3-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:19:00.873 [nioEventLoopGroup-5-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:19:01.170 [nioEventLoopGroup-9-1] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:19:27.358 [nioEventLoopGroup-9-2] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:19:27.436 [nioEventLoopGroup-3-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:19:28.123 [nioEventLoopGroup-7-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:19:28.764 [nioEventLoopGroup-5-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:19:51.967 [nioEventLoopGroup-7-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:19:52.030 [nioEventLoopGroup-3-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:19:52.186 [nioEventLoopGroup-9-3] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:19:55.155 [nioEventLoopGroup-5-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:20:14.358 [nioEventLoopGroup-7-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:20:14.858 [nioEventLoopGroup-9-4] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:20:15.530 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:20:17.499 [nioEventLoopGroup-5-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:20:47.843 [nioEventLoopGroup-7-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:20:47.983 [nioEventLoopGroup-9-5] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:20:49.311 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:20:49.499 [nioEventLoopGroup-5-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:21:14.468 [nioEventLoopGroup-7-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:21:14.936 [nioEventLoopGroup-9-6] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:21:15.186 [nioEventLoopGroup-5-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:21:15.937 [nioEventLoopGroup-3-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:21:39.062 [nioEventLoopGroup-5-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:21:40.296 [nioEventLoopGroup-7-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:21:40.328 [nioEventLoopGroup-3-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:21:40.812 [nioEventLoopGroup-9-7] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:22:03.453 [nioEventLoopGroup-5-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:22:04.359 [nioEventLoopGroup-7-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:22:04.890 [nioEventLoopGroup-3-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:22:06.140 [nioEventLoopGroup-9-8] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:22:27.656 [nioEventLoopGroup-5-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:22:27.891 [nioEventLoopGroup-9-1] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:22:27.969 [nioEventLoopGroup-3-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:22:28.156 [nioEventLoopGroup-7-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:23:00.861 [nioEventLoopGroup-5-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:23:01.563 [nioEventLoopGroup-3-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:23:03.032 [nioEventLoopGroup-7-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:23:03.626 [nioEventLoopGroup-9-2] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:23:29.736 [nioEventLoopGroup-3-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:23:29.986 [nioEventLoopGroup-5-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:23:30.080 [nioEventLoopGroup-7-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:23:32.314 [nioEventLoopGroup-9-3] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:24:03.514 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:24:04.061 [nioEventLoopGroup-7-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:24:04.702 [nioEventLoopGroup-5-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:24:04.811 [nioEventLoopGroup-9-4] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:24:26.593 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:24:27.093 [nioEventLoopGroup-7-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:24:27.437 [nioEventLoopGroup-9-5] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:24:29.624 [nioEventLoopGroup-5-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:24:49.984 [nioEventLoopGroup-7-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:24:50.781 [nioEventLoopGroup-3-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:24:51.265 [nioEventLoopGroup-5-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:24:51.265 [nioEventLoopGroup-9-6] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:25:17.657 [nioEventLoopGroup-7-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:25:18.156 [nioEventLoopGroup-9-7] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:25:18.844 [nioEventLoopGroup-5-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:25:20.328 [nioEventLoopGroup-3-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:25:39.890 [nioEventLoopGroup-7-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:25:40.546 [nioEventLoopGroup-5-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:25:40.577 [nioEventLoopGroup-9-8] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:25:40.624 [nioEventLoopGroup-3-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:26:03.937 [nioEventLoopGroup-7-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:26:03.969 [nioEventLoopGroup-5-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:26:03.999 [nioEventLoopGroup-9-1] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:26:04.390 [nioEventLoopGroup-3-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:26:27.266 [nioEventLoopGroup-5-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:26:28.187 [nioEventLoopGroup-7-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:26:28.187 [nioEventLoopGroup-9-2] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:26:28.734 [nioEventLoopGroup-3-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:26:51.547 [nioEventLoopGroup-5-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:26:52.125 [nioEventLoopGroup-9-3] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:26:52.407 [nioEventLoopGroup-3-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:26:52.547 [nioEventLoopGroup-7-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:27:15.345 [nioEventLoopGroup-9-4] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:27:15.548 [nioEventLoopGroup-7-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:27:15.954 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:27:16.079 [nioEventLoopGroup-5-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:27:41.861 [nioEventLoopGroup-9-5] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:27:41.970 [nioEventLoopGroup-7-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:27:42.548 [nioEventLoopGroup-5-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:27:44.095 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:28:05.845 [nioEventLoopGroup-7-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:28:06.502 [nioEventLoopGroup-5-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:28:07.720 [nioEventLoopGroup-9-6] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:28:08.173 [nioEventLoopGroup-3-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:28:39.939 [nioEventLoopGroup-7-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:28:40.095 [nioEventLoopGroup-5-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:28:40.689 [nioEventLoopGroup-3-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:28:40.924 [nioEventLoopGroup-9-7] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:29:07.374 [nioEventLoopGroup-5-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:29:07.561 [nioEventLoopGroup-7-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:29:07.639 [nioEventLoopGroup-9-8] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:29:07.702 [nioEventLoopGroup-3-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:29:40.738 [nioEventLoopGroup-5-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:29:41.270 [nioEventLoopGroup-7-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:29:41.332 [nioEventLoopGroup-9-1] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:29:42.973 [nioEventLoopGroup-3-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:30:05.364 [nioEventLoopGroup-7-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:30:05.770 [nioEventLoopGroup-5-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:30:07.332 [nioEventLoopGroup-3-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:30:08.833 [nioEventLoopGroup-9-2] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:30:32.552 [nioEventLoopGroup-3-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:30:32.614 [nioEventLoopGroup-5-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:30:33.302 [nioEventLoopGroup-9-3] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:30:34.239 [nioEventLoopGroup-7-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:30:58.052 [nioEventLoopGroup-5-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:30:58.942 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:30:59.443 [nioEventLoopGroup-9-4] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:30:59.989 [nioEventLoopGroup-7-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:31:21.927 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:31:22.333 [nioEventLoopGroup-9-5] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:31:22.802 [nioEventLoopGroup-5-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:31:23.521 [nioEventLoopGroup-7-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:31:47.943 [nioEventLoopGroup-5-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:31:47.974 [nioEventLoopGroup-3-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:31:49.193 [nioEventLoopGroup-7-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:31:50.427 [nioEventLoopGroup-9-6] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+01:32:11.318 [nioEventLoopGroup-5-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 80.94.95.221
+01:32:11.412 [nioEventLoopGroup-3-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 80.94.95.221
+01:32:12.349 [nioEventLoopGroup-7-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 80.94.95.221
+01:32:12.615 [nioEventLoopGroup-9-7] DEBUG netty.LoginServerInitializer - Client connected to login server from 80.94.95.221 
+04:28:49.557 [nioEventLoopGroup-3-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.92
+04:28:50.010 [nioEventLoopGroup-3-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.92
+04:29:02.729 [nioEventLoopGroup-3-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.92
+04:29:14.823 [nioEventLoopGroup-3-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.92
+04:29:27.276 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.92
+04:29:39.776 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.92
+04:29:51.870 [nioEventLoopGroup-3-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.92
+10:46:23.847 [nioEventLoopGroup-3-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.136
+10:46:24.925 [nioEventLoopGroup-3-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.136
+10:46:37.348 [nioEventLoopGroup-3-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.136
+10:46:49.439 [nioEventLoopGroup-3-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.136
+10:47:02.379 [nioEventLoopGroup-3-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.136
+10:47:14.489 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.136
+10:47:27.208 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 160.119.71.136
+10:48:34.694 [nioEventLoopGroup-9-8] DEBUG netty.LoginServerInitializer - Client connected to login server from 138.84.39.34 
+10:53:06.047 [nioEventLoopGroup-3-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 138.84.39.34
+10:53:11.917 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command OnlineTwoCommand
+11:07:13.745 [TimerManager-Worker-4] DEBUG client.Character - Attempting to autosave chr Admin
+11:15:09.033 [nioEventLoopGroup-9-1] DEBUG netty.LoginServerInitializer - Client connected to login server from 47.84.111.171 
+12:07:13.803 [TimerManager-Worker-2] DEBUG client.Character - Attempting to autosave chr Admin
+13:07:13.875 [TimerManager-Worker-1] DEBUG client.Character - Attempting to autosave chr Admin
+13:42:34.346 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command OnlineTwoCommand
+13:42:44.503 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command GotoCommand
+14:07:13.925 [TimerManager-Worker-1] DEBUG client.Character - Attempting to autosave chr Admin
+15:07:13.988 [TimerManager-Worker-3] DEBUG client.Character - Attempting to autosave chr Admin
+16:07:14.045 [TimerManager-Worker-2] DEBUG client.Character - Attempting to autosave chr Admin
+17:06:46.728 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command OnlineTwoCommand
+17:07:14.100 [TimerManager-Worker-4] DEBUG client.Character - Attempting to autosave chr Admin
+18:07:14.143 [TimerManager-Worker-1] DEBUG client.Character - Attempting to autosave chr Admin
+19:07:14.196 [TimerManager-Worker-3] DEBUG client.Character - Attempting to autosave chr Admin
+20:07:14.236 [TimerManager-Worker-1] DEBUG client.Character - Attempting to autosave chr Admin
+20:23:36.831 [nioEventLoopGroup-3-3] INFO  command.CommandsExecutor - Chr Admin used command OnlineTwoCommand
+21:07:14.289 [TimerManager-Worker-3] DEBUG client.Character - Attempting to autosave chr Admin
+21:08:20.587 [nioEventLoopGroup-3-3] WARN  client.Client - Exception caught by Admin
+java.net.SocketException: Connection reset
+	at java.base/sun.nio.ch.SocketChannelImpl.throwConnectionReset(SocketChannelImpl.java:401)
+	at java.base/sun.nio.ch.SocketChannelImpl.read(SocketChannelImpl.java:434)
+	at io.netty.buffer.AdaptivePoolingAllocator$AdaptiveByteBuf.setBytes(AdaptivePoolingAllocator.java:1357)
+	at io.netty.buffer.AbstractByteBuf.writeBytes(AbstractByteBuf.java:1139)
+	at io.netty.channel.socket.nio.NioSocketChannel.doReadBytes(NioSocketChannel.java:350)
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:152)
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.handle(AbstractNioChannel.java:445)
+	at io.netty.channel.nio.NioIoHandler$DefaultNioRegistration.handle(NioIoHandler.java:381)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKey(NioIoHandler.java:575)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeysOptimized(NioIoHandler.java:550)
+	at io.netty.channel.nio.NioIoHandler.processSelectedKeys(NioIoHandler.java:491)
+	at io.netty.channel.nio.NioIoHandler.run(NioIoHandler.java:468)
+	at io.netty.channel.SingleThreadIoEventLoop.runIo(SingleThreadIoEventLoop.java:206)
+	at io.netty.channel.SingleThreadIoEventLoop.run(SingleThreadIoEventLoop.java:177)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:1073)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+21:08:20.603 [pool-3-thread-5] DEBUG client.Character - Attempting to save chr Admin
+21:08:20.712 [nioEventLoopGroup-9-2] DEBUG netty.LoginServerInitializer - Client connected to login server from 138.84.39.34 
+22:22:57.866 [TimerManager-Worker-1] INFO  client.Client - Disconnected 138.84.39.34 due to idling. Reason: ALL_IDLE
+04:34:07.859 [nioEventLoopGroup-9-3] DEBUG netty.LoginServerInitializer - Client connected to login server from 59.15.116.99 
+04:34:07.875 [nioEventLoopGroup-7-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 59.15.116.99
+04:34:07.875 [nioEventLoopGroup-3-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 59.15.116.99
+04:34:07.891 [nioEventLoopGroup-5-3] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 59.15.116.99
+04:36:09.924 [nioEventLoopGroup-3-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 124.88.46.182
+04:36:09.954 [nioEventLoopGroup-9-4] DEBUG netty.LoginServerInitializer - Client connected to login server from 124.88.46.182 
+04:36:09.954 [nioEventLoopGroup-7-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 124.88.46.182
+04:36:10.030 [nioEventLoopGroup-5-4] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 124.88.46.182
+04:36:28.202 [nioEventLoopGroup-7-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 59.15.116.99
+04:36:28.202 [nioEventLoopGroup-3-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 59.15.116.99
+04:36:28.202 [nioEventLoopGroup-5-5] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 59.15.116.99
+04:36:28.218 [nioEventLoopGroup-9-5] DEBUG netty.LoginServerInitializer - Client connected to login server from 59.15.116.99 
+04:37:23.484 [nioEventLoopGroup-9-6] DEBUG netty.LoginServerInitializer - Client connected to login server from 124.88.46.182 
+04:37:23.484 [nioEventLoopGroup-7-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 124.88.46.182
+04:37:23.500 [nioEventLoopGroup-5-6] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 124.88.46.182
+04:37:23.594 [nioEventLoopGroup-3-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 124.88.46.182
+04:38:06.360 [nioEventLoopGroup-9-7] DEBUG netty.LoginServerInitializer - Client connected to login server from 119.148.49.82 
+04:38:37.154 [nioEventLoopGroup-7-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 124.88.46.182
+04:38:37.154 [nioEventLoopGroup-9-8] DEBUG netty.LoginServerInitializer - Client connected to login server from 124.88.46.182 
+04:38:37.183 [nioEventLoopGroup-3-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 124.88.46.182
+04:38:37.261 [nioEventLoopGroup-5-7] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 124.88.46.182
+04:38:48.667 [nioEventLoopGroup-3-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 59.15.116.99
+04:38:48.667 [nioEventLoopGroup-7-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 59.15.116.99
+04:38:48.667 [nioEventLoopGroup-9-1] DEBUG netty.LoginServerInitializer - Client connected to login server from 59.15.116.99 
+04:38:48.683 [nioEventLoopGroup-5-8] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 59.15.116.99
+04:39:20.824 [nioEventLoopGroup-3-2] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 1 from 119.148.49.82
+04:39:36.590 [nioEventLoopGroup-5-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 2 from 119.148.49.82
+04:40:21.591 [nioEventLoopGroup-7-1] DEBUG netty.ChannelServerInitializer - Client connecting to world 0, channel 3 from 119.148.49.82
