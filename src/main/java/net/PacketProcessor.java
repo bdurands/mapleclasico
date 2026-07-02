@@ -195,6 +195,7 @@ import net.server.handlers.login.ViewAllCharSelectedHandler;
 import net.server.handlers.login.ViewAllCharSelectedWithPicHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.server.channel.handlers.BeautyHandler;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -452,5 +453,6 @@ public final class PacketProcessor {
         registerHandler(RecvOpcode.OPEN_ITEMUI, new RaiseUIStateHandler());
         registerHandler(RecvOpcode.USE_ITEMUI, new RaiseIncExpHandler());
         registerHandler(RecvOpcode.CHANGE_QUICKSLOT, new QuickslotKeyMappedModifiedHandler());
+        registerHandler(RecvOpcode.BEAUTY_ACTION, new BeautyHandler());
     }
 }

@@ -44,12 +44,17 @@ public final class GeneralChatHandler extends AbstractPacketHandler {
             return;
         }
         if (s.length() > Byte.MAX_VALUE && !chr.isGM()) {
-            AutobanFactory.PACKET_EDIT.alert(c.getPlayer(), c.getPlayer().getName() + " tried to packet edit in General Chat.");
+            AutobanFactory.PACKET_EDIT.alert(c.getPlayer(),
+                    c.getPlayer().getName() + " tried to packet edit in General Chat.");
             log.warn("Chr {} tried to send text with length of {}", c.getPlayer().getName(), s.length());
             c.disconnect(true, false);
             return;
         }
         char heading = s.charAt(0);
+        if (s.equalsIgnoreCase("@beauty")) {
+            c.sendPacket(server.beauty.BeautyPackets.beautyOpen());
+            return;
+        }
         if (CommandsExecutor.isCommand(c, s)) {
             CommandsExecutor.getInstance().handle(c, s);
         } else if (heading != '/') {
