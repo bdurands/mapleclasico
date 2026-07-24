@@ -6369,8 +6369,8 @@ public class Character extends AbstractCharacterObject {
             addhp += Randomizer.rand(20, 24);
             addmp += Randomizer.rand(14, 16);
         } else if (job.isA(Job.GM)) {
-            addhp += 30000;
-            addmp += 30000;
+            addhp += 99999;
+            addmp += 99999;
         } else if (job.isA(Job.PIRATE) || job.isA(Job.THUNDERBREAKER1)) {
             improvingMaxHP = isCygnus() ? SkillFactory.getSkill(ThunderBreaker.IMPROVE_MAX_HP) : SkillFactory.getSkill(Brawler.IMPROVE_MAX_HP);
             improvingMaxHPLevel = getSkillLevel(improvingMaxHP);
@@ -7693,8 +7693,8 @@ public class Character extends AbstractCharacterObject {
                 localmaxmp += (hbmp.doubleValue() / 100) * localmaxmp;
             }
 
-            localmaxhp = Math.min(30000, localmaxhp);
-            localmaxmp = Math.min(30000, localmaxmp);
+            localmaxhp = Math.min(99999, localmaxhp);
+            localmaxmp = Math.min(99999, localmaxmp);
 
             StatEffect combo = getBuffEffect(BuffStat.ARAN_COMBO);
             if (combo != null) {
@@ -8968,7 +8968,7 @@ public class Character extends AbstractCharacterObject {
 
     private int calcHpRatioUpdate(int curpoint, int maxpoint, int diffpoint) {
         int curMax = maxpoint;
-        int nextMax = Math.min(30000, maxpoint + diffpoint);
+        int nextMax = Math.min(99999, maxpoint + diffpoint);
 
         float temp = curpoint * nextMax;
         int ret = (int) Math.ceil(temp / curMax);
@@ -8979,7 +8979,7 @@ public class Character extends AbstractCharacterObject {
 
     private int calcMpRatioUpdate(int curpoint, int maxpoint, int diffpoint) {
         int curMax = maxpoint;
-        int nextMax = Math.min(30000, maxpoint + diffpoint);
+        int nextMax = Math.min(99999, maxpoint + diffpoint);
 
         float temp = curpoint * nextMax;
         int ret = (int) Math.ceil(temp / curMax);

@@ -409,7 +409,7 @@ public abstract class AbstractCharacterObject extends AbstractAnimatedMapObject 
     }
 
     public void healHpMp() {
-        updateHpMp(30000);
+        updateHpMp(99999);
     }
 
     public void updateHpMp(int x) {
