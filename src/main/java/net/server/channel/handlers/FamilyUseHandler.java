@@ -126,7 +126,15 @@ public final class FamilyUseHandler extends AbstractPacketHandler {
                 }
                 break;
             } while (true);
-            //not implemented
+            
+            if (type == FamilyEntitlement.SELF_EXP_1_5) {
+                if (useEntitlement(entry, type)) {
+                    c.getPlayer().setFamilyExp(rate, duration * 60 * 1000);
+                    c.getPlayer().dropMessage(5, "You have used the Family EXP 1.5x buff for 15 minutes.");
+                }
+            } else {
+                c.getPlayer().dropMessage(1, "This family entitlement is not implemented yet.");
+            }
         }
     }
 

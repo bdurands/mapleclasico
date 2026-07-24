@@ -223,6 +223,13 @@ public class Character extends AbstractCharacterObject {
     private int possibleReports = 10;
     private int ariantPoints, dojoPoints, vanquisherStage, dojoStage, dojoEnergy, vanquisherKills;
     private int expRate = 1, mesoRate = 1, dropRate = 1, expCoupon = 1, mesoCoupon = 1, dropCoupon = 1;
+    private double familyExpRate = 1.0;
+    private long familyExpEndTime = 0;
+
+    public void setFamilyExp(double rate, long durationMs) {
+        this.familyExpRate = rate;
+        this.familyExpEndTime = System.currentTimeMillis() + durationMs;
+    }
     private int omokwins, omokties, omoklosses, matchcardwins, matchcardties, matchcardlosses;
     private int owlSearch;
     private long lastfametime, lastUsedCashItem, lastExpression = 0, lastHealed, lastDeathtime, jailExpiration = -1;
@@ -3105,6 +3112,11 @@ public class Character extends AbstractCharacterObject {
         if (hasDisease(Disease.CURSE)) {
             gain *= 0.5;
             party *= 0.5;
+        }
+
+        if (System.currentTimeMillis() < familyExpEndTime) {
+            gain = (int) (gain * familyExpRate);
+            party = (int) (party * familyExpRate);
         }
 
         if (gain < 0) {

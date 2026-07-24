@@ -94,7 +94,7 @@ function action(mode, type, selection) {
                 if (cm.hasItem(4001158, 20)) {
                     if (cm.canHold(1002798)) {
                         cm.gainItem(4001158, -20);
-                        cm.gainItem(1002798, 20);
+                        cm.gainItem(1002798, 1);
                         cm.sendNext("Here it is. Enjoy!");
                     }
                 } else {
