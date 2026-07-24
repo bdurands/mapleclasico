@@ -1,0 +1,17 @@
+model\NoteTest.class
+net\packet\ByteBufInPacketTest.class
+scripting\ScriptEvaluationTest$1.class
+tools\RandomizerTest.class
+net\server\channel\handlers\CashShopSurpriseHandlerTest.class
+testutil\Items.class
+testutil\Mocks.class
+testutil\HandlerTest.class
+net\packet\ByteBufOutPacketTest.class
+tools\HexToolTest.class
+constants\id\ItemIdTest.class
+testutil\Packets.class
+client\processor\stat\AssignAPProcessorTest.class
+scripting\ScriptEvaluationTest.class
+server\life\MobSkillFactoryTest.class
+service\NoteServiceTest.class
+testutil\AnyValues.class
