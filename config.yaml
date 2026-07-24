@@ -4,15 +4,15 @@
 worlds:
     #Properties for Scania 0
   - flag: 0
-    server_message: Welcome to Scania!
+    server_message: Welcome to EllinMS!
     event_message: Scania!
-    why_am_i_recommended: Welcome to Scania!
+    why_am_i_recommended: Welcome to EllinMS!
     channels: 3
     exp_rate: 1
     meso_rate: 1
     drop_rate: 1
     boss_drop_rate: 1                      #NOTE: Boss drop rate OVERRIDES common drop rate, for bosses-only.
-    quest_rate: 3                           #Multiplier for Exp & Meso gains when completing a quest. Only available when USE_QUEST_RATE is true. Stacks with server Exp & Meso rates.
+    quest_rate: 2                           #Multiplier for Exp & Meso gains when completing a quest. Only available when USE_QUEST_RATE is true. Stacks with server Exp & Meso rates.
     fishing_rate: 1                        #Multiplier for success likelihood on meso thrown during fishing.
     travel_rate: 1                         #Means of transportation rides/departs using 1/N of the default time.
 
@@ -265,19 +265,19 @@ server:
     #Events/PQs Configuration
     USE_OLD_GMS_STYLED_PQ_NPCS: true     #Enables PQ NPCs with similar behaviour to old GMS style, that skips info about the PQs and immediately tries to register the party in.
     USE_ENABLE_SOLO_EXPEDITIONS: false    #Enables start expeditions with any number of players. This will also bypass all the Zakum prequest.
-    USE_ENABLE_DAILY_EXPEDITIONS: false  #Enables daily entry limitations in expeditions.
+    USE_ENABLE_DAILY_EXPEDITIONS: true  #Enables daily entry limitations in expeditions.
     USE_ENABLE_RECALL_EVENT: false        #Enables a disconnected player to reaccess the last event instance they were in before logging out. Recall only works if the event isn't cleared or disposed yet. Suggestion thanks to Alisson (Goukken).
 
     #Announcement Configuration
     USE_ANNOUNCE_SHOPITEMSOLD: false    #Automatic message sent to owner when an item from the Player Shop or Hired Merchant is sold.
-    USE_ANNOUNCE_CHANGEJOB: false       #Automatic message sent to acquantainces when changing jobs.
+    USE_ANNOUNCE_CHANGEJOB: true       #Automatic message sent to acquantainces when changing jobs.
     USE_ANNOUNCE_NX_COUPON_LOOT: false    #Enables or disables the floating text when a player loots a NX card
 
     #Cash Shop Configuration
     USE_JOINT_CASHSHOP_INVENTORY: false  #Enables usage of a same cash shop inventory for explorers, cygnus and legends. Items from exclusive cash shop inventories won't show up on the shared inventory, though.
     USE_CLEAR_OUTDATED_COUPONS: true    #Enables deletion of older code coupon registry from the DB, freeing so-long irrelevant data.
     ALLOW_CASHSHOP_NAME_CHANGE: true    #Allows players to buy name changes in the cash shop.
-    ALLOW_CASHSHOP_WORLD_TRANSFER: true  #Allows players to buy world transfers in the cash shop.
+    ALLOW_CASHSHOP_WORLD_TRANSFER: false  #Allows players to buy world transfers in the cash shop.
 
     #Maker Configuration
     USE_MAKER_PERMISSIVE_ATKUP: false    #Allows players to use attack-based strengthening gems on non-weapon items.
@@ -320,7 +320,7 @@ server:
 
     #Map Monitor Configuration
     ITEM_EXPIRE_CHECK: 10000        # (10 * 10000) Interval between item expiring tasks on maps, which checks and makes disappear expired items.
-    ITEM_LIMIT_ON_MAP: 200              #Max number of items allowed on a map.
+    ITEM_LIMIT_ON_MAP: 300              #Max number of items allowed on a map.
     MAP_VISITED_SIZE: 5                 #Max length for last mapids visited by a player. This is used to recover and update drops on these maps accordingly with player actions.
     MAP_DAMAGE_OVERTIME_INTERVAL: 2500  #Interval in milliseconds between map environment damage (e.g. El Nath and Aqua Road surrondings).
     MAP_DAMAGE_OVERTIME_COUNT: 2
@@ -378,9 +378,9 @@ server:
     EXPAND_GUILD_MAX_COST: 5000000
 
     #Family Configuration
-    FAMILY_REP_PER_KILL: 4               #Amount of rep gained per monster kill.
-    FAMILY_REP_PER_BOSS_KILL: 20         #Amount of rep gained per boss kill.
-    FAMILY_REP_PER_LEVELUP: 200          #Amount of rep gained upon leveling up.
+    FAMILY_REP_PER_KILL: 2               #Amount of rep gained per monster kill.
+    FAMILY_REP_PER_BOSS_KILL: 10         #Amount of rep gained per boss kill.
+    FAMILY_REP_PER_LEVELUP: 100          #Amount of rep gained upon leveling up.
     FAMILY_MAX_GENERATIONS: 1000         #Maximum depth of family tree. (Distance from leader to farthest junior)
 
     #Equipment Configuration
