@@ -46,7 +46,7 @@ public class MaxStatCommand extends Command {
         player.setWorldRates();
         player.updateStrDexIntLuk(Short.MAX_VALUE);
         player.setFame(13337);
-        player.updateMaxHpMaxMp(99999, 99999);
+        player.updateMaxHpMaxMp(30000, 30000);
         player.updateSingleStat(Stat.LEVEL, 255);
         player.updateSingleStat(Stat.FAME, 13337);
         player.yellowMessage("Stats maxed out.");
