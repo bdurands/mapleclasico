@@ -204,10 +204,10 @@ public class PacketCreator {
         p.writeShort(chr.getDex()); // dex
         p.writeShort(chr.getInt()); // int
         p.writeShort(chr.getLuk()); // luk
-        p.writeShort(chr.getHp()); // hp (?)
-        p.writeShort(chr.getClientMaxHp()); // maxhp
-        p.writeShort(chr.getMp()); // mp (?)
-        p.writeShort(chr.getClientMaxMp()); // maxmp
+        p.writeInt(chr.getHp()); // hp (?)
+        p.writeInt(chr.getClientMaxHp()); // maxhp
+        p.writeInt(chr.getMp()); // mp (?)
+        p.writeInt(chr.getClientMaxMp()); // maxmp
         p.writeShort(chr.getRemainingAp()); // remaining ap
         if (GameConstants.hasSPTable(chr.getJob())) {
             addRemainingSkillInfo(p, chr);
@@ -1032,6 +1032,8 @@ public class PacketCreator {
                     } else {
                         p.writeShort(statupdate.getRight().shortValue());
                     }
+                } else if (statupdate.getLeft().getValue() == 0x400 || statupdate.getLeft().getValue() == 0x800 || statupdate.getLeft().getValue() == 0x1000 || statupdate.getLeft().getValue() == 0x2000) {
+                    p.writeInt(statupdate.getRight());
                 } else if (statupdate.getLeft().getValue() < 0xFFFF) {
                     p.writeShort(statupdate.getRight().shortValue());
                 } else if (statupdate.getLeft().getValue() == 0x20000) {
@@ -1059,7 +1061,7 @@ public class PacketCreator {
         p.writeByte(0);//updated
         p.writeInt(to.getId());
         p.writeByte(spawnPoint);
-        p.writeShort(chr.getHp());
+        p.writeInt(chr.getHp());
         p.writeBool(chr.isChasing());
         if (chr.isChasing()) {
             chr.setChasing(false);
@@ -1077,7 +1079,7 @@ public class PacketCreator {
         p.writeByte(0);//updated
         p.writeInt(to.getId());
         p.writeByte(spawnPoint);
-        p.writeShort(chr.getHp());
+        p.writeInt(chr.getHp());
         p.writeBool(true);
         p.writeInt(spawnPosition.x);    // spawn position placement thanks to Arnah (Vertisy)
         p.writeInt(spawnPosition.y);
