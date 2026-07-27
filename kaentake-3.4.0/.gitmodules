@@ -1,0 +1,7 @@
+[submodule "external/Detours"]
+	path = external/Detours
+	url = https://github.com/microsoft/Detours.git
+[submodule "external/WzLib"]
+	path = external/WzLib
+	url = https://github.com/iw2d/WzLib.git
+	branch = v83_DX8to9
