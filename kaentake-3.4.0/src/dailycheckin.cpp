@@ -25,6 +25,7 @@
 // ============================================================
 
 #include "pch.h"
+#include "constants.h"
 #include "hook.h"
 #include "debug.h"
 #include "wvs/packet.h"      // COutPacket / CInPacket
@@ -55,7 +56,6 @@ static constexpr uintptr_t kAddr_ClientSocket_SendPacket = 0x0049637B;
 static constexpr uintptr_t kAddr_ClientSocket_ProcessPkt = 0x004965F1;
 static constexpr uintptr_t kAddr_CUtilDlg_Notice         = 0x009929DD;
 static constexpr uintptr_t kAddr_get_basic_font          = 0x0098A707;
-static constexpr uintptr_t kAddr_SetFont                 = 0x0046341A;  // IWzFont::SetFont(name,size,color,..)
 
 // Styled-tooltip palette.
 static constexpr unsigned long TT_COL_BORDER  = 0xFF20283A;  // steel frame
@@ -200,16 +200,19 @@ public:
     static void DrawBorder(IWzCanvasPtr c, const RECT& rc, int t, unsigned int color) {
         if (!c) return;
         int w = rc.right - rc.left, h = rc.bottom - rc.top;
+        if (w <= 0 || h <= 0 || t <= 0) return;
         try {
-            c->DrawRectangle(rc.left, rc.top, w, t, color);
-            c->DrawRectangle(rc.left, rc.bottom - t, w, t, color);
-            c->DrawRectangle(rc.left, rc.top, t, h, color);
-            c->DrawRectangle(rc.right - t, rc.top, t, h, color);
+            c->DrawRectangle(rc.left, rc.top, (unsigned)w, (unsigned)t, color);
+            c->DrawRectangle(rc.left, rc.bottom - t, (unsigned)w, (unsigned)t, color);
+            c->DrawRectangle(rc.left, rc.top, (unsigned)t, (unsigned)h, color);
+            c->DrawRectangle(rc.right - t, rc.top, (unsigned)t, (unsigned)h, color);
         } catch (...) {}
     }
     static void Fill(IWzCanvasPtr c, const RECT& rc, unsigned int color) {
         if (!c) return;
-        try { c->DrawRectangle(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, color); } catch (...) {}
+        int w = rc.right - rc.left, h = rc.bottom - rc.top;
+        if (w <= 0 || h <= 0) return;
+        try { c->DrawRectangle(rc.left, rc.top, (unsigned)w, (unsigned)h, color); } catch (...) {}
     }
     // Filled rounded rect — per-row spans give a 45deg corner bevel. Rows never overlap, so it
     // stays correct with a translucent color.
@@ -263,15 +266,13 @@ public:
         m_pBtClose[1]  = LoadSprite(L"UI/UIWindow.img/Bag/BtClose/mouseOver/0");
     }
 
-    // Create a bold Dotum font of the given colour/size.
+    // Create a bold Dotum font of the given colour/size using the COM interface.
     static bool MakeFont(IWzFontPtr& out, unsigned long color, int size) {
         if (out) return true;
         try {
             PcCreateObject<IWzFontPtr>(L"Canvas#Font", out, nullptr);
             if (!out) return false;
-            auto fn = reinterpret_cast<HRESULT(__thiscall*)(
-                IWzFont*, Ztl_bstr_t, unsigned long, unsigned long, const Ztl_variant_t&)>(kAddr_SetFont);
-            return SUCCEEDED(fn(out, L"Dotum", size, color, Ztl_variant_t(L"B")));
+            return SUCCEEDED(out->Create(L"Dotum", (unsigned int)size, (unsigned int)color, Ztl_variant_t(L"B")));
         } catch (...) { return false; }
     }
     void EnsureTooltipFonts() {
@@ -280,12 +281,14 @@ public:
         MakeFont(m_pFontAccent, 0xFFFFE08A, 12);   // light gold (meso line)
         MakeFont(m_pFontShadow, 0xFF000000, 12);   // black shadow
     }
-    // Text with a 1px black drop shadow.
+    // Text with a 1px black drop shadow. Pre-converts to Ztl_bstr_t to avoid
+    // repeated implicit const char* -> Ztl_bstr_t conversion (heap alloc per call).
     void ShadowText(IWzCanvasPtr c, int x, int y, const char* s, IWzFontPtr font) const {
         if (!c || !font || !s || !*s) return;
         try {
-            if (m_pFontShadow) c->DrawTextA(x + 1, y + 1, s, m_pFontShadow);
-            c->DrawTextA(x, y, s, font);
+            Ztl_bstr_t bs(s);
+            if (m_pFontShadow) c->DrawTextA(x + 1, y + 1, bs, m_pFontShadow);
+            c->DrawTextA(x, y, bs, font);
         } catch (...) {}
     }
 
@@ -400,7 +403,12 @@ CUIDailyCheckin::CUIDailyCheckin(int nLeft, int nTop)
     CWnd::CreateWnd(this, nLeft, nTop, kWndW, kWndH, 10, 1, nullptr, 0);
     play_ui_sound(L"MenuUp");
     m_pFont = nullptr;
-    try { get_basic_font(std::addressof(m_pFont), 0); } catch (...) {}
+    try {
+        get_basic_font(std::addressof(m_pFont), 0);
+        if (!m_pFont) { DEBUG_MESSAGE("DailyCheckin: get_basic_font returned null"); }
+    } catch (...) {
+        DEBUG_MESSAGE("DailyCheckin: get_basic_font threw");
+    }
     EnsureTooltipFonts();
 }
 
