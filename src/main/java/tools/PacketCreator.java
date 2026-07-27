@@ -7497,4 +7497,21 @@ public class PacketCreator {
         return p;
     }
 
+    public static Packet dailyCheckinSnapshot(int currentDay, int claimedMask, int justClaimed) {
+        OutPacket p = OutPacket.create(SendOpcode.DAILY_CHECKIN);
+        p.writeByte(1);                 // RESP_SNAPSHOT
+        p.writeByte(currentDay);
+        p.writeInt(claimedMask);
+        p.writeByte(justClaimed);
+        int n = server.DailyCheckinRewards.CYCLE_DAYS;
+        p.writeByte(n);
+        for (int d = 1; d <= n; d++) {
+            p.writeInt(server.DailyCheckinRewards.iconItemId(d));
+        }
+        for (int d = 1; d <= n; d++) {
+            p.writeString(server.DailyCheckinRewards.tooltip(d));
+        }
+        return p;
+    }
+
 }

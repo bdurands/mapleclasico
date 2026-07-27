@@ -214,6 +214,41 @@ public class Character extends AbstractCharacterObject {
     private int slots = 0;
     private int energybar;
     private int gmLevel;
+
+    private int checkinDay = 0;        // last day claimed this cycle (0..28)
+    private int checkinClaimed = 0;    // 28-bit mask of days claimed this cycle
+    private long checkinLastClaim = 0;  // epoch millis of the last claim (0 = never)
+    private static final long CHECKIN_PERIOD_MS = 86_400_000L;   // 24h
+
+    public int getCheckinDay()       { return checkinDay; }
+    public int getCheckinClaimed()   { return checkinClaimed; }
+    public long getCheckinLastClaim() { return checkinLastClaim; }
+
+    public int refreshCheckin() {
+        final int cycle = server.DailyCheckinRewards.CYCLE_DAYS;
+        if (checkinLastClaim <= 0) {           // never claimed -> fresh cycle, day 1 ready
+            checkinDay = 0; checkinClaimed = 0;
+            return 1;
+        }
+        long elapsed = System.currentTimeMillis() - checkinLastClaim;
+        if (elapsed < CHECKIN_PERIOD_MS)        return 0;                       // cooldown
+        if (elapsed >= 2L * CHECKIN_PERIOD_MS) { checkinDay = 0; checkinClaimed = 0; return 1; } // lapsed -> reset
+        if (checkinDay >= cycle)               { checkinDay = 0; checkinClaimed = 0; return 1; } // cycle done -> new cycle
+        return checkinDay + 1;                  // consecutive day available
+    }
+
+    public void applyCheckinClaim(int d) {
+        if (d < 1 || d > server.DailyCheckinRewards.CYCLE_DAYS) return;
+        checkinDay = d;
+        checkinClaimed |= (1 << (d - 1));
+        checkinLastClaim = System.currentTimeMillis();
+    }
+
+    public long getCheckinCooldownSeconds() {
+        if (checkinLastClaim <= 0) return 0;
+        long remain = (checkinLastClaim + CHECKIN_PERIOD_MS) - System.currentTimeMillis();
+        return remain > 0 ? (remain + 999) / 1000 : 0;
+    }
     private int ci = 0;
     private FamilyEntry familyEntry;
     private int familyId;
@@ -6890,6 +6925,9 @@ public class Character extends AbstractCharacterObject {
                     }
 
                     ret.name = rs.getString("name");
+                    ret.checkinDay       = rs.getInt("checkinDay");
+                    ret.checkinClaimed   = rs.getInt("checkinClaimed");
+                    ret.checkinLastClaim = rs.getLong("checkinLastClaim");
                     ret.level = rs.getInt("level");
                     ret.fame = rs.getInt("fame");
                     ret.quest_fame = rs.getInt("fquest");
@@ -8649,6 +8687,15 @@ public class Character extends AbstractCharacterObject {
                         }
                     }
 
+                }
+
+                try (PreparedStatement psCheckin = con.prepareStatement(
+                        "UPDATE characters SET checkinDay = ?, checkinClaimed = ?, checkinLastClaim = ? WHERE id = ?")) {
+                    psCheckin.setInt(1, checkinDay);
+                    psCheckin.setInt(2, checkinClaimed);
+                    psCheckin.setLong(3, checkinLastClaim);
+                    psCheckin.setInt(4, id);
+                    psCheckin.executeUpdate();
                 }
 
                 if (cashshop != null) {

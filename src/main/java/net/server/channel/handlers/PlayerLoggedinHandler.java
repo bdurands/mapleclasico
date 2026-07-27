@@ -23,6 +23,7 @@ package net.server.channel.handlers;
 
 import client.BuddyList;
 import client.BuddylistEntry;
+import server.DailyCheckinRewards;
 import client.Character;
 import client.CharacterNameAndId;
 import client.Client;
@@ -481,6 +482,14 @@ public final class PlayerLoggedinHandler extends AbstractPacketHandler {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+
+        if (c.getPlayer().getLevel() >= DailyCheckinRewards.MIN_LEVEL) {
+            int checkinClaimable = c.getPlayer().refreshCheckin();
+            if (checkinClaimable >= 1) {
+                c.sendPacket(PacketCreator.dailyCheckinSnapshot(
+                        checkinClaimable, c.getPlayer().getCheckinClaimed(), 0));
+            }
         }
     }
 

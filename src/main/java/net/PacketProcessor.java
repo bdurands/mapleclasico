@@ -454,5 +454,6 @@ public final class PacketProcessor {
         registerHandler(RecvOpcode.USE_ITEMUI, new RaiseIncExpHandler());
         registerHandler(RecvOpcode.CHANGE_QUICKSLOT, new QuickslotKeyMappedModifiedHandler());
         registerHandler(RecvOpcode.BEAUTY_ACTION, new BeautyHandler());
+        registerHandler(RecvOpcode.DAILY_CHECKIN, new net.server.channel.handlers.DailyCheckinHandler());
     }
 }

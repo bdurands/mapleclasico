@@ -18,6 +18,7 @@ add_library(injector SHARED
     beautyshop.cpp
     facehair.cpp
     debug.cpp
+    dailycheckin.cpp
     hook.cpp
 )
 

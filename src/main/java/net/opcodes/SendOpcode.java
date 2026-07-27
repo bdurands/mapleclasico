@@ -22,6 +22,7 @@
 package net.opcodes;
 
 public enum SendOpcode {
+    DAILY_CHECKIN(0x17C),
 
     LOGIN_STATUS(0x00),
     GUEST_ID_LOGIN(0x01),
