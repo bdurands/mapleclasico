@@ -262,8 +262,8 @@ public:
 
     void LoadSprites() {
         m_pBg          = LoadSprite(L"UI/UIWindow.img/DailyCheckin/backgrnd");
-        m_pBtClose[0]  = LoadSprite(L"UI/UIWindow.img/Bag/BtClose/normal/0");
-        m_pBtClose[1]  = LoadSprite(L"UI/UIWindow.img/Bag/BtClose/mouseOver/0");
+        m_pBtClose[0]  = LoadSprite(L"UI/UIWindow.img/Item/BtClose/normal/0");
+        m_pBtClose[1]  = LoadSprite(L"UI/UIWindow.img/Item/BtClose/mouseOver/0");
     }
 
     // Create a bold Dotum font of the given colour/size using the COM interface.

@@ -51,7 +51,7 @@ public final class DailyCheckinRewards {
     static {
         DAYS = new Reward[CYCLE_DAYS];
         for (int d = 0; d < CYCLE_DAYS; d++) {
-            DAYS[d] = new Reward(PLACEHOLDER_ICON, 1, NONE);   // mock: 1 meso, generic icon, no items
+            DAYS[d] = new Reward(PLACEHOLDER_ICON, 100000, NONE);   // mock: 1 meso, generic icon, no items
         }
         // ---- Example of a richer day (uncomment + adapt) ----
         // DAYS[6]  = new Reward(2340000, 0, new Grant[]{ new Grant(2340000, 5) });          // Day 7: White Scroll x5
