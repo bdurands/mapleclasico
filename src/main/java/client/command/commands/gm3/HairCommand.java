@@ -28,6 +28,7 @@ import client.Client;
 import client.Stat;
 import client.command.Command;
 import constants.inventory.ItemConstants;
+import server.ItemInformationProvider;
 
 public class HairCommand extends Command {
     {
@@ -45,7 +46,7 @@ public class HairCommand extends Command {
         try {
             if (params.length == 1) {
                 int itemId = Integer.parseInt(params[0]);
-                if (!ItemConstants.isHair(itemId)) {
+                if (!ItemConstants.isHair(itemId) || ItemInformationProvider.getInstance().getName(itemId) == null) {
                     player.yellowMessage("Hair id '" + params[0] + "' does not exist.");
                     return;
                 }
@@ -55,7 +56,7 @@ public class HairCommand extends Command {
                 player.equipChanged();
             } else {
                 int itemId = Integer.parseInt(params[1]);
-                if (!ItemConstants.isHair(itemId)) {
+                if (!ItemConstants.isHair(itemId) || ItemInformationProvider.getInstance().getName(itemId) == null) {
                     player.yellowMessage("Hair id '" + params[1] + "' does not exist.");
                     return;
                 }

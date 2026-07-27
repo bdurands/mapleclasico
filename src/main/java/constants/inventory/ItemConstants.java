@@ -232,6 +232,6 @@ public final class ItemConstants {
     }
 
     public static boolean isHair(int itemId) {
-        return itemId >= 30000 && itemId < 65000;
+        return (itemId >= 30000 && itemId < 40000) || (itemId >= 40000 && itemId < 50000) || (itemId >= 60000 && itemId < 70000);
     }
 }
