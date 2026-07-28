@@ -60,6 +60,7 @@ void AttachDamageSkinPickerMod();
 void AttachBeautyShopMod();
 void AttachFaceHairMod();
 void AttachDailyCheckinMod();
+void AttachFixCashItemsMod();
 
 inline void AttachClientHooks() {
     AttachClientBypass();
@@ -78,6 +79,7 @@ inline void AttachClientHooks() {
     AttachBeautyShopMod();
     AttachFaceHairMod();
     AttachDailyCheckinMod();
+    AttachFixCashItemsMod();
 }
 
 

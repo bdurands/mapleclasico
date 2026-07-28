@@ -177,8 +177,11 @@ public:
     virtual void Update() override { InvalidateRect(nullptr); }
     virtual const CRTTI* GetRTTI() const override { return &ms_RTTI; }
     virtual int IsKindOf(const CRTTI* pRTTI) const override { return ms_RTTI.IsKindOf(pRTTI); }
-    virtual int OnSetFocus(int /*bFocus*/) override { return 0; }   // let the player still move
     virtual void OnKey(unsigned int wParam, unsigned int lParam) override {
+        if (wParam == VK_ESCAPE) {
+            Destroy();
+            return;
+        }
         void* ctx = GetWvsContext();
         if (ctx) reinterpret_cast<int(__thiscall*)(void*, unsigned int, unsigned int)>(
                      kAddr_ProcessBasicUIKey)(ctx, wParam, lParam);
@@ -262,8 +265,8 @@ public:
 
     void LoadSprites() {
         m_pBg          = LoadSprite(L"UI/UIWindow.img/DailyCheckin/backgrnd");
-        m_pBtClose[0]  = LoadSprite(L"UI/Basic.img/BtClose3/normal/0");
-        m_pBtClose[1]  = LoadSprite(L"UI/Basic.img/BtClose3/mouseOver/0");
+        m_pBtClose[0]  = LoadSprite(L"UI/v83.img/beautyRoom/BtClose/normal/0");
+        m_pBtClose[1]  = LoadSprite(L"UI/v83.img/beautyRoom/BtClose/mouseOver/0");
     }
 
     // Create a bold Dotum font of the given colour/size using the COM interface.
@@ -458,7 +461,7 @@ void CUIDailyCheckin::Draw(const RECT* pRect) {
     }
 
     // (3) Close button (mouseOver art when hovered).
-    BlitA(pCanvas, m_nCloseHover ? m_pBtClose[1] : m_pBtClose[0], m_rcClose.left, m_rcClose.top);
+    BlitAt(pCanvas, m_nCloseHover ? m_pBtClose[1] : m_pBtClose[0], m_rcClose.left, m_rcClose.top);
 
     // (4) Hover tooltip — drawn last, on top.
     if (m_hoverDay >= 1) DrawTooltip(pCanvas, m_hoverDay);

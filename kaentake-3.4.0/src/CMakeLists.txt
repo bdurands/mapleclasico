@@ -19,6 +19,7 @@ add_library(injector SHARED
     facehair.cpp
     debug.cpp
     dailycheckin.cpp
+    fixcashitems.cpp
     hook.cpp
 )
 

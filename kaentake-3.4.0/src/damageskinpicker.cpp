@@ -1396,7 +1396,13 @@ static auto get_consume_cash_item_type_picker =
 // ---------------------------------------------------------------------------
 
 bool CUIDamageSkinPicker::HandleKey(int vk) {
-    if (m_nInputFocus == 0) return false;
+    if (m_nInputFocus == 0) {
+        if (vk == VK_ESCAPE) {
+            Destroy();
+            return true;
+        }
+        return false;
+    }
     std::wstring& buf  = (m_nInputFocus == 1) ? m_sMyInput   : m_sShopInput;
     int&          scr  = (m_nInputFocus == 1) ? m_nMyScroll  : m_nShopScroll;
     int           sz   = (m_nInputFocus == 1) ? (int)m_vMyList.size()

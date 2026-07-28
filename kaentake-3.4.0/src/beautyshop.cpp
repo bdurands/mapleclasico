@@ -415,6 +415,16 @@ public:
     virtual void OnDestroy() override;
     virtual void Update() override;
 
+    virtual void OnKey(unsigned int wParam, unsigned int lParam) override {
+        if (wParam == VK_ESCAPE) {
+            Destroy();
+            return;
+        }
+        void* ctx = *reinterpret_cast<void**>(kAddr_CWvsContext_Instance);
+        if (ctx) reinterpret_cast<int(__thiscall*)(void*, unsigned int, unsigned int)>(
+                     0x00A07431)(ctx, wParam, lParam);
+    }
+
     virtual const CRTTI* GetRTTI() const override { return &ms_RTTI; }
     virtual int IsKindOf(const CRTTI* pRTTI) const override { return ms_RTTI.IsKindOf(pRTTI); }
 
