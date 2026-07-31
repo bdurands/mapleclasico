@@ -357,7 +357,7 @@ public class Character extends AbstractCharacterObject {
     private final Lock chrLock = new ReentrantLock(true);
     private final Lock evtLock = new ReentrantLock(true);
     private final Lock petLock = new ReentrantLock(true);
-    private final BagExtraService bagExtraService = new BagExtraService(this);
+
     // ===== Storage Bag (ore/scroll/chair/mount) - per CHARACTER =====
     private server.OreStorage orestorage = null;
     private server.OreStorage scrollstorage = null;
