@@ -1,0 +1,37 @@
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\bin\Release\EllinMS Launcher.exe.config
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\bin\Release\EllinMS Launcher.exe
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\bin\Release\EllinMS Launcher.pdb
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS-Launcher.csproj.AssemblyReference.cache
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\MainWindow.baml
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\MainWindow.g.cs
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\App.g.cs
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher_MarkupCompile.cache
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher.g.resources
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS-Launcher.csproj.CoreCompileInputs.cache
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher.exe
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher.pdb
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\bin\Release\EllinMS Launcher.exe.config
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\bin\Release\EllinMS Launcher.exe
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\bin\Release\EllinMS Launcher.pdb
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS-Launcher.csproj.AssemblyReference.cache
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher.exe.config
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\MainWindow.baml
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\MainWindow.g.cs
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\App.g.cs
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher_MarkupCompile.cache
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher.g.resources
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS-Launcher.csproj.CoreCompileInputs.cache
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher.exe
+D:\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher.pdb
+C:\Users\Nion\Desktop\mapleclasico\EllinMS-Launcher\EllinMS-Launcher\bin\Release\EllinMS Launcher.exe.config
+C:\Users\Nion\Desktop\mapleclasico\EllinMS-Launcher\EllinMS-Launcher\bin\Release\EllinMS Launcher.exe
+C:\Users\Nion\Desktop\mapleclasico\EllinMS-Launcher\EllinMS-Launcher\bin\Release\EllinMS Launcher.pdb
+C:\Users\Nion\Desktop\mapleclasico\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS-Launcher.csproj.AssemblyReference.cache
+C:\Users\Nion\Desktop\mapleclasico\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\MainWindow.baml
+C:\Users\Nion\Desktop\mapleclasico\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\MainWindow.g.cs
+C:\Users\Nion\Desktop\mapleclasico\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\App.g.cs
+C:\Users\Nion\Desktop\mapleclasico\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher_MarkupCompile.cache
+C:\Users\Nion\Desktop\mapleclasico\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher.g.resources
+C:\Users\Nion\Desktop\mapleclasico\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS-Launcher.csproj.CoreCompileInputs.cache
+C:\Users\Nion\Desktop\mapleclasico\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher.exe
+C:\Users\Nion\Desktop\mapleclasico\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Release\EllinMS Launcher.pdb

@@ -42,10 +42,30 @@ void ProcessConfigFile() {
 }
 
 
+// Check if the process was launched through the EllinMS Launcher.
+// The C# launcher sets the environment variable ELLINMS_LAUNCHER=1
+// before spawning MapleStory.exe. If it's missing, the user opened
+// MapleStory.exe directly.
+static bool WasLaunchedByEllinMS() {
+    char buf[16] = {};
+    DWORD len = GetEnvironmentVariableA("ELLINMS_LAUNCHER", buf, sizeof(buf));
+    return (len > 0 && strcmp(buf, "1") == 0);
+}
+
 BOOL WINAPI DllMain(HINSTANCE hModule, DWORD fdwReason, LPVOID lpvReserved) {
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hModule);
+
+        if (!WasLaunchedByEllinMS()) {
+            MessageBoxA(NULL,
+                "No puedes abrir MapleStory.exe directamente.\n\n"
+                "Por favor, abre EllinMS Launcher para jugar.",
+                "EllinMS", MB_OK | MB_ICONWARNING);
+            TerminateProcess(GetCurrentProcess(), 0);
+            return FALSE;
+        }
+
         ProcessCommandLine();
         ProcessConfigFile();
         AttachSystemHooks();

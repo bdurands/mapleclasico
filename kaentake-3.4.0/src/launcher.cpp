@@ -22,6 +22,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ResumeThread(pi.hThread);
     WaitForSingleObject(pi.hProcess, INFINITE);
 
+
     DWORD dwExitCode;
     if (!GetExitCodeProcess(pi.hProcess, &dwExitCode)) {
         ErrorMessage("GetExitCodeProcess failed [%d]", GetLastError());

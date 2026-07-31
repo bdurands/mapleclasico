@@ -1,0 +1,6 @@
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Debug\EllinMS-Launcher.csproj.AssemblyReference.cache
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Debug\MainWindow.baml
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Debug\MainWindow.g.cs
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Debug\App.g.cs
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Debug\EllinMS Launcher_MarkupCompile.cache
+C:\Users\USER\Desktop\KAEN2\EllinMS-Launcher\EllinMS-Launcher\obj\x86\Debug\EllinMS Launcher.g.resources
