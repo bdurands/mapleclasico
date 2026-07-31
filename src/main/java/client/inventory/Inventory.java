@@ -237,6 +237,10 @@ public class Inventory implements Iterable<Item> {
         addSlotFromDB(item.getPosition(), item);
     }
 
+    public void addItemToSlot(short slot, Item item) {
+        addSlotFromDB(slot, item);
+    }
+
     private static boolean isSameOwner(Item source, Item target) {
         return source.getOwner().equals(target.getOwner());
     }

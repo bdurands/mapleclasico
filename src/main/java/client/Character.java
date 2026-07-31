@@ -2068,9 +2068,7 @@ public class Character extends AbstractCharacterObject {
                 if (mapitem.getMeso() <= 0 && !MapId.isSelfLootableOnly(this.getMapId())
                         && autoCollectToBag(mItem)) {
                     this.getMap().pickItemDrop(pickupPacket, mapitem);
-                    if (!isFromVac) {
-                        sendPacket(PacketCreator.enableActions());
-                    }
+                    sendPacket(PacketCreator.enableActions());
                     return;
                 }
 
@@ -2203,7 +2201,6 @@ public class Character extends AbstractCharacterObject {
             return false;
         }
         Item bagItem = mItem.copy();
-        KarmaManipulator.toggleKarmaFlagToUntradeable(bagItem);
         if (bag.storeMerge(bagItem, client)) {
             switch (kind) {
                 case 1:  setUsedScrollStorage(); break;
