@@ -608,7 +608,9 @@ static void __fastcall CClientSocket_ProcessPacket_hook(
     size_t saved = PacketOffset(pPacket);
     uint16_t op = InPacket_Decode2(pPacket);
     switch (op) {
-    case 0x3724: // BAG_WINDOW
+    //case 0x3724: // BAG_WINDOW
+    case 0x3725: // BAG_WINDOW (server -> client)
+        PacketOffset(pPacket) = saved;
         BagWindow_HandleSnapshotPacket(pPacket);
         return;
     case kOp_S2C_Catalog:
