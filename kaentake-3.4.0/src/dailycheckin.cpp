@@ -553,7 +553,7 @@ static void HandleSnapshot(unsigned char* data, unsigned int& offset, unsigned s
     if (justClaimed >= 1 && justClaimed <= kDays) {
         play_ui_sound(L"BtMouseClick");
         char buf[160];
-        _snprintf(buf, sizeof(buf),
+        _snprintf_s(buf, sizeof(buf), _TRUNCATE,
                   "Daily Check-In\r\n\r\nDay %d reward claimed!\r\nCheck your inventory.",
                   justClaimed);
         buf[sizeof(buf) - 1] = 0;

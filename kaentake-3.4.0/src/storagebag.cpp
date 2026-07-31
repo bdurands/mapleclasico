@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // storagebag.cpp  —  the STORAGE BAG window (inventory BAG button): Ore / Scroll / Chair / Cash bags in one window
 //
 // A client-DLL CWnd window that gives the player extra, server-backed storage split
@@ -713,7 +713,7 @@ public:
         q[qn] = 0;
         if (!n.empty() && strstr(n.c_str(), q)) return true;
         // fall back to the item id so unnamed/unknown items stay searchable
-        char ids[16]; _snprintf(ids, sizeof(ids), "%d", id); ids[15] = 0;
+        char ids[16]; _snprintf_s(ids, sizeof(ids), _TRUNCATE, "%d", id); ids[15] = 0;
         return strstr(ids, q) != nullptr;
     }
     // Rebuild the compacted list of matching slots (only used while filtering).
@@ -1107,7 +1107,7 @@ void CUIBagWindow::Draw(const RECT* pRect) {
             // no box) seated at the cell's bottom-left and nudged up so they don't clip.
             int q = s.qty[slot];
             if (q >= 1) {
-                char num[12]; _snprintf(num, sizeof(num), "%d", q); num[11] = 0;
+                char num[12]; _snprintf_s(num, sizeof(num), _TRUNCATE, "%d", q); num[11] = 0;
                 int dx = rc.left + 1, dy = rc.bottom - 14;
                 for (const char* np = num; *np; ++np) {
                     int d = *np - '0';
@@ -1189,7 +1189,7 @@ void CUIBagWindow::Draw(const RECT* pRect) {
         }
         // result-count badge when filtering
         if (Filtering()) {
-            char cnt[16]; _snprintf(cnt, sizeof(cnt), "%d", m_displayCount); cnt[15] = 0;
+            char cnt[16]; _snprintf_s(cnt, sizeof(cnt), _TRUNCATE, "%d", m_displayCount); cnt[15] = 0;
             int cw = (int)strlen(cnt) * 6;
             try { pCanvas->DrawTextA(kSearchBoxR - cw - 6, kSearchTextY, Ztl_bstr_t(cnt), pfDk, Ztl_variant_t(), Ztl_variant_t()); } catch (...) {}
         }

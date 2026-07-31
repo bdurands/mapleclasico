@@ -1,4 +1,5 @@
 #pragma once
+#include "../constants.h"
 #include "hook.h"
 #include "wvs/wnd.h"
 #include "wvs/util.h"
