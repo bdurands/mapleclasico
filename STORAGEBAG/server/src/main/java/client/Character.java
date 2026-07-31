@@ -1,4 +1,4 @@
-/* 
+/*
  This file is part of the OdinMS Maple Story Server
  Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
  Matthias Butz <matze@odinms.de>
@@ -25,7 +25,9 @@ package client;
 import client.autoban.AutobanManager;
 import client.creator.CharacterFactoryRecipe;
 import client.inventory.Equip;
+import client.inventory.Equip.StatUpgrade;
 import client.inventory.Inventory;
+import server.SetBonusService;
 import client.inventory.InventoryProof;
 import client.inventory.InventoryType;
 import client.inventory.Item;
@@ -36,6 +38,7 @@ import client.inventory.PetDataFactory;
 import client.inventory.WeaponType;
 import client.inventory.manipulator.CashIdGenerator;
 import client.inventory.manipulator.InventoryManipulator;
+import client.inventory.manipulator.KarmaManipulator;
 import client.keybind.KeyBinding;
 import client.keybind.QuickslotBinding;
 import client.newyear.NewYearCardRecord;
@@ -48,35 +51,7 @@ import constants.id.ItemId;
 import constants.id.MapId;
 import constants.id.MobId;
 import constants.inventory.ItemConstants;
-import constants.skills.Aran;
-import constants.skills.Beginner;
-import constants.skills.Bishop;
-import constants.skills.BlazeWizard;
-import constants.skills.Bowmaster;
-import constants.skills.Brawler;
-import constants.skills.Buccaneer;
-import constants.skills.Corsair;
-import constants.skills.Crusader;
-import constants.skills.DarkKnight;
-import constants.skills.DawnWarrior;
-import constants.skills.Evan;
-import constants.skills.FPArchMage;
-import constants.skills.Hermit;
-import constants.skills.Hero;
-import constants.skills.ILArchMage;
-import constants.skills.Legend;
-import constants.skills.Magician;
-import constants.skills.Marauder;
-import constants.skills.Marksman;
-import constants.skills.NightLord;
-import constants.skills.Noblesse;
-import constants.skills.Paladin;
-import constants.skills.Priest;
-import constants.skills.Ranger;
-import constants.skills.Shadower;
-import constants.skills.Sniper;
-import constants.skills.ThunderBreaker;
-import constants.skills.Warrior;
+import constants.skills.*;
 import net.packet.Packet;
 import net.server.PlayerBuffValueHolder;
 import net.server.PlayerCoolDownValueHolder;
@@ -100,6 +75,8 @@ import scripting.AbstractPlayerInteraction;
 import scripting.event.EventInstanceManager;
 import scripting.item.ItemScriptManager;
 import server.CashShop;
+import server.DailyCheckinRewards;
+import server.DailyCheckinSchedule;
 import server.ExpLogger;
 import server.ExpLogger.ExpLogRecord;
 import server.ItemInformationProvider;
@@ -115,6 +92,7 @@ import server.events.Events;
 import server.events.RescueGaga;
 import server.events.gm.Fitness;
 import server.events.gm.Ola;
+import server.expeditions.BossPQService;
 import server.life.BanishInfo;
 import server.life.MobSkill;
 import server.life.MobSkillFactory;
@@ -151,6 +129,7 @@ import server.quest.Quest;
 import tools.DatabaseConnection;
 import tools.LongTool;
 import tools.PacketCreator;
+import tools.BCrypt;
 import tools.Pair;
 import tools.Randomizer;
 import tools.packets.WeddingPackets;
@@ -164,30 +143,19 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -195,6 +163,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class Character extends AbstractCharacterObject {
     private static final Logger log = LoggerFactory.getLogger(Character.class);
+    public static final int DAMAGE_RANK_DOT_SKILL_ID = -1;
     private static final String LEVEL_200 = "[Congrats] %s has reached Level %d! Congratulate %s on such an amazing achievement!";
     private static final String[] BLOCKED_NAMES = {"admin", "owner", "moderator", "intern", "donor", "administrator", "FREDRICK", "help", "helper", "alert", "notice", "maplestory", "fuck", "wizet", "fucking", "negro", "fuk", "fuc", "penis", "pussy", "asshole", "gay",
             "nigger", "homo", "suck", "cum", "shit", "shitty", "condom", "security", "official", "rape", "nigga", "sex", "tit", "boner", "orgy", "clit", "asshole", "fatass", "bitch", "support", "gamemaster", "cock", "gaay", "gm",
@@ -202,6 +171,13 @@ public class Character extends AbstractCharacterObject {
 
     private int world;
     private int accountid, id, level;
+    private int checkinDay;
+    private int checkinClaimed;
+    private long checkinLastClaim;
+    private int checkinMobKills;
+    private long checkinLastCompletion;
+    private int checkinCycle;
+    private int pendingDailyCheckinEventPoints;
     private int rank, rankMove, jobRank, jobRankMove;
     private int gender, hair, face;
     private int fame, quest_fame;
@@ -214,41 +190,6 @@ public class Character extends AbstractCharacterObject {
     private int slots = 0;
     private int energybar;
     private int gmLevel;
-
-    private int checkinDay = 0;        // last day claimed this cycle (0..28)
-    private int checkinClaimed = 0;    // 28-bit mask of days claimed this cycle
-    private long checkinLastClaim = 0;  // epoch millis of the last claim (0 = never)
-    private static final long CHECKIN_PERIOD_MS = 86_400_000L;   // 24h
-
-    public int getCheckinDay()       { return checkinDay; }
-    public int getCheckinClaimed()   { return checkinClaimed; }
-    public long getCheckinLastClaim() { return checkinLastClaim; }
-
-    public int refreshCheckin() {
-        final int cycle = server.DailyCheckinRewards.CYCLE_DAYS;
-        if (checkinLastClaim <= 0) {           // never claimed -> fresh cycle, day 1 ready
-            checkinDay = 0; checkinClaimed = 0;
-            return 1;
-        }
-        long elapsed = System.currentTimeMillis() - checkinLastClaim;
-        if (elapsed < CHECKIN_PERIOD_MS)        return 0;                       // cooldown
-        if (elapsed >= 2L * CHECKIN_PERIOD_MS) { checkinDay = 0; checkinClaimed = 0; return 1; } // lapsed -> reset
-        if (checkinDay >= cycle)               { checkinDay = 0; checkinClaimed = 0; return 1; } // cycle done -> new cycle
-        return checkinDay + 1;                  // consecutive day available
-    }
-
-    public void applyCheckinClaim(int d) {
-        if (d < 1 || d > server.DailyCheckinRewards.CYCLE_DAYS) return;
-        checkinDay = d;
-        checkinClaimed |= (1 << (d - 1));
-        checkinLastClaim = System.currentTimeMillis();
-    }
-
-    public long getCheckinCooldownSeconds() {
-        if (checkinLastClaim <= 0) return 0;
-        long remain = (checkinLastClaim + CHECKIN_PERIOD_MS) - System.currentTimeMillis();
-        return remain > 0 ? (remain + 999) / 1000 : 0;
-    }
     private int ci = 0;
     private FamilyEntry familyEntry;
     private int familyId;
@@ -258,23 +199,26 @@ public class Character extends AbstractCharacterObject {
     private int possibleReports = 10;
     private int ariantPoints, dojoPoints, vanquisherStage, dojoStage, dojoEnergy, vanquisherKills;
     private int expRate = 1, mesoRate = 1, dropRate = 1, expCoupon = 1, mesoCoupon = 1, dropCoupon = 1;
-    private double familyExpRate = 1.0;
-    private long familyExpEndTime = 0;
-
-    public void setFamilyExp(double rate, long durationMs) {
-        this.familyExpRate = rate;
-        this.familyExpEndTime = System.currentTimeMillis() + durationMs;
-    }
     private int omokwins, omokties, omoklosses, matchcardwins, matchcardties, matchcardlosses;
     private int owlSearch;
     private long lastfametime, lastUsedCashItem, lastExpression = 0, lastHealed, lastDeathtime, jailExpiration = -1;
     private transient int localstr, localdex, localluk, localint_, localmagic, localwatk;
     private transient int equipmaxhp, equipmaxmp, equipstr, equipdex, equipluk, equipint_, equipmagic, equipwatk, localchairhp, localchairmp;
+    // Set Bonus: bonus acumulado dos itens de set equipados (aplicado em reapplyLocalStats)
+    private transient int setbonusstr, setbonusdex, setbonusint_, setbonusluk, setbonushp, setbonusmp, setbonuswatk, setbonusmatk;
+    private transient int setbonusacc, setbonuseva; // Set Bonus: precisao/esquiva
+    private transient int setbonusbossdmg; // Set Bonus: % de dano extra em boss (ex.: Cygnus 6/6 = 5)
+    // Set Bonus: ultimo bonus virtual enviado ao cliente (evita reenvio desnecessario).
+    private transient int sentSetbonusStr = -1, sentSetbonusDex = -1, sentSetbonusInt = -1, sentSetbonusLuk = -1;
+    private transient int sentSetbonusWatk = -1, sentSetbonusMatk = -1, sentSetbonusAcc = -1, sentSetbonusEva = -1;
+    private transient int sentSetbonusHp = -1, sentSetbonusMp = -1, sentSetbonusBossDmg = -1;
+    private transient String clientCharacterPower = "";
     private int localchairrate;
     private boolean hidden, equipchanged = true, berserk, hasMerchant, hasSandboxItem = false, whiteChat = false, canRecvPartySearchInvite = true;
     private boolean equippedMesoMagnet = false, equippedItemPouch = false, equippedPetItemIgnore = false;
     private boolean usedSafetyCharm = false;
     private float autopotHpAlert, autopotMpAlert;
+    private volatile boolean takingReflectDamage;
     private int linkedLevel = 0;
     private String linkedName = null;
     private boolean finishedDojoTutorial;
@@ -286,7 +230,7 @@ public class Character extends AbstractCharacterObject {
     private String search = null;
     private final AtomicBoolean mapTransitioning = new AtomicBoolean(true);  // player client is currently trying to change maps or log in the game map
     private final AtomicBoolean awayFromWorld = new AtomicBoolean(true);  // player is online, but on cash shop or mts
-    private final AtomicInteger exp = new AtomicInteger();
+    private final AtomicLong exp = new AtomicLong();
     private final AtomicInteger gachaexp = new AtomicInteger();
     private final AtomicInteger meso = new AtomicInteger();
     private final AtomicInteger chair = new AtomicInteger(-1);
@@ -308,7 +252,7 @@ public class Character extends AbstractCharacterObject {
     private final Pet[] pets = new Pet[3];
     private PlayerShop playerShop = null;
     private Shop shop = null;
-    private SkinColor skinColor = SkinColor.LIGHT;
+    private SkinColor skinColor = SkinColor.NORMAL;
     private Storage storage = null;
     private Trade trade = null;
     private MonsterBook monsterbook;
@@ -371,6 +315,7 @@ public class Character extends AbstractCharacterObject {
     private boolean autoScrollStorage = false;
     private boolean autoChairStorage = false;
     private boolean autoMountStorage = false;
+    private final PointMarketService pointMarketService = new PointMarketService(this);
     private final Lock prtLock = new ReentrantLock();
     private final Lock cpnLock = new ReentrantLock();
     private final Map<Integer, Set<Integer>> excluded = new LinkedHashMap<>();
@@ -414,6 +359,74 @@ public class Character extends AbstractCharacterObject {
     private long loginTime;
     private boolean chasing = false;
 
+    private static final class DptPlayerStat {
+        final int charId;
+        String name;
+        int jobId;
+        long totalDamage = 0L;
+        long firstHitTimeMs = 0L;
+        long lastHitTimeMs = 0L;
+
+        DptPlayerStat(int charId, String name, int jobId) {
+            this.charId = charId;
+            this.name = name;
+            this.jobId = jobId;
+        }
+
+        long getDps() {
+            if (totalDamage <= 0L) {
+                return 0L;
+            }
+            if (firstHitTimeMs <= 0L || lastHitTimeMs < firstHitTimeMs) {
+                return 0L;
+            }
+
+            long durationMs = lastHitTimeMs - firstHitTimeMs;
+            long durationSec = durationMs / 1000L;
+            if (durationSec <= 0L) {
+                durationSec = 1L;
+            }
+            return totalDamage / durationSec;
+        }
+    }
+
+    private static final class DptSkillStat {
+        final int skillId;
+        long totalDamage = 0L;
+        long maxDamage = 0L;
+        long minDamage = Long.MAX_VALUE;
+        int count = 0;
+
+        DptSkillStat(int skillId) {
+            this.skillId = skillId;
+        }
+    }
+
+    private long dptStartMs = 0L;
+    private long dptTotalDmg = 0L;
+    private boolean dptActive = false;
+    private final Map<Integer, DptPlayerStat> dptPlayerView = new LinkedHashMap<>();
+    private final Map<Integer, DptSkillStat> dptSkillStats = new LinkedHashMap<>();
+
+    private boolean autoCureActive = false;
+    private ScheduledFuture<?> autoBuffTask = null;
+    private boolean autoBuffActive = false;
+    private boolean autoBuffActive2 = false;
+    private List<Integer> selectedAutoBuffs2 = new ArrayList<>();
+    private boolean mobRateActive = false;
+    private boolean itemVacActive;
+    private long lastVaccedItemsTime;
+    private final AtomicBoolean vacLock = new AtomicBoolean(false);
+    private boolean hideEffects = false;
+    private volatile long lastMovementTime = System.currentTimeMillis();
+    private volatile long lastHumanActionTime = System.currentTimeMillis(); // BOTCHECK: ultima acao humana deliberada
+    private volatile long lastDamageTime = 0; // BOTCHECK: ultima vez que tomou dano (p/ ignorar knockback do mob como "andar")
+    private volatile boolean botCheckProtected = false; // BOTCHECK: invencivel enquanto a caixinha esta aberta (+3s pos-acerto)
+    private boolean dpsOverlayEnabled = false;
+    private long lastHintTime = 0L;
+    private long lastShownDpsVersion = -1L;
+    private String lastDpsOverlayText = null;
+
     private Character() {
         super.setListener(new AbstractCharacterListener() {
             @Override
@@ -447,11 +460,20 @@ public class Character extends AbstractCharacterObject {
             @Override
             public void onAnnounceStatPoolUpdate() {
                 List<Pair<Stat, Integer>> statup = new ArrayList<>(8);
+                boolean refreshSetBonusVisual = false;
                 for (Map.Entry<Stat, Integer> s : statUpdates.entrySet()) {
+                    Stat stat = s.getKey();
+                    if (stat == Stat.STR || stat == Stat.DEX || stat == Stat.INT || stat == Stat.LUK) {
+                        refreshSetBonusVisual = true;
+                    }
                     statup.add(new Pair<>(s.getKey(), s.getValue()));
                 }
 
+                sendRealHpMpSyncIfNeeded(statup);
                 sendPacket(PacketCreator.updatePlayerStats(statup, true, Character.this));
+                if (refreshSetBonusVisual) {
+                    refreshSetBonusVisual();
+                }
             }
         });
 
@@ -598,6 +620,14 @@ public class Character extends AbstractCharacterObject {
         } else {
             client.getChannelServer().removePlayerAway(id);
         }
+    }
+
+    public boolean isDpsOverlayEnabled() {
+        return dpsOverlayEnabled;
+    }
+
+    public void setDpsOverlayEnabled(boolean dpsOverlayEnabled) {
+        this.dpsOverlayEnabled = dpsOverlayEnabled;
     }
 
     public void updatePartySearchAvailability(boolean psearchAvailable) {
@@ -945,6 +975,13 @@ public class Character extends AbstractCharacterObject {
         blockCashShop = !blockCashShop;
     }
 
+    public boolean allowDamage() { return hideEffects; }
+
+    public boolean toggleDamage() {
+        hideEffects = !hideEffects;
+        return hideEffects;
+    }
+
     public void toggleExpGain() {
         allowExpGain = !allowExpGain;
     }
@@ -1260,11 +1297,11 @@ public class Character extends AbstractCharacterObject {
             addhp += Randomizer.rand(300, 350);
         } else if (job_ < 300) {                // 2nd~4th mage
             addmp += Randomizer.rand(450, 500);
-        } else if (job_ > 0) {                  // 2nd~4th others
+        } else if (job_ > 0) {                  // 2nd~4th otherscheckAutoCure
             addhp += Randomizer.rand(300, 350);
             addmp += Randomizer.rand(150, 200);
         }
-        
+
         /*
         //aran perks?
         int newJobId = newJob.getId();
@@ -1293,6 +1330,7 @@ public class Character extends AbstractCharacterObject {
             statup.add(new Pair<>(Stat.AVAILABLEAP, remainingAp));
             statup.add(new Pair<>(Stat.AVAILABLESP, remainingSp[GameConstants.getSkillBook(job.getId())]));
             statup.add(new Pair<>(Stat.JOB, job.getId()));
+            sendRealHpMpSyncIfNeeded(statup);
             sendPacket(PacketCreator.updatePlayerStats(statup, true, this));
         } finally {
             statWlock.unlock();
@@ -1348,7 +1386,7 @@ public class Character extends AbstractCharacterObject {
         if (guild != null) {
             guild.broadcast(packet, id);
         }
-        
+
         /*
         if(partnerid > 0) {
             partner.sendPacket(packet); not yet implemented
@@ -1645,6 +1683,15 @@ public class Character extends AbstractCharacterObject {
         }
 
         updatePartyTownDoors(party, this, partyLeaver, partyMembers);
+
+        if (exPartyMembers != null) {
+            sendPacket(PacketCreator.partyStatusOverlayClear());
+            for (Character partyMember : partyMembers) {
+                partyMember.updatePartyStatusOverlay();
+            }
+        } else {
+            updatePartyStatusOverlay();
+        }
     }
 
     private static void addPartyPlayerDoor(Character target) {
@@ -1816,6 +1863,7 @@ public class Character extends AbstractCharacterObject {
             setPosition(pos);
             map.addPlayer(this);
             visitMap(map);
+            sendPacket(PacketCreator.realHpMpSync(this));
 
             prtLock.lock();
             try {
@@ -1989,6 +2037,237 @@ public class Character extends AbstractCharacterObject {
         }
     }
 
+    //REF= QUEST RING
+    public void applyQuestRingBoost() {
+        applyQuestRingBoost(true);
+    }
+
+    public void applyQuestRingBoostSilently() {
+        applyQuestRingBoost(false);
+    }
+
+    private void applyQuestRingBoost(boolean updateClient) {
+        equipchanged = true;
+
+        int questRingId = 1115155; // ID DO ANEL
+        Inventory equip = this.getInventory(InventoryType.EQUIP);
+        Inventory equipped = this.getInventory(InventoryType.EQUIPPED);
+
+        // Procura o item no EQUIP e no EQUIPPED
+        Equip questRing = (Equip) equip.findById(questRingId);
+        if (questRing == null)
+            questRing = (Equip) equipped.findById(questRingId);
+
+        if (questRing == null) {
+            System.out.println("Error: Unable to find quest ring item for player " + this.getName());
+            return;
+        }
+
+        // ============================================
+        // 1) ZERAR TODOS OS STATS ANTES DO BOOST
+        // ============================================
+        questRing.setHp((short) 0);
+        questRing.setMp((short) 0);
+        questRing.setStr((short) 0);
+        questRing.setDex((short) 0);
+        questRing.setInt((short) 0);
+        questRing.setLuk((short) 0);
+        questRing.setWdef((short) 0);
+        questRing.setMdef((short) 0);
+        questRing.setAcc((short) 0);
+        questRing.setAvoid((short) 0);
+        questRing.setWatk((short) 0);
+        questRing.setMatk((short) 0);
+
+        // ============================================
+        // 2) BOOST BASEADO EM QUESTS COMPLETAS
+        // ============================================
+        int completedQuests = this.getAccountCompletedQuestsCount();
+
+        // short boost = (short) completedQuests; // 1 stat por quest
+
+        // Aplica o boost nos stats
+        short AttMattRingBoost = (short) (completedQuests / 10);
+        short StatusRingBoost = (short) (completedQuests / 5);
+        short HpMpRingBoost = (short) (completedQuests * 3);
+
+        questRing.setHp(HpMpRingBoost);
+        questRing.setMp(HpMpRingBoost);
+        questRing.setStr(StatusRingBoost);
+        questRing.setDex(StatusRingBoost);
+        questRing.setInt(StatusRingBoost);
+        questRing.setLuk(StatusRingBoost);
+        // questRing.setWdef(AttMattRingBoost);
+        // questRing.setMdef(AttMattRingBoost);
+        questRing.setAcc(StatusRingBoost);
+        questRing.setAvoid(StatusRingBoost);
+        questRing.setWatk(AttMattRingBoost);
+        questRing.setMatk(AttMattRingBoost);
+
+        // Marca item como nao comercializavel e travado
+        byte flag = (byte) questRing.getFlag();
+        //flag |= ItemConstants.UNTRADEABLE;
+        //flag |= ItemConstants.LOCK;
+        questRing.setFlag(flag);
+
+        // Atualiza o item no cliente
+        if (updateClient) {
+            this.forceUpdateItem(questRing);
+        }
+
+        // Recalcula stats locais
+        recalcLocalStats();
+    }
+
+    private int getAccountCompletedQuestsCount() {
+        final String query = """
+                SELECT DISTINCT qs.quest
+                FROM queststatus qs
+                INNER JOIN characters c ON c.id = qs.characterid
+                WHERE c.accountid = ?
+                  AND qs.characterid <> ?
+                  AND (qs.status = ? OR qs.completed > 0)
+                """;
+
+        final Set<Integer> completedQuestIds = new HashSet<>();
+
+        // Current character from memory so the ring updates immediately on quest completion.
+        for (QuestStatus qs : getQuests()) {
+            if (qs.getStatus() == QuestStatus.Status.COMPLETED || qs.getCompleted() > 0) {
+                completedQuestIds.add((int) qs.getQuestID());
+            }
+        }
+
+        // Other characters from DB on same account.
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setInt(1, getAccountID());
+            ps.setInt(2, getId());
+            ps.setInt(3, QuestStatus.Status.COMPLETED.getId());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    completedQuestIds.add(rs.getInt(1));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return this.getCompletedQuests().size();
+        }
+
+        return completedQuestIds.size();
+    }
+    //REF= LIVRO CODEX
+    public void applyCodexBoost() {
+        applyCodexBoost(true);
+    }
+
+    public void applyCodexBoostSilently() {
+        applyCodexBoost(false);
+    }
+
+    private void applyCodexBoost(boolean updateClient) {
+        equipchanged = true;
+
+        int codexItemId = 1122431; // ID do Livro Codex
+        Inventory equip = this.getInventory(InventoryType.EQUIP);
+        Inventory equipped = this.getInventory(InventoryType.EQUIPPED);
+
+        // Procura o item no EQUIP e EQUIPPED
+        Equip codex = (Equip) equip.findById(codexItemId);
+        if (codex == null)
+            codex = (Equip) equipped.findById(codexItemId);
+
+        if (codex == null) {
+            System.out.println("Error: Unable to find codex item for player " + this.getName());
+            return;
+        }
+
+        // Zera todos os stats antes de aplicar o boost
+        codex.setHp((short) 0);
+        codex.setMp((short) 0);
+        codex.setStr((short) 0);
+        codex.setDex((short) 0);
+        codex.setInt((short) 0);
+        codex.setLuk((short) 0);
+        codex.setWdef((short) 0);
+        codex.setMdef((short) 0);
+        codex.setAcc((short) 0);
+        codex.setAvoid((short) 0);
+        codex.setWatk((short) 0);
+        codex.setMatk((short) 0);
+
+        // Pega o total de boost baseado na raridade das cartas
+        int totalBoost = 0; // mantem a logica original
+        int hpBoost = 0;    // novo para HP/MP
+        if (this.getMonsterBook() != null) {
+            totalBoost = this.getMonsterBook().getCodexBoost();       // para STR/DEX/INT/LUK/WDEF/MDEF/ACC/AVOID
+            hpBoost = this.getMonsterBook().getCodexHpMpBoost();      // para HP/MP
+        }
+
+        // Aplica o boost nos stats
+        codex.setHp((short) hpBoost);
+        codex.setMp((short) hpBoost);
+        codex.setStr((short) totalBoost);
+        codex.setDex((short) totalBoost);
+        codex.setInt((short) totalBoost);
+        codex.setLuk((short) totalBoost);
+        codex.setWdef((short) totalBoost);
+        codex.setMdef((short) totalBoost);
+        codex.setAcc((short) totalBoost);
+        codex.setAvoid((short) totalBoost);
+        // codex.setWatk((short) totalBoost);
+        // codex.setMatk((short) totalBoost);
+
+        // Marca item como nao comercializavel e travado
+        byte flag = (byte) codex.getFlag();
+        // flag |= ItemConstants.UNTRADEABLE;
+        // flag |= ItemConstants.LOCK;
+        codex.setFlag(flag);
+
+        // Atualiza o item no cliente
+        if (updateClient) {
+            this.forceUpdateItem(codex);
+        }
+
+        // Recalcula stats locais
+        recalcLocalStats();
+    }
+
+    //TOMO DO PROGRESSO --> Marca o item como recompensa
+    public void markItemAsReward(int itemId, short quantity) {
+        InventoryType invType = ItemConstants.getInventoryType(itemId);
+        Inventory inv = this.getInventory(invType);
+
+        inv.lockInventory();
+        try {
+            Item targetItem = null;
+            short highestPosition = -1;
+
+            for (Item item : inv.list()) {
+                if (item.getItemId() == itemId && item.getPosition() > highestPosition) {
+                    highestPosition = item.getPosition();
+                    targetItem = item;
+                }
+            }
+
+            if (targetItem != null) {
+                targetItem.setOwner("[TDP]");
+                this.forceUpdateItem(targetItem);
+            }
+        } finally {
+            inv.unlockInventory();
+        }
+    }
+
+
+    public boolean isRewardItem(Item item) {
+        if (item == null) return false;
+        String owner = item.getOwner();
+        if (owner == null) return false;
+        return owner.equals("[TDP]");
+    }
+
     public boolean applyConsumeOnPickup(final int itemId) {
         if (itemId / 1000000 == 2) {
             ItemInformationProvider ii = ItemInformationProvider.getInstance();
@@ -2029,17 +2308,25 @@ public class Character extends AbstractCharacterObject {
     }
 
     public final void pickupItem(MapObject ob) {
-        pickupItem(ob, -1);
+        pickupItem(ob, -1, false);
     }
 
-    public final void pickupItem(MapObject ob, int petIndex) {     // yes, one picks the MapObject, not the MapItem
-        if (ob == null) {                                               // pet index refers to the one picking up the item
+
+    public final void pickupItem(MapObject ob, int petIndex) {
+        pickupItem(ob, petIndex, false);
+    }
+
+
+    public final void pickupItem(MapObject ob, int petIndex, boolean isFromVac) {
+        if (ob == null) {
             return;
         }
 
         if (ob instanceof MapItem mapitem) {
             if (System.currentTimeMillis() - mapitem.getDropTime() < 400 || !mapitem.canBePickedBy(this)) {
-                sendPacket(PacketCreator.enableActions());
+                if (!isFromVac) {
+                    sendPacket(PacketCreator.enableActions());
+                }
                 return;
             }
 
@@ -2052,8 +2339,10 @@ public class Character extends AbstractCharacterObject {
             mapitem.lockItem();
             try {
                 if (mapitem.isPickedUp()) {
-                    sendPacket(PacketCreator.showItemUnavailable());
-                    sendPacket(PacketCreator.enableActions());
+                    if (!isFromVac) {
+                        sendPacket(PacketCreator.showItemUnavailable());
+                        sendPacket(PacketCreator.enableActions());
+                    }
                     return;
                 }
 
@@ -2079,7 +2368,7 @@ public class Character extends AbstractCharacterObject {
                 if (ItemId.isNxCard(mapitem.getItemId()) || mapitem.getMeso() > 0 || ii.isConsumeOnPickup(mapitem.getItemId()) || (hasSpaceInventory = InventoryManipulator.checkSpace(client, mapitem.getItemId(), mItem.getQuantity(), mItem.getOwner()))) {
                     int mapId = this.getMapId();
 
-                    if ((MapId.isSelfLootableOnly(mapId))) {//happyville trees and guild PQ
+                    if ((MapId.isSelfLootableOnly(mapId))) {
                         if (!mapitem.isPlayerDrop() || mapitem.getDropper().getObjectId() == client.getPlayer().getObjectId()) {
                             if (mapitem.getMeso() > 0) {
                                 if (!mpcs.isEmpty()) {
@@ -2092,36 +2381,36 @@ public class Character extends AbstractCharacterObject {
                                 } else {
                                     this.gainMeso(mapitem.getMeso(), true, true, false);
                                 }
-
                                 this.getMap().pickItemDrop(pickupPacket, mapitem);
                             } else if (ItemId.isNxCard(mapitem.getItemId())) {
-                                // Add NX to account, show effect and make item disappear
                                 int nxGain = mapitem.getItemId() == ItemId.NX_CARD_100 ? 100 : 250;
                                 this.getCashShop().gainCash(1, nxGain);
-
                                 if (YamlConfig.config.server.USE_ANNOUNCE_NX_COUPON_LOOT) {
                                     showHint("You have earned #e#b" + nxGain + " NX#k#n. (" + this.getCashShop().getCash(CashShop.NX_CREDIT) + " NX)", 300);
                                 }
-
                                 this.getMap().pickItemDrop(pickupPacket, mapitem);
                             } else if (InventoryManipulator.addFromDrop(client, mItem, true)) {
                                 this.getMap().pickItemDrop(pickupPacket, mapitem);
                             } else {
-                                sendPacket(PacketCreator.enableActions());
+                                if (!isFromVac) sendPacket(PacketCreator.enableActions());
                                 return;
                             }
                         } else {
-                            sendPacket(PacketCreator.showItemUnavailable());
-                            sendPacket(PacketCreator.enableActions());
+                            if (!isFromVac) {
+                                sendPacket(PacketCreator.showItemUnavailable());
+                                sendPacket(PacketCreator.enableActions());
+                            }
                             return;
                         }
-                        sendPacket(PacketCreator.enableActions());
+                        if (!isFromVac) sendPacket(PacketCreator.enableActions());
                         return;
                     }
 
                     if (!this.needQuestItem(mapitem.getQuest(), mapitem.getItemId())) {
-                        sendPacket(PacketCreator.showItemUnavailable());
-                        sendPacket(PacketCreator.enableActions());
+                        if (!isFromVac) {
+                            sendPacket(PacketCreator.showItemUnavailable());
+                            sendPacket(PacketCreator.enableActions());
+                        }
                         return;
                     }
 
@@ -2142,15 +2431,13 @@ public class Character extends AbstractCharacterObject {
                             itemScript = info;
                         } else {
                             if (!InventoryManipulator.addFromDrop(client, mItem, true)) {
-                                sendPacket(PacketCreator.enableActions());
+                                if (!isFromVac) sendPacket(PacketCreator.enableActions());
                                 return;
                             }
                         }
                     } else if (ItemId.isNxCard(mapitem.getItemId())) {
-                        // Add NX to account, show effect and make item disappear
                         int nxGain = mapitem.getItemId() == ItemId.NX_CARD_100 ? 100 : 250;
                         this.getCashShop().gainCash(1, nxGain);
-
                         if (YamlConfig.config.server.USE_ANNOUNCE_NX_COUPON_LOOT) {
                             showHint("You have earned #e#b" + nxGain + " NX#k#n. (" + this.getCashShop().getCash(CashShop.NX_CREDIT) + " NX)", 300);
                         }
@@ -2160,10 +2447,9 @@ public class Character extends AbstractCharacterObject {
                             updateAriantScore();
                         }
                     } else {
-                        sendPacket(PacketCreator.enableActions());
+                        if (!isFromVac) sendPacket(PacketCreator.enableActions());
                         return;
                     }
-
                     this.getMap().pickItemDrop(pickupPacket, mapitem);
                 } else if (!hasSpaceInventory) {
                     sendPacket(PacketCreator.getInventoryFull());
@@ -2177,8 +2463,8 @@ public class Character extends AbstractCharacterObject {
                 ItemScriptManager ism = ItemScriptManager.getInstance();
                 ism.runItemScript(client, itemScript);
             }
+            if (!isFromVac) sendPacket(PacketCreator.enableActions());
         }
-        sendPacket(PacketCreator.enableActions());
     }
 
     // Auto-collect on pickup: if the item's kind has its Auto toggle on and the matching Storage Bag
@@ -2251,15 +2537,33 @@ public class Character extends AbstractCharacterObject {
         sendPacket(PacketCreator.skillCooldown(5221999, battleshipHp));
     }
 
-    public void decreaseBattleshipHp(int decrease) {
+
+    /*public void decreaseBattleshipHp(int decrease) {
         this.battleshipHp -= decrease;
         if (battleshipHp <= 0) {
-            Skill battleship = SkillFactory.getSkill(Corsair.BATTLE_SHIP);
-            int cooldown = battleship.getEffect(getSkillLevel(battleship)).getCooldown();
+            int cooldown = 60; // 60 segundos (1 minuto) fixo
             sendPacket(PacketCreator.skillCooldown(Corsair.BATTLE_SHIP, cooldown));
-            addCooldown(Corsair.BATTLE_SHIP, Server.getInstance().getCurrentTime(), SECONDS.toMillis(cooldown));
+            addCooldown(Corsair.BATTLE_SHIP, Server.getInstance().getCurrentTime(), cooldown * 1000L);
             removeCooldown(5221999);
             cancelEffectFromBuffStat(BuffStat.MONSTER_RIDING);
+        } else {
+            announceBattleshipHp();
+            addCooldown(5221999, 0, Long.MAX_VALUE);
+        }
+    } */
+
+    public void decreaseBattleshipHp(int decrease) {
+        if (battleshipHp <= 0) {
+            return;
+        }
+        this.battleshipHp -= decrease;
+        if (battleshipHp <= 0) {
+            this.battleshipHp = 0;
+            removeCooldown(Corsair.BATTLE_SHIP);
+            removeCooldown(5221999);
+            if (getBuffedValue(BuffStat.MONSTER_RIDING) != null) {
+                cancelEffectFromBuffStat(BuffStat.MONSTER_RIDING);
+            }
         } else {
             announceBattleshipHp();
             addCooldown(5221999, 0, Long.MAX_VALUE);
@@ -2486,7 +2790,7 @@ public class Character extends AbstractCharacterObject {
                 ps.executeUpdate();
             }
 
-            String[] toDel = {"famelog", "inventoryitems", "keymap", "queststatus", "savedlocations", "trocklocations", "skillmacros", "skills", "eventstats" };
+            String[] toDel = {"famelog", "inventoryitems", "keymap", "queststatus", "savedlocations", "trocklocations", "skillmacros", "skills", "eventstats", "server_queue"};
             for (String s : toDel) {
                 Character.deleteWhereCharacterId(con, "DELETE FROM `" + s + "` WHERE characterid = ?", cid);
             }
@@ -2705,12 +3009,46 @@ public class Character extends AbstractCharacterObject {
             List<BuffStatValueHolder> mbsvhList = getAllStatups();
             for (BuffStatValueHolder mbsvh : mbsvhList) {
                 if (mbsvh.effect.isSkill()) {
-                    if (mbsvh.effect.getBuffSourceId() != Aran.COMBO_ABILITY) { // check discovered thanks to Croosade dev team
+                    int buffSourceId = mbsvh.effect.getBuffSourceId();
+
+                    // Buffs protegidos contra Dispel: Combo, Explorer Blessing e Echo of Hero
+                    if (buffSourceId != Aran.COMBO_ABILITY &&
+                            !isExplorerBlessing(buffSourceId) &&
+                            !isEchoOfHero(buffSourceId)) {
                         cancelEffect(mbsvh.effect, false, mbsvh.startTime);
                     }
                 }
             }
         }
+    }
+
+
+    private boolean isExplorerBlessing(int skillId) {
+        return skillId == Hero.EXPLORER_BLESSING ||
+                skillId == Paladin.EXPLORER_BLESSING ||
+                skillId == DarkKnight.EXPLORER_BLESSING ||
+                skillId == FPArchMage.EXPLORER_BLESSING ||
+                skillId == ILArchMage.EXPLORER_BLESSING ||
+                skillId == Bishop.EXPLORER_BLESSING ||
+                skillId == Bowmaster.EXPLORER_BLESSING ||
+                skillId == Marksman.EXPLORER_BLESSING ||
+                skillId == NightLord.EXPLORER_BLESSING ||
+                skillId == Shadower.EXPLORER_BLESSING ||
+                skillId == Buccaneer.EXPLORER_BLESSING ||
+                skillId == Corsair.EXPLORER_BLESSING ||
+                skillId == DawnWarrior.CYGNUS_BLESSING ||
+                skillId == BlazeWizard.CYGNUS_BLESSING ||
+                skillId == WindArcher.CYGNUS_BLESSING ||
+                skillId == NightWalker.CYGNUS_BLESSING ||
+                skillId == ThunderBreaker.CYGNUS_BLESSING;
+    }
+
+
+    private boolean isEchoOfHero(int skillId) {
+        return skillId == Beginner.ECHO_OF_HERO ||
+                skillId == Noblesse.ECHO_OF_HERO ||
+                skillId == Legend.ECHO_OF_HERO ||
+                skillId == Evan.ECHO_OF_HERO;
     }
 
     public final boolean hasDisease(final Disease dis) {
@@ -2812,6 +3150,732 @@ public class Character extends AbstractCharacterObject {
         }
     }
 
+
+    public void updateLastMovementTime() {
+        this.lastMovementTime = System.currentTimeMillis();
+    }
+
+    public long getLastMovementTime() {
+        return lastMovementTime;
+    }
+
+    // ===== BOTCHECK: rastreio de acao humana deliberada (andar/chat/npc/...) =====
+    public void markHumanAction() {
+        this.lastHumanActionTime = System.currentTimeMillis();
+    }
+
+    public long getLastHumanActionTime() {
+        return lastHumanActionTime;
+    }
+
+    // BOTCHECK: marca que tomou dano agora. O knockback do mob empurra o char (e ele "recupera"
+    // deslizando de volta) -> isso vira movimento identico a um passo, mas NAO e andar deliberado.
+    public void markDamageTaken() {
+        this.lastDamageTime = System.currentTimeMillis();
+    }
+
+    public long getLastDamageTime() {
+        return lastDamageTime;
+    }
+
+    // BOTCHECK: enquanto true, o player nao toma dano (caixinha aberta + 3s pos-acerto). Ver TakeDamageHandler.
+    public void setBotCheckProtected(boolean v) {
+        this.botCheckProtected = v;
+    }
+
+    public boolean isBotCheckProtected() {
+        return botCheckProtected;
+    }
+
+    public boolean isAfkByMovement() {
+        return System.currentTimeMillis() - lastMovementTime >= 2 * 60 * 1000;
+    }
+
+    public void checkInactiveToggles() {
+        if (!isAfkByMovement()) {
+            return;
+        }
+
+        if (itemVacActive) {
+            itemVacActive = false;
+            this.dropMessage(6, "[Totem Magnético] Desativado por inatividade do jogador.");
+        }
+
+        if (mobRateActive) {
+            mobRateActive = false;
+            this.dropMessage(6, "[Martelete Dimensional] Desativado por inatividade do jogador.");
+        }
+
+        if (autoBuffActive) {
+            autoBuffActive = false;
+            this.dropMessage(6, "[Grimório do Aventureiro] Desativado por inatividade do jogador.");
+        }
+
+        if (autoCureActive) {
+            autoCureActive = false;
+            this.dropMessage(6, "[Amuleto Balaco-Baco] Desativado por inatividade do jogador.");
+        }
+    }
+
+    //AUTO VAC-ITEM // MAP BLOCK
+    public AtomicBoolean getVacLock() {
+        return this.vacLock;
+    }
+
+    private static final Set<Integer> ITEM_VAC_BLOCKED_MAPS = Set.of(
+            910000000, // Free Market
+            280030000, // Altar do Zakum
+            240060200, // Horntail
+            270050100, // Pink Bean
+            211070100, // Von Leon
+            220080001, // Papulatus
+            800040410, // Castellan
+            702060000  // Jiaoceng
+    );
+    private boolean isItemVacBlockedMap() {
+        if (map == null) {
+            return true;
+        }
+        return ITEM_VAC_BLOCKED_MAPS.contains(map.getId());
+    }
+
+    //AUTO VAC-ITEM
+    private static final int Item_vac = 5500006;
+    public boolean hasItemVacActive() {
+        if (!itemVacActive) {
+            return false;
+        }
+
+        if (client == null || getCashShop() == null || getCashShop().isOpened()) {
+            return false;
+        }
+
+        if (map == null || !client.isLoggedIn()) {
+            return false;
+        }
+        if (!isAlive()) {
+            return false;
+        }
+
+        if (mapTransitioning.get()) {
+            return false;
+        }
+
+        if (isItemVacBlockedMap()) {
+            if (itemVacActive) {
+                itemVacActive = false;
+                this.dropMessage(6, "[Totem Magnético] Desativado: Não é permitido neste mapa.");
+            }
+            return false;
+        }
+
+        if (getInventory(InventoryType.CASH).countById(Item_vac) <= 0) {
+            itemVacActive = false;
+            return false;
+        }
+        //VALIDAR PESCA
+        if (ItemConstants.isFishingChair(getChair()) &&
+                getMap().getFishingArea() != null &&
+                getMap().getFishingArea().contains(getPosition())) {
+            return false;
+        }
+        return true;
+    }
+
+    public void toggleItemVac() {
+        if (!itemVacActive && isItemVacBlockedMap()) {
+            this.dropMessage(6, "[Totem Magnético] Não é permitido ativar neste mapa.");
+            return;
+        }
+        this.itemVacActive = !this.itemVacActive;
+
+        if (this.itemVacActive) {
+            this.lastMovementTime = System.currentTimeMillis();
+        }
+
+        String status = this.itemVacActive ? "Ativado" : "Desativado";
+        this.dropMessage(6, "[Totem Magnético] " + status + " com sucesso!");
+
+    }
+    public long getLastVaccedItemsTime() {
+        return lastVaccedItemsTime;
+    }
+
+    public void setLastVaccedItemsTime(long lastVaccedItemsTime) {
+        this.lastVaccedItemsTime = lastVaccedItemsTime;
+    }
+
+    //MOB 60%
+    private static final int Mob_rate = 5500008;
+    public boolean isMobRateActive() {
+        if (!mobRateActive) {
+            return false;
+        }
+
+        if (client == null || getCashShop() == null || getCashShop().isOpened()) {
+            return false;
+        }
+
+        if (map == null || !client.isLoggedIn()) {
+            return false;
+        }
+        if (!isAlive()) {
+            return false;
+        }
+
+        if (mapTransitioning.get()) {
+            return false;
+        }
+        if (getInventory(InventoryType.CASH).countById(Mob_rate) <= 0) {
+            mobRateActive = false;
+            return false;
+        }
+        //VALIDAR PESCA
+        if (ItemConstants.isFishingChair(getChair()) &&
+                getMap().getFishingArea() != null &&
+                getMap().getFishingArea().contains(getPosition())) {
+            return false;
+        }
+        return true;
+    }
+
+    public void toggleMobRate() {
+        this.mobRateActive = !this.mobRateActive;
+
+        if (this.mobRateActive) {
+            this.lastMovementTime = System.currentTimeMillis();
+        }
+
+        String status = this.mobRateActive ? "Ativado" : "Desativado";
+        this.dropMessage(6, "[Martelete Dimensional] " + status + " com sucesso!");
+    }
+
+
+    //AUTO-BUFF
+    public void toggleAutoBuff() {
+        this.autoBuffActive = !this.autoBuffActive;
+
+        if (this.autoBuffActive) {
+            this.lastMovementTime = System.currentTimeMillis();
+        }
+
+        String status = this.autoBuffActive ? "Ativado" : "Desativado";
+        this.dropMessage(6, "[Grimório do Aventureiro] " + status + " com sucesso!");
+    }
+
+    private boolean hasAnyBuffFrom(int... skillIds) {
+        chrLock.lock();
+        try {
+            for (BuffStatValueHolder holder : effects.values()) {
+                int source = holder.effect.getSourceId();
+                for (int id : skillIds) {
+                    if (source == id) {
+                        return true;
+                    }
+                }
+            }
+        } finally {
+            chrLock.unlock();
+        }
+        return false;
+    }
+
+    private boolean shouldSkipAutoBuffSkill(int skillId) {
+        switch (skillId) {
+            case 4101004:
+                return hasAnyBuffFrom(5111005, 5121003, 15111002, 13111005);
+            default:
+                return false;
+        }
+    }
+
+    public void checkAutoBuff() {
+
+        if (map == null || client == null || !client.isLoggedIn()) {
+            return;
+        }
+
+
+        if (mapTransitioning.get()
+                || !client.canClickNPC()
+                || getLoggedInTime() < 2000
+                || (getCashShop() != null && getCashShop().isOpened())) {
+            return;
+        }
+
+        if (!autoBuffActive || !isAlive()) {
+            return;
+        }
+
+
+        if (getInventory(InventoryType.CASH).countById(5500009) <= 0) {
+            autoBuffActive = false;
+            return;
+        }
+
+        int[] skillsToBuff = {4101004, 2311003, 1301007, 2301004, 5121009, 3121002};
+        boolean used = false;
+        int startMapId = this.mapid;
+
+        for (int skillId : skillsToBuff) {
+            if (this.mapid != startMapId || mapTransitioning.get() || !client.canClickNPC()) {
+                break;
+            }
+
+
+            if (shouldSkipAutoBuffSkill(skillId)) {
+                continue;
+            }
+
+
+            boolean alreadyHasBetterOrEqualBuff = false;
+
+
+            Skill itemSkill = SkillFactory.getSkill(skillId);
+            if (itemSkill == null) {
+                continue;
+            }
+            int itemBuffDuration = itemSkill.getEffect(itemSkill.getMaxLevel()).getDuration();
+
+            List<Integer> relatedSkills = getRelatedSkillIds(skillId);
+
+            chrLock.lock();
+            try {
+                for (BuffStatValueHolder holder : effects.values()) {
+
+                    if (relatedSkills.contains(holder.effect.getSourceId())) {
+
+
+                        if (holder.effect.getDuration() >= itemBuffDuration) {
+                            alreadyHasBetterOrEqualBuff = true;
+                            break;
+                        }
+                    }
+                }
+            } finally {
+                chrLock.unlock();
+            }
+
+
+
+            if (!alreadyHasBetterOrEqualBuff) {
+                StatEffect effect = itemSkill.getEffect(itemSkill.getMaxLevel());
+
+                // 1. Salva o estado atual da Party e do MPC
+                net.server.world.Party actualParty = this.getParty();
+                net.server.world.PartyCharacter actualMPC = this.getMPC();
+
+                // 2. "Esconde" a party para o buff ficar isolado
+                this.setParty(null);
+
+                try {
+                    effect.applyTo(this);
+                    used = true;
+                } finally {
+                    // 3. Restaura TUDO o que foi removido
+                    this.setParty(actualParty);
+                    if (actualParty != null) {
+                        this.setMPC(actualMPC); // Devolve o MPC original, evitando o erro no console!
+                    }
+                }
+            }
+        }
+
+        if (used && this.mapid == startMapId && !mapTransitioning.get() && client.canClickNPC()) {
+            client.sendPacket(PacketCreator.enableActions());
+        }
+    }
+
+    private boolean isMapleWarrior(int skillId) {
+        return skillId % 10000 == 1000 && (skillId / 1000000 >= 1 && skillId / 1000000 <= 5 || skillId / 1000000 == 21);
+    }
+
+    private List<Integer> getRelatedSkillIds(int skillId) {
+        List<Integer> related = new ArrayList<>();
+        related.add(skillId);
+        //MW
+        if (isMapleWarrior(skillId)) {
+            int[] mwIds = {1121000, 1221000, 1321000, 2121000, 2221000, 2321000, 3121000, 3221000, 4121000, 4221000, 5121000, 5221000, 21121000, 11121000, 12121000, 13121000, 14121000, 15121000};
+            for (int id : mwIds) if (!related.contains(id)) related.add(id);
+        }
+        //SE
+        else if (skillId == 3121002 || skillId == 3221002 || skillId == 13121003) {
+            related.add(3121002); related.add(3221002); related.add(13121003);
+        }
+        //HAST
+        else if (skillId == 4101004 || skillId == 4201003 || skillId == 14101003 || skillId == 9101001) {
+            related.add(4101004); related.add(4201003); related.add(14101003); related.add(9101001);
+        }
+
+        else if (skillId == 2101001 || skillId == 2201001 || skillId == 12101001) {
+            related.add(2101001); related.add(2201001); related.add(12101001);
+        }
+        //HOLLY SHIELD
+        else if (skillId == 2321005 || skillId == 12121003) {
+            related.add(2321005); related.add(12121003);
+        }
+        //SPEEDFUSION
+        else if (skillId == 5121009 || skillId == 15111005) {
+            related.add(5121009); related.add(15111005);
+        }
+        //HS
+        else if (skillId == 9101002 || skillId == 2311003) {
+            related.add(9101002); related.add(2311003);
+        }
+        //BLESS
+        else if (skillId == 9101003 || skillId == 2301004) {
+            related.add(9101003); related.add(2301004);
+        }
+        //HB
+        else if (skillId == 1301007 || skillId == 9101008) {
+            related.add(1301007); related.add(9101008);
+        }
+        else {
+            related.clear();
+            related.add(skillId);
+        }
+        return related;
+    }
+
+    /*
+
+    //AUTO-BUFF2
+    public void toggleAutoBuff2() {
+        this.autoBuffActive2 = !this.autoBuffActive2;
+        client.sendPacket(PacketCreator.enableActions());
+    }
+
+    public void addCustomAutoBuff2(int skillId) {
+        if (!selectedAutoBuffs2.contains(skillId)) {
+            selectedAutoBuffs2.add(skillId);
+            client.sendPacket(PacketCreator.enableActions());
+        }
+    }
+
+    public void removeCustomAutoBuff2(int skillId) {
+        selectedAutoBuffs2.remove(Integer.valueOf(skillId));
+        client.sendPacket(PacketCreator.enableActions());
+    }
+
+    public List<Integer> getSelectedCustomAutoBuffs2() {
+        return selectedAutoBuffs2;
+    }
+
+    public void clearCustomAutoBuffs2() {
+        selectedAutoBuffs2.clear();
+        client.sendPacket(PacketCreator.enableActions());
+    }
+
+    public boolean isAutoBuffActive2() {
+        return autoBuffActive2;
+    }
+
+    public void checkAutoBuff2() {
+
+        if (map == null || client == null || !client.isLoggedIn()) {
+            return;
+        }
+
+
+        if (mapTransitioning.get()
+                || !client.canClickNPC()
+                || getLoggedInTime() < 2000
+                || (getCashShop() != null && getCashShop().isOpened())) {
+            return;
+        }
+
+        if (!autoBuffActive2 || !isAlive() || selectedAutoBuffs2.isEmpty()) {
+            return;
+        }
+
+        if (getInventory(InventoryType.CASH).countById(5500010) <= 0) {
+            autoBuffActive2 = false;
+            return;
+        }
+
+        int startMapId = this.mapid;
+
+        for (int skillId : selectedAutoBuffs2) {
+
+            if (this.mapid != startMapId || mapTransitioning.get() || !client.canClickNPC()) {
+                break;
+            }
+
+            int mySkillLevel = getSkillLevel(skillId);
+            if (mySkillLevel <= 0) continue;
+
+
+            boolean someoneNeedsBuff = false;
+            double maxDistanceSq = 60000.0;
+
+            if (hasBetterOrEqualBuffActive(skillId, mySkillLevel)) {
+                if (getParty() != null) {
+                    for (PartyCharacter partyChar : getParty().getMembers()) {
+                        if (partyChar.getId() != getId() && partyChar.getMapId() == getMapId()) {
+                            Character member = getMap().getCharacterById(partyChar.getId());
+                            if (member != null && getPosition().distanceSq(member.getPosition()) < maxDistanceSq) {
+                                if (!memberHasBuff(member, skillId, mySkillLevel)) {
+                                    someoneNeedsBuff = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                someoneNeedsBuff = true;
+            }
+
+            if (someoneNeedsBuff) {
+                Skill skill = SkillFactory.getSkill(skillId);
+                if (skill != null) {
+                    skill.getEffect(mySkillLevel).applyTo(this);
+
+
+                    if (this.mapid == startMapId && !mapTransitioning.get() && client.canClickNPC()) {
+                        client.sendPacket(PacketCreator.enableActions());
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean memberHasBuff(Character member, int skillId, int myLevel) {
+        List<Integer> relatedSkills = getRelatedSkillIds(skillId);
+        Skill mySkill = SkillFactory.getSkill(skillId);
+        int myDuration = mySkill.getEffect(myLevel).getDuration();
+
+        if (member.effects != null) {
+            for (BuffStatValueHolder holder : member.effects.values()) {
+                if (relatedSkills.contains(holder.effect.getSourceId())) {
+                    if (holder.effect.getDuration() >= myDuration) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean hasBetterOrEqualBuffActive(int skillId, int myLevel) {
+        List<Integer> relatedSkills = getRelatedSkillIds(skillId);
+        Skill mySkill = SkillFactory.getSkill(skillId);
+        if (mySkill == null) return false;
+
+        StatEffect effect = mySkill.getEffect(myLevel);
+        int myDuration = effect.getDuration();
+
+        double maxDistanceSq = 60000.0;
+
+
+        chrLock.lock();
+        try {
+            for (BuffStatValueHolder holder : effects.values()) {
+                if (relatedSkills.contains(holder.effect.getSourceId())) {
+                    if (holder.effect.getDuration() >= myDuration) {
+                        return true;
+                    }
+                }
+            }
+        } finally {
+            chrLock.unlock();
+        }
+
+
+        if (getParty() != null) {
+            for (PartyCharacter partyChar : getParty().getMembers()) {
+                if (partyChar.getId() != getId() && partyChar.getMapId() == getMapId()) {
+                    Character member = getMap().getCharacterById(partyChar.getId());
+
+                    if (member != null && getPosition().distanceSq(member.getPosition()) < maxDistanceSq) {
+                        if (member.effects != null) {
+                            for (BuffStatValueHolder holder : member.effects.values()) {
+                                if (relatedSkills.contains(holder.effect.getSourceId())) {
+                                    if (holder.effect.getDuration() > myDuration) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public List<Integer> getEligibleAutoBuffs2() {
+        List<Integer> available = new ArrayList<>();
+        int[] potentialBuffs = {
+                1001003, 1101004, 1101005, 1101006, 1111002, 1121000, 1121002,
+                1201004, 1201005, 1211003, 1211004, 1211005, 1211006, 1211007, 1211008, 1221000, 1221003, 1221004, 1221002,
+                1301004, 1301005, 1301006, 1301007, 1311008, 1321002, 1321007, 1321000,
+                2001002, 2001003,
+                2101001, 2111005, 2121004, 2121002, 2121005, 2121000,
+                2201001, 2211005, 2221004, 2221002, 2221005, 2221000,
+                2301003, 2301004, 2311003, 2311006, 2321002, 2321003, 2321004, 2321005, 2321000,
+                3001003, 3101002, 3101004, 3111005, 3121002, 3121006, 3121007, 3121008, 3121000,
+                3201002, 3201004, 3211005, 3221002, 3221005, 3221006, 3221000,
+                4101003, 4101004, 4111001, 4111002, 4121006, 4121000,
+                4201002, 4201003, 4211003, 4211005, 4221000,
+                5001005, 5101006, 5101007, 5111005, 5121003, 5121009, 5121000,
+                5201003, 5211001, 5211002, 5221006, 5221000,
+                11001001, 11001004, 11101001, 11101003, 11101002, 11111001,
+                12001001, 12001002, 12001004, 12101000, 12101004, 12101005, 12111004,
+                13001002, 13001004, 13101001, 13101002, 13101003,
+                14001005, 14101002, 14101003, 14111000,
+                15001003, 15001004, 15101002, 15101006, 15111005, 15111006,
+                21001003, 21101003, 21111005, 21111001, 21121003, 21121000
+        };
+
+        int myJobId = getJob().getId();
+        for (int skillId : potentialBuffs) {
+            if (getSkillLevel(skillId) > 0) {
+                int skillJobId = skillId / 10000;
+                if (isJobCompatible2(myJobId, skillJobId)) {
+                    available.add(skillId);
+                }
+            }
+        }
+        return available;
+    }
+
+    private boolean isJobCompatible2(int playerJobId, int skillJobId) {
+        if (playerJobId == skillJobId) return true;
+        if (skillJobId == 0) return true;
+        if (playerJobId >= 2000 && playerJobId <= 2112) {
+            if (skillJobId >= 2000 && skillJobId <= 2112) {
+                if (skillJobId == 2000) return true;
+                return playerJobId >= skillJobId;
+            }
+            return false;
+        }
+        if (playerJobId >= 1000 && playerJobId <= 1512) {
+            if (skillJobId >= 1000 && skillJobId <= 1512) {
+                if (skillJobId == 1000) return true;
+                if (playerJobId / 100 == skillJobId / 100) return playerJobId >= skillJobId;
+            }
+            return false;
+        }
+        if (skillJobId == 100 || skillJobId == 200 || skillJobId == 300 || skillJobId == 400 || skillJobId == 500) {
+            return playerJobId / 100 == skillJobId / 100;
+        }
+        if (playerJobId / 10 == skillJobId / 10) {
+            return playerJobId >= skillJobId;
+        }
+        return false;
+    }
+
+    */
+
+    //AUTO-CURE
+    public void cureDisease(Disease disease) {
+        if (!hasDisease(disease)) {
+            return;
+        }
+
+        long mask = disease.getValue();
+
+        chrLock.lock();
+        try {
+            diseases.remove(disease);
+            diseaseExpires.remove(disease);
+        } finally {
+            chrLock.unlock();
+        }
+
+        client.sendPacket(PacketCreator.cancelDebuff(mask));
+        map.broadcastMessage(
+                this,
+                PacketCreator.cancelForeignDebuff(id, mask),
+                false
+        );
+
+    }
+
+    public void toggleAutoCure() {
+        this.autoCureActive = !this.autoCureActive;
+
+        if (this.autoCureActive) {
+            this.lastMovementTime = System.currentTimeMillis();
+        }
+
+        String status = this.autoCureActive ? "Ativado" : "Desativado";
+        this.dropMessage(6, "[Amuleto Balaco-Baco] " + status + " com sucesso!");
+    }
+
+    public void checkAutoCure() {
+
+        if (map == null || client == null || !client.isLoggedIn()) {
+            return;
+        }
+
+
+        if (mapTransitioning.get()
+                || !client.canClickNPC()
+                || getLoggedInTime() < 2000
+                || (getCashShop() != null && getCashShop().isOpened())) {
+            return;
+        }
+
+        if (!autoCureActive || !isAlive()) {
+            return;
+        }
+
+        int autoCureCashItemId = 5500007;
+        if (getInventory(InventoryType.CASH).countById(autoCureCashItemId) <= 0) {
+            autoCureActive = false;
+            return;
+        }
+
+        Disease[] autoCureDiseases = {
+                Disease.SEAL, Disease.CURSE, Disease.DARKNESS,
+                Disease.WEAKEN, Disease.POISON, Disease.SLOW, Disease.SEDUCE
+        };
+
+        boolean hasAnyDisease = false;
+        for (Disease d : autoCureDiseases) {
+            if (hasDisease(d)) {
+                hasAnyDisease = true;
+                break;
+            }
+        }
+
+        if (hasAnyDisease) {
+            int allCureItemId = 2050004;
+            int startMapId = this.mapid;
+
+            if (getInventory(InventoryType.USE).countById(allCureItemId) > 0) {
+                // Adicionado: Verifica estabilidade antes de consumir o item
+                if (this.mapid == startMapId && !mapTransitioning.get() && client.canClickNPC()) {
+                    InventoryManipulator.removeById(client, InventoryType.USE, allCureItemId, 1, false, false);
+
+                    for (Disease d : autoCureDiseases) {
+
+                        if (this.mapid != startMapId || mapTransitioning.get() || !client.canClickNPC()) {
+                            break;
+                        }
+                        if (hasDisease(d)) {
+                            cureDisease(d);
+                        }
+                    }
+
+
+                    if (this.mapid == startMapId && !mapTransitioning.get() && client.canClickNPC()) {
+                        client.sendPacket(PacketCreator.enableActions());
+                    }
+                }
+
+            } else {
+
+                if (!mapTransitioning.get() && client.canClickNPC()) {
+                    this.dropMessage(6, "[Amuleto Balaco-Baco] Você não possui Cura-Tudo no inventário para consumir como proteção.");
+                }
+            }
+        }
+    }
+
     public void giveDebuff(final Disease disease, MobSkill skill) {
         if (!hasDisease(disease) && getDiseasesSize() < 2) {
             if (!(disease == Disease.SEDUCE || disease == Disease.STUN)) {
@@ -2841,6 +3905,7 @@ public class Character extends AbstractCharacterObject {
             } else {
                 map.broadcastMessage(this, PacketCreator.giveForeignSlowDebuff(id, debuff, skill), false);
             }
+            checkAutoCure();
         }
     }
 
@@ -2960,6 +4025,74 @@ public class Character extends AbstractCharacterObject {
         }
     }
 
+    // Set Bonus: sincroniza os bonus virtuais no login/troca de canal sem broadcast visual/messenger.
+    public void refreshSetBonusOnLogin() {
+        invalidateSetBonusVisualState();
+        updateLocalStats();
+    }
+
+    // Set Bonus: % de dano extra em boss concedido pelo set (ex.: Cygnus 6/6 = 5). 0 = sem bonus.
+    public int getSetBonusBossDamage() {
+        return setbonusbossdmg;
+    }
+
+    // Set Bonus: atributos virtuais do set usados no stat efetivo enviado ao cliente.
+    public int getSetBonusStr() { return setbonusstr; }
+    public int getSetBonusDex() { return setbonusdex; }
+    public int getSetBonusInt() { return setbonusint_; }
+    public int getSetBonusLuk() { return setbonusluk; }
+
+    // Set Bonus: responde ao pedido do cliente (opcode 0x3717) com o tooltip do set do item sob o mouse.
+    public void sendSetBonusTooltip(int itemId) {
+        try {
+            SetBonusService.TooltipPayload payload = SetBonusService.getInstance().buildTooltipPayload(itemId, getInventory(InventoryType.EQUIPPED));
+            if (payload == null) {
+                return;
+            }
+            sendPacket(PacketCreator.setBonusTooltip(payload.getItemId(), payload.getTitle(), payload.getLines()));
+        } catch (Throwable ignored) {
+        }
+    }
+
+    // Set Bonus: quando o bonus muda, envia o estado virtual e atualiza STR/DEX/INT/LUK efetivos.
+    // Nao toca em item nenhum: sem Codex, sem item ancora e sem ModifyInventory.
+    private void refreshSetBonusVisual() {
+        try {
+            final int s = setbonusstr, d = setbonusdex, in = setbonusint_, l = setbonusluk;
+            final int wa = setbonuswatk, ma = setbonusmatk, ac = setbonusacc, ev = setbonuseva;
+            final int hp = setbonushp, mp = setbonusmp, boss = setbonusbossdmg;
+            if (s == sentSetbonusStr && d == sentSetbonusDex && in == sentSetbonusInt && l == sentSetbonusLuk
+                    && wa == sentSetbonusWatk && ma == sentSetbonusMatk && ac == sentSetbonusAcc && ev == sentSetbonusEva
+                    && hp == sentSetbonusHp && mp == sentSetbonusMp && boss == sentSetbonusBossDmg) {
+                return; // nada mudou
+            }
+            sentSetbonusStr = s; sentSetbonusDex = d; sentSetbonusInt = in; sentSetbonusLuk = l;
+            sentSetbonusWatk = wa; sentSetbonusMatk = ma; sentSetbonusAcc = ac; sentSetbonusEva = ev;
+            sentSetbonusHp = hp; sentSetbonusMp = mp; sentSetbonusBossDmg = boss;
+
+            // Envia primeiro: quando o stat update redesenhar a janela, o cliente ja sabe o que subtrair do texto.
+            // Tambem serve como invalidador da tooltip quando muda HP/MP ou bonus de boss do set.
+            sendPacket(PacketCreator.setBonusVirtualStats(s, d, in, l, wa, ma, ac, ev));
+
+            // Envia os stats base; PacketCreator aplica base + set quando chr != null.
+            List<Pair<Stat, Integer>> stats = new ArrayList<>(4);
+            stats.add(new Pair<>(Stat.STR, getStr()));
+            stats.add(new Pair<>(Stat.DEX, getDex()));
+            stats.add(new Pair<>(Stat.INT, getInt()));
+            stats.add(new Pair<>(Stat.LUK, getLuk()));
+            sendPacket(PacketCreator.updatePlayerStats(stats, false, this));
+        } catch (Throwable ignored) {
+        }
+    }
+
+    // Set Bonus: troca de canal reaproveita o Character e os valores de sentSetbonus* podem
+    // continuar iguais, mas o novo cliente/canal precisa receber o pacote virtual novamente.
+    private void invalidateSetBonusVisualState() {
+        sentSetbonusStr = sentSetbonusDex = sentSetbonusInt = sentSetbonusLuk = -1;
+        sentSetbonusWatk = sentSetbonusMatk = sentSetbonusAcc = sentSetbonusEva = -1;
+        sentSetbonusHp = sentSetbonusMp = sentSetbonusBossDmg = -1;
+    }
+
     public void cancelDiseaseExpireTask() {
         if (diseaseExpireTask != null) {
             diseaseExpireTask.cancel(false);
@@ -3038,6 +4171,67 @@ public class Character extends AbstractCharacterObject {
         if (skillCooldownTask != null) {
             skillCooldownTask.cancel(false);
             skillCooldownTask = null;
+        }
+    }
+
+    public server.maps.MapDpsTracker getCurrentDpsTracker() {
+        if (getMap() == null) {
+            return null;
+        }
+        return getMap().getDpsTracker();
+    }
+
+    public void resetMyDps() {
+        server.maps.MapDpsTracker tracker = getCurrentDpsTracker();
+        if (tracker != null) {
+            tracker.clearPlayer(getId());
+        }
+    }
+
+    public void autoBuffTask() {
+        if (autoBuffTask == null) {
+            autoBuffTask = TimerManager.getInstance().register(new Runnable() {
+                @Override
+                public void run() {
+
+                    if (client == null || map == null) {
+                        if (autoBuffTask != null) {
+                            autoBuffTask.cancel(false);
+                            autoBuffTask = null;
+                        }
+                        return;
+                    }
+
+                    checkInactiveToggles();
+
+                    if (getCashShop().isOpened()) {
+                        if (autoBuffTask != null) {
+                            autoBuffTask.cancel(false);
+                            autoBuffTask = null;
+                        }
+                        return;
+                    }
+
+                    if (!isAlive()) {
+                        return;
+                    }
+                    //VALIDA SE ESTA PESCANDO
+                    if (ItemConstants.isFishingChair(getChair()) &&
+                            getMap().getFishingArea() != null &&
+                            getMap().getFishingArea().contains(getPosition())) {
+                        return;
+                    }
+                    //VALIDA SE ESTA SENTADO
+                    if (getChair() > 0) {
+                        return;
+                    }
+                    if (!autoBuffActive && !autoBuffActive2) {
+                        return;
+                    }
+                    checkAutoBuff();
+                    //checkAutoBuff2();
+                }
+            }, 1000);
         }
     }
 
@@ -3174,17 +4368,17 @@ public class Character extends AbstractCharacterObject {
     }
 
     public void gainGachaExp() {
-        int expgain = 0;
+        long expgain = 0;
         long currentgexp = gachaexp.get();
         if ((currentgexp + exp.get()) >= ExpTable.getExpNeededForLevel(level)) {
             expgain += ExpTable.getExpNeededForLevel(level) - exp.get();
 
-            int nextneed = ExpTable.getExpNeededForLevel(level + 1);
+            long nextneed = ExpTable.getExpNeededForLevel(level + 1);
             if (currentgexp - expgain >= nextneed) {
                 expgain += nextneed;
             }
 
-            this.gachaexp.set((int) (currentgexp - expgain));
+            this.gachaexp.set((int) Math.max(0L, currentgexp - expgain));
         } else {
             expgain = this.gachaexp.getAndSet(0);
         }
@@ -3196,52 +4390,70 @@ public class Character extends AbstractCharacterObject {
         updateSingleStat(Stat.GACHAEXP, gachaexp.addAndGet(gain));
     }
 
-    public void gainExp(int gain) {
+    public void gainExp(long gain) {
         gainExp(gain, true, true);
     }
 
-    public void gainExp(int gain, boolean show, boolean inChat) {
+    public void gainExp(int gain) {
+        gainExp((long) gain);
+    }
+
+    public void gainExp(long gain, boolean show, boolean inChat) {
         gainExp(gain, show, inChat, true);
     }
 
-    public void gainExp(int gain, boolean show, boolean inChat, boolean white) {
+    public void gainExp(int gain, boolean show, boolean inChat) {
+        gainExp((long) gain, show, inChat);
+    }
+
+    public void gainExp(long gain, boolean show, boolean inChat, boolean white) {
         gainExp(gain, 0, show, inChat, white);
     }
 
-    public void gainExp(int gain, int party, boolean show, boolean inChat, boolean white) {
-        if (hasDisease(Disease.CURSE)) {
-            gain *= 0.5;
-            party *= 0.5;
-        }
+    public void gainExp(int gain, boolean show, boolean inChat, boolean white) {
+        gainExp((long) gain, show, inChat, white);
+    }
 
-        if (System.currentTimeMillis() < familyExpEndTime) {
-            gain = (int) (gain * familyExpRate);
-            party = (int) (party * familyExpRate);
+    public void gainExp(long gain, long party, boolean show, boolean inChat, boolean white) {
+        if (hasDisease(Disease.CURSE)) {
+            gain /= 2;
+            party /= 2;
         }
 
         if (gain < 0) {
-            gain = Integer.MAX_VALUE;   // integer overflow, heh.
+            gain = Long.MAX_VALUE;   // integer overflow, heh.
         }
 
         if (party < 0) {
-            party = Integer.MAX_VALUE;  // integer overflow, heh.
+            party = Long.MAX_VALUE;  // integer overflow, heh.
         }
 
-        int equip = (int) Math.min((long) (gain / 10) * pendantExp, Integer.MAX_VALUE);
+        long equip = (gain / 10) * pendantExp;
 
         gainExpInternal(gain, equip, party, show, inChat, white);
     }
 
-    public void loseExp(int loss, boolean show, boolean inChat) {
+    public void gainExp(int gain, int party, boolean show, boolean inChat, boolean white) {
+        gainExp((long) gain, (long) party, show, inChat, white);
+    }
+
+    public void loseExp(long loss, boolean show, boolean inChat) {
         loseExp(loss, show, inChat, true);
     }
 
-    public void loseExp(int loss, boolean show, boolean inChat, boolean white) {
+    public void loseExp(int loss, boolean show, boolean inChat) {
+        loseExp((long) loss, show, inChat);
+    }
+
+    public void loseExp(long loss, boolean show, boolean inChat, boolean white) {
         gainExpInternal(-loss, 0, 0, show, inChat, white);
     }
 
-    private void announceExpGain(long gain, int equip, int party, boolean inChat, boolean white) {
-        gain = Math.min(gain, Integer.MAX_VALUE);
+    public void loseExp(int loss, boolean show, boolean inChat, boolean white) {
+        loseExp((long) loss, show, inChat, white);
+    }
+
+    private void announceExpGain(long gain, long equip, long party, boolean inChat, boolean white) {
         if (gain == 0) {
             if (party == 0) {
                 return;
@@ -3252,21 +4464,14 @@ public class Character extends AbstractCharacterObject {
             white = false;
         }
 
-        sendPacket(PacketCreator.getShowExpGain((int) gain, equip, party, inChat, white));
+        sendPacket(PacketCreator.getShowExpGain(gain, equip, party, inChat, white));
     }
 
-    private synchronized void gainExpInternal(long gain, int equip, int party, boolean show, boolean inChat, boolean white) {   // need of method synchonization here detected thanks to MedicOP
+    private synchronized void gainExpInternal(long gain, long equip, long party, boolean show, boolean inChat, boolean white) {   // need of method synchonization here detected thanks to MedicOP
         long total = Math.max(gain + equip + party, -exp.get());
 
         if (level < getMaxLevel() && (allowExpGain || this.getEventInstance() != null)) {
-            long leftover = 0;
-            long nextExp = exp.get() + total;
-
-            if (nextExp > (long) Integer.MAX_VALUE) {
-                total = Integer.MAX_VALUE - exp.get();
-                leftover = nextExp - Integer.MAX_VALUE;
-            }
-            updateSingleStat(Stat.EXP, exp.addAndGet((int) total));
+            updateSingleStat(Stat.EXP, clampLongToInt(exp.addAndGet(total)));
             totalExpGained += total;
             if (show) {
                 announceExpGain(gain, equip, party, inChat, white);
@@ -3280,25 +4485,21 @@ public class Character extends AbstractCharacterObject {
                 }
             }
 
-            if (leftover > 0) {
-                gainExpInternal(leftover, equip, party, false, inChat, white);
-            } else {
-                lastExpGainTime = System.currentTimeMillis();
+            lastExpGainTime = System.currentTimeMillis();
 
-                if (YamlConfig.config.server.USE_EXP_GAIN_LOG) {
-                    ExpLogRecord expLogRecord = new ExpLogger.ExpLogRecord(
+            if (YamlConfig.config.server.USE_EXP_GAIN_LOG) {
+                ExpLogRecord expLogRecord = new ExpLogger.ExpLogRecord(
                         getWorldServer().getExpRate(),
                         expCoupon,
                         totalExpGained,
                         exp.get(),
                         new Timestamp(lastExpGainTime),
                         id
-                    );
-                    ExpLogger.putExpLogRecord(expLogRecord);
-                }
-
-                totalExpGained = 0;
+                );
+                ExpLogger.putExpLogRecord(expLogRecord);
             }
+
+            totalExpGained = 0;
         }
     }
 
@@ -3961,6 +5162,10 @@ public class Character extends AbstractCharacterObject {
             }
         }
 
+        if (ret) {
+            updatePartyStatusOverlay();
+        }
+
         return ret;
     }
 
@@ -4125,6 +5330,7 @@ public class Character extends AbstractCharacterObject {
         }
 
         cancelPlayerBuffs(Arrays.asList(stat));
+        updatePartyStatusOverlay();
     }
 
     private Map<BuffStat, BuffStatValueHolder> extractCurrentBuffStats(StatEffect effect) {
@@ -4740,6 +5946,9 @@ public class Character extends AbstractCharacterObject {
         }
 
         updateLocalStats();
+        if (!isSilent) {
+            updatePartyStatusOverlay();
+        }
     }
 
     private static int getJobMapChair(Job job) {
@@ -5036,7 +6245,7 @@ public class Character extends AbstractCharacterObject {
         }
     }
 
-    public int getExp() {
+    public long getExp() {
         return exp.get();
     }
 
@@ -5078,7 +6287,7 @@ public class Character extends AbstractCharacterObject {
 
     public int getBossDropRate() {
         World w = getWorldServer();
-        return (dropRate / w.getDropRate()) * w.getBossDropRate();
+        return (dropCoupon * w.getBossDropRate());
     }
 
     public int getMesoRate() {
@@ -5099,12 +6308,12 @@ public class Character extends AbstractCharacterObject {
         }
 
         World w = getWorldServer();
-        return w.getExpRate() * w.getQuestRate();
+        return w.getQuestRate();
     }
 
     public int getQuestMesoRate() {
         World w = getWorldServer();
-        return w.getMesoRate() * w.getQuestRate();
+        return w.getQuestRate();
     }
 
     public float getCardRate(int itemid) {
@@ -5415,7 +6624,7 @@ public class Character extends AbstractCharacterObject {
     }
 
     public int getMaxClassLevel() {
-        return isCygnus() ? 120 : 200;
+        return isCygnus() ? 300 : 300;
     }
 
     public int getMaxLevel() {
@@ -5558,6 +6767,7 @@ public class Character extends AbstractCharacterObject {
         this.activeDamageSkin = skinId;
     }
 
+
     public int getMonsterBookCover() {
         return bookCover;
     }
@@ -5665,6 +6875,23 @@ public class Character extends AbstractCharacterObject {
         return list;
     }
 
+    public void refreshPartyStatusOverlayForSameMapMembers() {
+        if (party == null || map == null) {
+            return;
+        }
+
+        List<Character> partyMembers = new LinkedList<>();
+        for (Character partyMember : getPartyMembersOnSameMap()) {
+            if (partyMember != this && partyMember.isLoggedinWorld()) {
+                partyMembers.add(partyMember);
+            }
+        }
+
+        for (Character viewer : partyMembers) {
+            viewer.sendPacket(PacketCreator.partyStatusOverlay(viewer, partyMembers));
+        }
+    }
+
     public boolean isPartyMember(Character chr) {
         return isPartyMember(chr.getId());
     }
@@ -5694,7 +6921,7 @@ public class Character extends AbstractCharacterObject {
         this.gmLevel = Math.min(level, 6);
         this.gmLevel = Math.max(level, 0);
 
-        whiteChat = gmLevel >= 4;   // thanks ozanrijen for suggesting default white chat
+        whiteChat = gmLevel >= 2;   // thanks ozanrijen for suggesting default white chat
     }
 
     public void closePartySearchInteractions() {
@@ -5900,6 +7127,141 @@ public class Character extends AbstractCharacterObject {
                 quests.put(quest.getId(), stat);
             }
         }
+    }
+
+    private void dptClearRuntimeState(boolean sendResetPacket) {
+        this.dptTotalDmg = 0L;
+        this.dptPlayerView.clear();
+        this.dptSkillStats.clear();
+
+        if (sendResetPacket) {
+            this.sendPacket(PacketCreator.dptReset());
+        }
+    }
+
+    private void dptSendFullSnapshot() {
+        this.sendPacket(PacketCreator.dptReset());
+
+        for (DptPlayerStat stat : this.dptPlayerView.values()) {
+            this.sendPacket(PacketCreator.dptPlayerUpdate(
+                    stat.charId,
+                    stat.name,
+                    stat.jobId,
+                    stat.totalDamage,
+                    stat.getDps()
+            ));
+        }
+
+        for (DptSkillStat stat : this.dptSkillStats.values()) {
+            this.sendPacket(PacketCreator.dptSkillUpdate(
+                    stat.skillId,
+                    dptResolveSkillName(stat.skillId),
+                    0L,
+                    stat.totalDamage,
+                    stat.maxDamage,
+                    stat.minDamage == Long.MAX_VALUE ? 0L : stat.minDamage,
+                    stat.count
+            ));
+        }
+    }
+
+    public void damageRankOpen() {
+        if (this.dptStartMs > 0L && !this.dptActive) {
+            this.dptActive = true;
+            dptSendFullSnapshot();
+            return;
+        }
+
+        if (this.dptStartMs == 0L) {
+            this.dptStartMs = System.currentTimeMillis();
+            this.dptActive = true;
+            dptClearRuntimeState(true);
+            return;
+        }
+
+        dptSendFullSnapshot();
+    }
+
+    public void damageRankClose() {
+        if (!this.dptActive) {
+            return;
+        }
+        this.dptActive = false;
+    }
+
+    public void damageRankReset() {
+        this.dptActive = false;
+        this.dptStartMs = 0L;
+        dptClearRuntimeState(true);
+    }
+
+    private void dptRecordObservedPlayerDamage(Character attacker, long dmg) {
+        if (!this.dptActive) return;
+        if (dmg <= 0L) return;
+
+        DptPlayerStat stat = dptPlayerView.computeIfAbsent(
+                attacker.getId(),
+                id -> new DptPlayerStat(attacker.getId(), attacker.getName(), attacker.getJob().getId())
+        );
+
+        stat.name = attacker.getName();
+        stat.jobId = attacker.getJob().getId();
+        final long now = System.currentTimeMillis();
+        if (stat.firstHitTimeMs <= 0L) {
+            stat.firstHitTimeMs = now;
+        }
+        stat.lastHitTimeMs = now;
+        stat.totalDamage += dmg;
+        this.sendPacket(PacketCreator.dptPlayerUpdate(
+                stat.charId,
+                stat.name,
+                stat.jobId,
+                stat.totalDamage,
+                stat.getDps()
+        ));
+    }
+
+    public void dptOnDamage(int skillId, long dmg) {
+        if (dmg <= 0L) return;
+
+        final MapleMap map = this.getMap();
+        if (map == null) return;
+
+        final int normalizedSkillId = skillId < 0 ? skillId : Math.max(0, skillId);
+
+        if (this.dptActive) {
+            this.dptTotalDmg += dmg;
+
+            DptSkillStat stat = dptSkillStats.computeIfAbsent(
+                    normalizedSkillId,
+                    DptSkillStat::new
+            );
+            stat.totalDamage += dmg;
+            stat.count += 1;
+            if (dmg > stat.maxDamage) stat.maxDamage = dmg;
+            if (dmg < stat.minDamage) stat.minDamage = dmg;
+            this.sendPacket(PacketCreator.dptSkillUpdate(
+                    normalizedSkillId,
+                    dptResolveSkillName(normalizedSkillId),
+                    dmg,
+                    stat.totalDamage,
+                    stat.maxDamage,
+                    stat.minDamage == Long.MAX_VALUE ? 0L : stat.minDamage,
+                    stat.count
+            ));
+        }
+
+        for (Character viewer : map.getAllPlayers()) {
+            if (viewer == null) continue;
+            viewer.dptRecordObservedPlayerDamage(this, dmg);
+        }
+    }
+
+    private static String dptResolveSkillName(int skillId) {
+        if (skillId == 0) {
+            return "Attack";
+        }
+        return SkillFactory.getSkillName(skillId);
     }
 
     public final QuestStatus getQuestNAdd(final Quest quest) {
@@ -6469,8 +7831,8 @@ public class Character extends AbstractCharacterObject {
             addhp += Randomizer.rand(20, 24);
             addmp += Randomizer.rand(14, 16);
         } else if (job.isA(Job.GM)) {
-            addhp += 30000;
-            addmp += 30000;
+            addhp += GameConstants.MAX_PLAYER_HP_MP;
+            addmp += GameConstants.MAX_PLAYER_HP_MP;
         } else if (job.isA(Job.PIRATE) || job.isA(Job.THUNDERBREAKER1)) {
             improvingMaxHP = isCygnus() ? SkillFactory.getSkill(ThunderBreaker.IMPROVE_MAX_HP) : SkillFactory.getSkill(Brawler.IMPROVE_MAX_HP);
             improvingMaxHPLevel = getSkillLevel(improvingMaxHP);
@@ -6495,8 +7857,6 @@ public class Character extends AbstractCharacterObject {
                 addmp += localint_ / 10;
             }
         }
-
-        addMaxMPMaxHP(addhp, addmp, true);
 
         if (takeexp) {
             exp.addAndGet(-ExpTable.getExpNeededForLevel(level));
@@ -6529,6 +7889,9 @@ public class Character extends AbstractCharacterObject {
             level = maxClassLevel; //To prevent levels past the maximum
         }
 
+        // Apply natural HP/MP gain after level changes so the cap uses the target level.
+        addMaxMPMaxHP(addhp, addmp, true);
+
         levelUpGainSp();
 
         effLock.lock();
@@ -6542,13 +7905,14 @@ public class Character extends AbstractCharacterObject {
             statup.add(new Pair<>(Stat.AVAILABLESP, remainingSp[GameConstants.getSkillBook(job.getId())]));
             statup.add(new Pair<>(Stat.HP, hp));
             statup.add(new Pair<>(Stat.MP, mp));
-            statup.add(new Pair<>(Stat.EXP, exp.get()));
+            statup.add(new Pair<>(Stat.EXP, clampLongToInt(exp.get())));
             statup.add(new Pair<>(Stat.LEVEL, level));
             statup.add(new Pair<>(Stat.MAXHP, clientmaxhp));
             statup.add(new Pair<>(Stat.MAXMP, clientmaxmp));
             statup.add(new Pair<>(Stat.STR, str));
             statup.add(new Pair<>(Stat.DEX, dex));
 
+            sendRealHpMpSyncIfNeeded(statup);
             sendPacket(PacketCreator.updatePlayerStats(statup, true, this));
         } finally {
             statWlock.unlock();
@@ -6695,16 +8059,45 @@ public class Character extends AbstractCharacterObject {
             return;
         }
 
-        effLock.lock();
-        chrLock.lock();
+        List<BuffStatValueHolder> couponBuffsToCancel = new ArrayList<>();
+        List<Integer> couponEffectsToApply;
+        Collection<Item> cashItemsSnapshot;
+        List<BuffStatValueHolder> allBuffsSnapshot = new ArrayList<>(getAllStatups());
+
         cashInv.lockInventory();
+        chrLock.lock();
         try {
-            revertCouponRates();
-            setCouponRates();
+            cashItemsSnapshot = new ArrayList<>(cashInv.list());
+
+            for (BuffStatValueHolder mbsvh : allBuffsSnapshot) {
+                if (ItemConstants.isRateCoupon(mbsvh.effect.getSourceId())) {
+                    couponBuffsToCancel.add(mbsvh);
+                }
+            }
+
+            this.expRate /= this.expCoupon;
+            this.dropRate /= this.dropCoupon;
+            this.mesoRate /= this.mesoCoupon;
+
+            this.expCoupon = 1;
+            this.dropCoupon = 1;
+            this.mesoCoupon = 1;
+
+            activeCoupons.clear();
+            activeCouponRates.clear();
+            setActiveCoupons(cashItemsSnapshot);
+            couponEffectsToApply = activateCouponsEffects();
         } finally {
-            cashInv.unlockInventory();
             chrLock.unlock();
-            effLock.unlock();
+            cashInv.unlockInventory();
+        }
+
+        for (BuffStatValueHolder mbsvh : couponBuffsToCancel) {
+            cancelEffect(mbsvh.effect, false, mbsvh.startTime);
+        }
+
+        for (Integer couponId : couponEffectsToApply) {
+            commitBuffCoupon(couponId);
         }
     }
 
@@ -6732,8 +8125,6 @@ public class Character extends AbstractCharacterObject {
     }
 
     private void revertCouponsEffects() {
-        dispelBuffCoupons();
-
         this.expRate /= this.expCoupon;
         this.dropRate /= this.dropCoupon;
         this.mesoRate /= this.mesoCoupon;
@@ -6819,12 +8210,21 @@ public class Character extends AbstractCharacterObject {
     }
 
     private void commitBuffCoupon(int couponid) {
-        if (!isLoggedin() || getCashShop().isOpened()) {
+        if (!isLoggedin()) {
+            return;
+        }
+
+        CashShop cashShop = getCashShop();
+        if (cashShop == null || cashShop.isOpened()) {
             return;
         }
 
         ItemInformationProvider ii = ItemInformationProvider.getInstance();
         StatEffect mse = ii.getItemEffect(couponid);
+        if (mse == null) {
+            return;
+        }
+
         mse.applyTo(this);
     }
 
@@ -6884,7 +8284,7 @@ public class Character extends AbstractCharacterObject {
             ret.setMaxMp(rs.getInt("maxmp"));
             ret.remainingAp = rs.getInt("ap");
             ret.loadCharSkillPoints(rs.getString("sp").split(","));
-            ret.exp.set(rs.getInt("exp"));
+            ret.exp.set(rs.getLong("exp"));
             ret.fame = rs.getInt("fame");
             ret.gachaexp.set(rs.getInt("gachaexp"));
             ret.mapid = rs.getInt("map");
@@ -6990,9 +8390,6 @@ public class Character extends AbstractCharacterObject {
                     }
 
                     ret.name = rs.getString("name");
-                    ret.checkinDay       = rs.getInt("checkinDay");
-                    ret.checkinClaimed   = rs.getInt("checkinClaimed");
-                    ret.checkinLastClaim = rs.getLong("checkinLastClaim");
                     ret.level = rs.getInt("level");
                     ret.fame = rs.getInt("fame");
                     ret.quest_fame = rs.getInt("fquest");
@@ -7000,7 +8397,7 @@ public class Character extends AbstractCharacterObject {
                     ret.dex = rs.getInt("dex");
                     ret.int_ = rs.getInt("int");
                     ret.luk = rs.getInt("luk");
-                    ret.exp.set(rs.getInt("exp"));
+                    ret.exp.set(rs.getLong("exp"));
                     ret.gachaexp.set(rs.getInt("gachaexp"));
                     ret.hp = rs.getInt("hp");
                     ret.setMaxHp(rs.getInt("maxhp"));
@@ -7030,6 +8427,10 @@ public class Character extends AbstractCharacterObject {
                     ret.mapid = rs.getInt("map");
                     ret.jailExpiration = rs.getLong("jailexpire");
                     ret.initialSpawnPoint = rs.getInt("spawnpoint");
+                    if (ret.getJailExpirationTimeLeft() > 0) {
+                        ret.mapid = MapId.JAIL;
+                        ret.initialSpawnPoint = 0;
+                    }
                     ret.world = rs.getByte("world");
                     ret.autoOreStorage    = rs.getBoolean("autoOreStorage");    // Storage Bag: auto-collect toggles
                     ret.autoScrollStorage = rs.getBoolean("autoScrollStorage");
@@ -7048,9 +8449,9 @@ public class Character extends AbstractCharacterObject {
                     ret.familyId = rs.getInt("familyId");
                     ret.bookCover = rs.getInt("monsterbookcover");
                     ret.monsterbook = new MonsterBook();
-                    ret.monsterbook.loadCards(charid);
+                    ret.monsterbook.loadCards(ret.getAccountID());
                     ret.activeDamageSkin = rs.getInt("activeDamageSkin");
-                    ret.damageSkinInv.loadSkins(charid);
+                    ret.damageSkinInv.loadSkins(ret.getAccountID());
                     ret.vanquisherStage = rs.getInt("vanquisherStage");
                     ret.ariantPoints = rs.getInt("ariantPoints");
                     ret.dojoPoints = rs.getInt("dojoPoints");
@@ -7088,11 +8489,12 @@ public class Character extends AbstractCharacterObject {
                             Equip equip = (Equip) item.getLeft();
                             if (equip.getRingId() > -1) {
                                 Ring ring = Ring.loadFromDb(equip.getRingId());
-                                if (item.getRight().equals(InventoryType.EQUIPPED)) {
-                                    ring.equip();
+                                if (ring != null) {
+                                    if (item.getRight().equals(InventoryType.EQUIPPED)) {
+                                        ring.equip();
+                                    }
+                                    ret.addPlayerRing(ring);
                                 }
-
-                                ret.addPlayerRing(ring);
                             }
                         }
                     }
@@ -7152,7 +8554,19 @@ public class Character extends AbstractCharacterObject {
                             portal = ret.map.getPortal(0);
                             ret.initialSpawnPoint = 0;
                         }
-                        ret.setPosition(portal.getPosition());
+                        if (portal == null) {
+
+                            portal = ret.map.getRandomPlayerSpawnpoint();
+                        }
+                        if (portal == null) {
+
+                            log.warn("Character {} (ID: {}) no mapa {} nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o possui portais vÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡lidos. Usando posiÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o padrÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o (0,0).",
+                                    ret.name, ret.id, ret.mapid);
+                            ret.setPosition(new Point(0, 0));
+                        } else {
+                            ret.setPosition(portal.getPosition());
+                        }
+
                         int partyid = rs.getInt("party");
                         Party party = wserv.getParty(partyid);
                         if (party != null) {
@@ -7204,7 +8618,12 @@ public class Character extends AbstractCharacterObject {
             }
 
             // Account info
-            try (PreparedStatement ps = con.prepareStatement("SELECT name, characterslots, language FROM accounts WHERE id = ?", Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement ps = con.prepareStatement(
+                    "SELECT name, characterslots, language, checkinDay, checkinClaimed, "
+                            + "checkinLastClaim, checkinMobKills, checkinLastCompletion, checkinCycle "
+                            + "FROM accounts WHERE id = ?",
+                    Statement.RETURN_GENERATED_KEYS
+            )) {
                 ps.setInt(1, ret.accountid);
 
                 try (ResultSet rs = ps.executeQuery()) {
@@ -7214,6 +8633,12 @@ public class Character extends AbstractCharacterObject {
                         retClient.setAccountName(rs.getString("name"));
                         retClient.setCharacterSlots(rs.getByte("characterslots"));
                         retClient.setLanguage(rs.getInt("language"));   // thanks Zein for noticing user language not overriding default once player is in-game
+                        ret.checkinDay = rs.getInt("checkinDay");
+                        ret.checkinClaimed = rs.getInt("checkinClaimed");
+                        ret.checkinLastClaim = rs.getLong("checkinLastClaim");
+                        ret.checkinMobKills = rs.getInt("checkinMobKills");
+                        ret.checkinLastCompletion = rs.getLong("checkinLastCompletion");
+                        ret.checkinCycle = rs.getInt("checkinCycle");
                     }
                 }
             }
@@ -7324,7 +8749,7 @@ public class Character extends AbstractCharacterObject {
                     try (ResultSet rs = ps.executeQuery()) {
                         while (rs.next()) {
                             Skill pSkill = SkillFactory.getSkill(rs.getInt("skillid"));
-                            if (pSkill != null) { // edit reported by Shavit (=＾● ⋏ ●＾=), thanks Zein for noticing an NPE here
+                            if (pSkill != null) {
                                 ret.skills.put(pSkill, new SkillEntry(rs.getByte("skilllevel"), rs.getInt("masterlevel"), rs.getLong("expiration")));
                             }
                         }
@@ -7438,7 +8863,7 @@ public class Character extends AbstractCharacterObject {
                         }
                     }
                 }
-                
+
                 ret.buddylist.loadFromDb(charid);
                 ret.storage = wserv.getAccountStorage(ret.accountid);
 
@@ -7456,6 +8881,7 @@ public class Character extends AbstractCharacterObject {
                 ret.scrollstorage = server.OreStorage.loadScrollStorage(ret.id);
                 ret.chairstorage  = server.OreStorage.loadChairStorage(ret.id);
                 ret.mountstorage  = server.OreStorage.loadMountStorage(ret.id);
+
                 int startHp = ret.hp, startMp = ret.mp;
                 ret.reapplyLocalStats();
                 ret.changeHpMp(startHp, startMp, true);
@@ -7622,7 +9048,7 @@ public class Character extends AbstractCharacterObject {
             usedSafetyCharm = true;
         } else if (getJob() != Job.BEGINNER) { //Hmm...
             if (!FieldLimit.NO_EXP_DECREASE.check(getMap().getFieldLimit())) {  // thanks Conrad for noticing missing FieldLimit check
-                int XPdummy = ExpTable.getExpNeededForLevel(getLevel());
+                long XPdummy = ExpTable.getExpNeededForLevel(getLevel());
 
                 if (getMap().isTown()) {    // thanks MindLove, SIayerMonkey, HaItsNotOver for noting players only lose 1% on town maps
                     XPdummy /= 100;
@@ -7634,7 +9060,7 @@ public class Character extends AbstractCharacterObject {
                     }
                 }
 
-                int curExp = getExp();
+                long curExp = getExp();
                 if (curExp > XPdummy) {
                     loseExp(XPdummy, false, false);
                 } else {
@@ -7795,7 +9221,7 @@ public class Character extends AbstractCharacterObject {
 
             recalcEquipStats();
 
-            localmagic = Math.min(localmagic, 2000);
+            localmagic = Math.min(localmagic, GameConstants.MAX_MAGIC_ATTACK);
 
             Integer hbhp = getBuffedValue(BuffStat.HYPERBODYHP);
             if (hbhp != null) {
@@ -7806,8 +9232,9 @@ public class Character extends AbstractCharacterObject {
                 localmaxmp += (hbmp.doubleValue() / 100) * localmaxmp;
             }
 
-            localmaxhp = Math.min(30000, localmaxhp);
-            localmaxmp = Math.min(30000, localmaxmp);
+            int hpMpCap = GameConstants.getMaxPlayerHpMpForLevel(level);
+            localmaxhp = Math.min(hpMpCap, localmaxhp);
+            localmaxmp = Math.min(hpMpCap, localmaxmp);
 
             StatEffect combo = getBuffEffect(BuffStat.ARAN_COMBO);
             if (combo != null) {
@@ -7880,7 +9307,19 @@ public class Character extends AbstractCharacterObject {
                     if (bow || crossbow || claw || gun) {
                         // Also calc stars into this.
                         Inventory inv = getInventory(InventoryType.USE);
-                        for (short i = 1; i <= inv.getSlotLimit(); i++) {
+                        // Get slot limit outside of synchronized block to avoid deadlock
+                        // Temporarily release locks to call getSlotLimit() safely
+                        statWlock.unlock();
+                        chrLock.unlock();
+                        effLock.unlock();
+
+                        byte invSlotLimit = inv.getSlotLimit();
+
+                        effLock.lock();
+                        chrLock.lock();
+                        statWlock.lock();
+
+                        for (short i = 1; i <= invSlotLimit; i++) {
                             Item item = inv.getItem(i);
                             if (item != null) {
                                 if ((claw && ItemConstants.isThrowingStar(item.getItemId())) || (gun && ItemConstants.isBullet(item.getItemId())) || (bow && ItemConstants.isArrowForBow(item.getItemId())) || (crossbow && ItemConstants.isArrowForCrossBow(item.getItemId()))) {
@@ -7896,11 +9335,64 @@ public class Character extends AbstractCharacterObject {
                 }
                 // Add throwing stars to dmg.
             }
+
+            // ===== Set Bonus (bonus de equipamento por conjunto) =====
+            // Recalcula o bonus dos itens de set equipados e aplica nos stats locais.
+            // STR/DEX/INT/LUK/WATK/MATK usam os valores do set como percentual; HP/MP continuam fixos.
+            setbonusstr = setbonusdex = setbonusint_ = setbonusluk = 0;
+            setbonushp = setbonusmp = 0;
+            setbonuswatk = setbonusmatk = 0;
+            setbonusacc = setbonuseva = 0;
+            setbonusbossdmg = 0;
+
+            Inventory setBonusEquipped = getInventory(InventoryType.EQUIPPED);
+            if (setBonusEquipped != null) {
+                SetBonusService.Result setBonus = SetBonusService.getInstance().computeSetBonus(setBonusEquipped);
+                SetBonusService.Bonus totalBonus = setBonus.getTotal();
+                setbonusstr = percentBonus(localstr, totalBonus.str);
+                setbonusdex = percentBonus(localdex, totalBonus.dex);
+                setbonusint_ = percentBonus(localint_, totalBonus.int_);
+                setbonusluk = percentBonus(localluk, totalBonus.luk);
+                setbonushp = totalBonus.hp;
+                setbonusmp = totalBonus.mp;
+                setbonuswatk = percentBonus(localwatk, totalBonus.watk);
+                setbonusmatk = percentBonus(localmagic, totalBonus.matk);
+                setbonusacc = totalBonus.acc;
+                setbonuseva = totalBonus.eva;
+                setbonusbossdmg = totalBonus.bossDmgPct;
+
+                localstr = clampClientMainStat(localstr + setbonusstr);
+                localdex = clampClientMainStat(localdex + setbonusdex);
+                localint_ = clampClientMainStat(localint_ + setbonusint_);
+                localluk = clampClientMainStat(localluk + setbonusluk);
+                localmagic += setbonusmatk;
+                localwatk += setbonuswatk;
+                localmaxhp += setbonushp;
+                localmaxmp += setbonusmp;
+
+                // Respeita o cap de HP/MP do servidor (GameConstants.MAX_PLAYER_HP_MP = 32767),
+                // o mesmo limite aplicado aos equipamentos acima. Evita estouro do campo de 2 bytes.
+                localmaxhp = Math.min(hpMpCap, localmaxhp);
+                localmaxmp = Math.min(hpMpCap, localmaxmp);
+            }
+
+            localmagic = Math.min(localmagic, GameConstants.MAX_MAGIC_ATTACK);
         } finally {
             statWlock.unlock();
             chrLock.unlock();
             effLock.unlock();
         }
+    }
+
+    private static int clampClientMainStat(int stat) {
+        return Math.max(0, Math.min(Short.MAX_VALUE, stat));
+    }
+
+    private static int percentBonus(int baseValue, int percent) {
+        if (baseValue <= 0 || percent <= 0) {
+            return 0;
+        }
+        return (int) Math.min(Integer.MAX_VALUE, ((long) baseValue * percent) / 100L);
     }
 
     private List<Pair<Stat, Integer>> recalcLocalStats() {
@@ -7935,12 +9427,20 @@ public class Character extends AbstractCharacterObject {
                     } else {
                         mpUpdate = calcMpRatioTransient();
                     }
-
                     hpmpupdate.add(mpUpdate);
                 }
             }
 
+            if (localmaxhp != oldlocalmaxhp) {
+                hpmpupdate.add(new Pair<>(Stat.MAXHP, localmaxhp));
+            }
+
+            if (localmaxmp != oldlocalmaxmp) {
+                hpmpupdate.add(new Pair<>(Stat.MAXMP, localmaxmp));
+            }
+
             return hpmpupdate;
+
         } finally {
             statWlock.unlock();
             chrLock.unlock();
@@ -7954,11 +9454,17 @@ public class Character extends AbstractCharacterObject {
         statWlock.lock();
         try {
             int oldmaxhp = localmaxhp;
+            int oldmaxmp = localmaxmp;
             List<Pair<Stat, Integer>> hpmpupdate = recalcLocalStats();
             enforceMaxHpMp();
 
             if (!hpmpupdate.isEmpty()) {
+                sendRealHpMpSyncIfNeeded(hpmpupdate);
                 sendPacket(PacketCreator.updatePlayerStats(hpmpupdate, true, this));
+            } else if (oldmaxhp != localmaxhp || oldmaxmp != localmaxmp) {
+                // When fixed-ratio HP/MP update is disabled, local max pools can change from equip/buff
+                // without producing stat entries; force immediate widget sync to avoid visual delay.
+                sendPacket(PacketCreator.widgetPlayerHpMp(getHp(), getCurrentMaxHp(), getMp(), getCurrentMaxMp()));
             }
 
             if (oldmaxhp != localmaxhp) {   // thanks Wh1SK3Y (Suwaidy) for pointing out a deadlock occuring related to party members HP
@@ -7969,6 +9475,7 @@ public class Character extends AbstractCharacterObject {
             effLock.unlock();
             prtLock.unlock();
         }
+        refreshSetBonusVisual(); // Set Bonus: atualiza os bonus virtuais fora dos locks
     }
 
     public void receivePartyMemberHP() {
@@ -8107,7 +9614,7 @@ public class Character extends AbstractCharacterObject {
 
     public void resetBattleshipHp() {
         int bshipLevel = Math.max(getLevel() - 120, 0);  // thanks alex12 for noticing battleship HP issues for low-level players
-        this.battleshipHp = 400 * getSkillLevel(SkillFactory.getSkill(Corsair.BATTLE_SHIP)) + (bshipLevel * 200);
+        this.battleshipHp = 4000 * getSkillLevel(SkillFactory.getSkill(Corsair.BATTLE_SHIP)) + (bshipLevel * 2000);
     }
 
     public void resetEnteredScript() {
@@ -8348,7 +9855,7 @@ public class Character extends AbstractCharacterObject {
                         ps.executeBatch();
                     }
                 }
-                
+
                 con.commit();
                 return true;
             } catch (Exception e) {
@@ -8387,6 +9894,7 @@ public class Character extends AbstractCharacterObject {
             return;
         }
 
+        int dailyCheckinEventPointsToGrant = pendingDailyCheckinEventPoints;
         Calendar c = Calendar.getInstance();
         log.debug("Attempting to {} chr {}", notAutosave ? "save" : "autosave", name);
 
@@ -8408,7 +9916,7 @@ public class Character extends AbstractCharacterObject {
                         ps.setInt(4, dex);
                         ps.setInt(5, luk);
                         ps.setInt(6, int_);
-                        ps.setInt(7, Math.abs(exp.get()));
+                        ps.setLong(7, Math.abs(exp.get()));
                         ps.setInt(8, Math.abs(gachaexp.get()));
                         ps.setInt(9, hp);
                         ps.setInt(10, mp);
@@ -8435,7 +9943,10 @@ public class Character extends AbstractCharacterObject {
                     ps.setInt(18, job.getId());
                     ps.setInt(19, hair);
                     ps.setInt(20, face);
-                    if (map == null || (cashshop != null && cashshop.isOpened())) {
+                    boolean jailed = getJailExpirationTimeLeft() > 0;
+                    if (jailed) {
+                        ps.setInt(21, MapId.JAIL);
+                    } else if (map == null || (cashshop != null && cashshop.isOpened())) {
                         ps.setInt(21, mapid);
                     } else {
                         if (map.getForcedReturnId() != MapId.NONE) {
@@ -8446,7 +9957,7 @@ public class Character extends AbstractCharacterObject {
                     }
                     ps.setInt(22, meso.get());
                     ps.setInt(23, hpMpApUsed);
-                    if (map == null || map.getId() == MapId.CRIMSONWOOD_VALLEY_1 || map.getId() == MapId.CRIMSONWOOD_VALLEY_2) {  // reset to first spawnpoint on those maps
+                    if (jailed || map == null || map.getId() == MapId.CRIMSONWOOD_VALLEY_1 || map.getId() == MapId.CRIMSONWOOD_VALLEY_2) {  // reset to first spawnpoint on those maps
                         ps.setInt(24, 0);
                     } else {
                         Portal closest = map.findClosestPlayerSpawnpoint(getPosition());
@@ -8519,6 +10030,8 @@ public class Character extends AbstractCharacterObject {
                         throw new RuntimeException("Character not in database (" + id + ")");
                     }
                 }
+
+                saveDailyCheckinAccountState(con, dailyCheckinEventPointsToGrant);
 
                 List<Pet> petList = new LinkedList<>();
                 petLock.lock();
@@ -8764,15 +10277,6 @@ public class Character extends AbstractCharacterObject {
 
                 }
 
-                try (PreparedStatement psCheckin = con.prepareStatement(
-                        "UPDATE characters SET checkinDay = ?, checkinClaimed = ?, checkinLastClaim = ? WHERE id = ?")) {
-                    psCheckin.setInt(1, checkinDay);
-                    psCheckin.setInt(2, checkinClaimed);
-                    psCheckin.setLong(3, checkinLastClaim);
-                    psCheckin.setInt(4, id);
-                    psCheckin.executeUpdate();
-                }
-
                 if (cashshop != null) {
                     cashshop.save(con);
                 }
@@ -8799,6 +10303,7 @@ public class Character extends AbstractCharacterObject {
                 if (mountstorage  != null && usedMountStorage)  { mountstorage.saveToDB(con);  usedMountStorage  = false; }
 
                 con.commit();
+                pendingDailyCheckinEventPoints -= dailyCheckinEventPointsToGrant;
             } catch (Exception e) {
                 con.rollback();
                 throw e;
@@ -8808,6 +10313,121 @@ public class Character extends AbstractCharacterObject {
             }
         } catch (Exception e) {
             log.error("Error saving chr {}, level: {}, job: {}", name, level, job.getId(), e);
+        }
+    }
+
+    private void saveDailyCheckinAccountState(
+            Connection con,
+            int eventPointsToGrant
+    ) throws SQLException {
+        String query = eventPointsToGrant > 0
+                ? "UPDATE accounts SET checkinDay = ?, checkinClaimed = ?, checkinLastClaim = ?, "
+                + "checkinMobKills = ?, checkinLastCompletion = ?, checkinCycle = ?, "
+                + "eventpoints = eventpoints + ? "
+                + "WHERE id = ? AND eventpoints >= 0 AND eventpoints <= ?"
+                : "UPDATE accounts SET checkinDay = ?, checkinClaimed = ?, checkinLastClaim = ?, "
+                + "checkinMobKills = ?, checkinLastCompletion = ?, checkinCycle = ? "
+                + "WHERE id = ?";
+        try (PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setInt(1, checkinDay);
+            ps.setInt(2, checkinClaimed);
+            ps.setLong(3, checkinLastClaim);
+            ps.setInt(4, checkinMobKills);
+            ps.setLong(5, checkinLastCompletion);
+            ps.setInt(6, checkinCycle);
+            if (eventPointsToGrant > 0) {
+                ps.setInt(7, eventPointsToGrant);
+                ps.setInt(8, accountid);
+                ps.setInt(9, Integer.MAX_VALUE - eventPointsToGrant);
+            } else {
+                ps.setInt(7, accountid);
+            }
+
+            if (ps.executeUpdate() < 1) {
+                throw new SQLException(
+                        "Account not found or Event Points limit exceeded (" + accountid + ")"
+                );
+            }
+        }
+    }
+
+    /**
+     * Persists only the state changed by a Daily Check-In claim.
+     *
+     * <p>Inventory items, inventory limits, account progress and Event Points
+     * are committed atomically. The caller must only acknowledge the claim to
+     * the client after this method returns {@code true}.</p>
+     */
+    public synchronized boolean saveDailyCheckinToDB() {
+        if (!loggedIn) {
+            return false;
+        }
+
+        int eventPointsToGrant = pendingDailyCheckinEventPoints;
+        for (Inventory inv : inventory) {
+            inv.lockInventory();
+        }
+
+        try (Connection con = DatabaseConnection.getConnection()) {
+            boolean originalAutoCommit = con.getAutoCommit();
+            int originalIsolation = con.getTransactionIsolation();
+            con.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+            con.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = con.prepareStatement(
+                        "UPDATE characters SET equipslots = ?, useslots = ?, "
+                                + "setupslots = ?, etcslots = ? WHERE id = ?"
+                )) {
+                    ps.setInt(1, getInventory(InventoryType.EQUIP).getSlotLimit());
+                    ps.setInt(2, getInventory(InventoryType.USE).getSlotLimit());
+                    ps.setInt(3, getInventory(InventoryType.SETUP).getSlotLimit());
+                    ps.setInt(4, getInventory(InventoryType.ETC).getSlotLimit());
+                    ps.setInt(5, id);
+                    if (ps.executeUpdate() < 1) {
+                        throw new SQLException("Character not found (" + id + ")");
+                    }
+                }
+
+                saveDailyCheckinAccountState(con, eventPointsToGrant);
+
+                List<Pair<Item, InventoryType>> itemsWithType = new ArrayList<>();
+                for (Inventory inv : inventory) {
+                    for (Item item : inv.list()) {
+                        itemsWithType.add(new Pair<>(item, inv.getType()));
+                    }
+                }
+                ItemFactory.INVENTORY.saveItems(itemsWithType, id, con);
+
+                con.commit();
+                pendingDailyCheckinEventPoints -= eventPointsToGrant;
+                return true;
+            } catch (Exception e) {
+                try {
+                    con.rollback();
+                } catch (SQLException rollbackException) {
+                    e.addSuppressed(rollbackException);
+                }
+                log.error("Failed to commit Daily Check-In for chr {}", name, e);
+                return false;
+            } finally {
+                try {
+                    con.setTransactionIsolation(originalIsolation);
+                    con.setAutoCommit(originalAutoCommit);
+                } catch (SQLException resetException) {
+                    log.warn(
+                            "Failed to reset Daily Check-In connection state for chr {}",
+                            name,
+                            resetException
+                    );
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to open Daily Check-In transaction for chr {}", name, e);
+            return false;
+        } finally {
+            for (int index = inventory.length - 1; index >= 0; index--) {
+                inventory[index].unlockInventory();
+            }
         }
     }
 
@@ -8926,8 +10546,12 @@ public class Character extends AbstractCharacterObject {
         }
     }
 
-    public void setExp(int amount) {
+    public void setExp(long amount) {
         this.exp.set(amount);
+    }
+
+    public void setExp(int amount) {
+        setExp((long) amount);
     }
 
     public void setGachaExp(int amount) {
@@ -8986,61 +10610,90 @@ public class Character extends AbstractCharacterObject {
         hasMerchant = set;
     }
 
-    public void addMerchantMesos(int add) {
-        final int newAmount = (int) Math.min((long) merchantmeso + add, Integer.MAX_VALUE);
-
+    private boolean updateMerchantMesosInDb(int amount) {
         try (Connection con = DatabaseConnection.getConnection();
              PreparedStatement ps = con.prepareStatement("UPDATE characters SET MerchantMesos = ? WHERE id = ?", Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, newAmount);
+            ps.setInt(1, amount);
             ps.setInt(2, id);
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+    public synchronized void addMerchantMesos(int add) {
+        final int newAmount = (int) Math.min((long) merchantmeso + add, Integer.MAX_VALUE);
+
+        if (!updateMerchantMesosInDb(newAmount)) {
             return;
         }
         merchantmeso = newAmount;
     }
 
-    public void setMerchantMeso(int set) {
-        try (Connection con = DatabaseConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement("UPDATE characters SET MerchantMesos = ? WHERE id = ?", Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, set);
-            ps.setInt(2, id);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public synchronized boolean addMerchantMesosIfPossible(int add) {
+        if (add < 0) {
+            return false;
+        }
+
+        long newAmount = (long) merchantmeso + add;
+        if (newAmount > Integer.MAX_VALUE) {
+            return false;
+        }
+
+        if (!updateMerchantMesosInDb((int) newAmount)) {
+            return false;
+        }
+
+        merchantmeso = (int) newAmount;
+        return true;
+    }
+
+    public synchronized void rollbackMerchantMesos(int remove) {
+        if (remove <= 0) {
             return;
         }
+
+        int newAmount = Math.max(merchantmeso - remove, 0);
+        if (!updateMerchantMesosInDb(newAmount)) {
+            return;
+        }
+
+        merchantmeso = newAmount;
+    }
+
+    public synchronized void setMerchantMeso(int set) {
+        if (!updateMerchantMesosInDb(set)) {
+            return;
+        }
+
         merchantmeso = set;
     }
 
-    public synchronized void withdrawMerchantMesos() {
+    public synchronized boolean withdrawMerchantMesos() {
         int merchantMeso = this.getMerchantNetMeso();
         int playerMeso = this.getMeso();
+        long nextMeso = (long) playerMeso + merchantMeso;
 
-        if (merchantMeso > 0) {
-            int possible = Integer.MAX_VALUE - playerMeso;
-
-            if (possible > 0) {
-                if (possible < merchantMeso) {
-                    this.gainMeso(possible, false);
-                    this.setMerchantMeso(merchantMeso - possible);
-                } else {
-                    this.gainMeso(merchantMeso, false);
-                    this.setMerchantMeso(0);
-                }
-            }
-        } else {
-            int nextMeso = playerMeso + merchantMeso;
-
-            if (nextMeso < 0) {
-                this.gainMeso(-playerMeso, false);
-                this.setMerchantMeso(merchantMeso + playerMeso);
-            } else {
-                this.gainMeso(merchantMeso, false);
-                this.setMerchantMeso(0);
-            }
+        if (nextMeso < 0 || nextMeso > Integer.MAX_VALUE) {
+            return false;
         }
+
+        if (merchantMeso != 0) {
+            this.gainMeso(merchantMeso, false);
+        }
+
+        if (!updateMerchantMesosInDb(0)) {
+            if (merchantMeso != 0) {
+                this.gainMeso(-merchantMeso, false);
+            }
+            return false;
+        }
+
+        merchantmeso = 0;
+        return true;
     }
 
     public void setHiredMerchant(HiredMerchant merchant) {
@@ -9106,7 +10759,7 @@ public class Character extends AbstractCharacterObject {
 
     private int calcHpRatioUpdate(int curpoint, int maxpoint, int diffpoint) {
         int curMax = maxpoint;
-        int nextMax = Math.min(30000, maxpoint + diffpoint);
+        int nextMax = Math.min(GameConstants.getMaxPlayerHpMpForLevel(level), maxpoint + diffpoint);
 
         float temp = curpoint * nextMax;
         int ret = (int) Math.ceil(temp / curMax);
@@ -9117,7 +10770,7 @@ public class Character extends AbstractCharacterObject {
 
     private int calcMpRatioUpdate(int curpoint, int maxpoint, int diffpoint) {
         int curMax = maxpoint;
-        int nextMax = Math.min(30000, maxpoint + diffpoint);
+        int nextMax = Math.min(GameConstants.getMaxPlayerHpMpForLevel(level), maxpoint + diffpoint);
 
         float temp = curpoint * nextMax;
         int ret = (int) Math.ceil(temp / curMax);
@@ -9152,6 +10805,7 @@ public class Character extends AbstractCharacterObject {
             effLock.unlock();
         }
 
+        /*
         // autopot on HPMP deplete... thanks shavit for finding out D. Roar doesn't trigger autopot request
         if (hpchange < 0) {
             KeyBinding autohpPot = this.getKeymap().get(91);
@@ -9167,7 +10821,7 @@ public class Character extends AbstractCharacterObject {
                 }
             }
         }
-
+        //FALLBACK DE MP PARA PET
         if (mpchange < 0) {
             KeyBinding autompPot = this.getKeymap().get(92);
             if (autompPot != null) {
@@ -9182,6 +10836,7 @@ public class Character extends AbstractCharacterObject {
                 }
             }
         }
+        */
 
         return true;
     }
@@ -9331,9 +10986,15 @@ public class Character extends AbstractCharacterObject {
     }
 
     public boolean gainSlots(int type, int slots, boolean update) {
+        return gainSlots(type, slots, update, true);
+    }
+
+    public boolean gainSlots(int type, int slots, boolean update, boolean saveImmediately) {
         int newLimit = gainSlotsInternal(type, slots);
         if (newLimit != -1) {
-            this.saveCharToDB();
+            if (saveImmediately) {
+                this.saveCharToDB();
+            }
             if (update) {
                 sendPacket(PacketCreator.updateInventorySlotLimit(type, newLimit));
             }
@@ -9356,6 +11017,603 @@ public class Character extends AbstractCharacterObject {
         } finally {
             inventory[type].unlockInventory();
         }
+    }
+
+    public record DailyCheckinProgress(
+            int completedDay,
+            int claimedMask,
+            int monsterKills,
+            int monsterTarget,
+            boolean huntReady,
+            int nextMonsterTarget,
+            long huntCooldownSeconds
+    ) {
+    }
+
+    public synchronized DailyCheckinProgress refreshCheckin() {
+        return refreshCheckin(false);
+    }
+
+    public synchronized DailyCheckinProgress refreshCheckin(boolean votedToday) {
+        long nowMillis = System.currentTimeMillis();
+        if (!DailyCheckinSchedule.isConfiguredCycleActive(
+                DailyCheckinRewards.CYCLE_ID,
+                nowMillis
+        )) {
+            return buildDailyCheckinProgress(nowMillis);
+        }
+
+        int oldDay = checkinDay;
+        int oldClaimed = checkinClaimed;
+        long oldLastClaim = checkinLastClaim;
+        int oldMobKills = checkinMobKills;
+        long oldLastCompletion = checkinLastCompletion;
+        int oldCycle = checkinCycle;
+
+        boolean changed = normalizeDailyCheckinState(nowMillis);
+        changed |= completeDailyCheckinObjectiveIfReady(votedToday, nowMillis);
+        if (changed && !persistDailyCheckinProgress()) {
+            restoreDailyCheckinState(
+                    oldDay,
+                    oldClaimed,
+                    oldLastClaim,
+                    oldMobKills,
+                    oldLastCompletion,
+                    oldCycle
+            );
+            log.warn("Failed to persist refreshed Daily Check-In state for chr {}", name);
+        }
+        return buildDailyCheckinProgress(nowMillis);
+    }
+
+    public synchronized DailyCheckinProgress recordDailyCheckinMonsterKill() {
+        return recordDailyCheckinMonsterKill(false);
+    }
+
+    public synchronized DailyCheckinProgress recordDailyCheckinMonsterKill(
+            boolean votedToday
+    ) {
+        long nowMillis = System.currentTimeMillis();
+        if (!DailyCheckinSchedule.isConfiguredCycleActive(
+                DailyCheckinRewards.CYCLE_ID,
+                nowMillis
+        )) {
+            return null;
+        }
+
+        int oldDay = checkinDay;
+        int oldClaimed = checkinClaimed;
+        long oldLastClaim = checkinLastClaim;
+        int oldMobKills = checkinMobKills;
+        long oldLastCompletion = checkinLastCompletion;
+        int oldCycle = checkinCycle;
+
+        boolean normalized = normalizeDailyCheckinState(nowMillis);
+        if (!DailyCheckinSchedule.isHuntReady(
+                checkinDay,
+                DailyCheckinRewards.CYCLE_DAYS,
+                checkinLastCompletion,
+                nowMillis
+        )) {
+            if (normalized && !persistDailyCheckinProgress()) {
+                restoreDailyCheckinState(
+                        oldDay,
+                        oldClaimed,
+                        oldLastClaim,
+                        oldMobKills,
+                        oldLastCompletion,
+                        oldCycle
+                );
+            }
+            return null;
+        }
+
+        int huntDay = checkinDay + 1;
+        int target = DailyCheckinRewards.monsterTarget(huntDay);
+        if (target <= 0) {
+            return null;
+        }
+
+        boolean changed = normalized;
+        if (checkinMobKills < target) {
+            checkinMobKills++;
+            changed = true;
+        }
+        if (completeDailyCheckinObjectiveIfReady(votedToday, nowMillis)) {
+            changed = true;
+        }
+        if (!changed) {
+            return null;
+        }
+
+        if (!persistDailyCheckinProgress()) {
+            restoreDailyCheckinState(
+                    oldDay,
+                    oldClaimed,
+                    oldLastClaim,
+                    oldMobKills,
+                    oldLastCompletion,
+                    oldCycle
+            );
+            return null;
+        }
+        return buildDailyCheckinProgress(nowMillis);
+    }
+
+    private boolean completeDailyCheckinObjectiveIfReady(
+            boolean votedToday,
+            long nowMillis
+    ) {
+        if (!votedToday
+                || checkinDay < 0
+                || checkinDay >= DailyCheckinRewards.CYCLE_DAYS
+                || !DailyCheckinSchedule.isHuntReady(
+                checkinDay,
+                DailyCheckinRewards.CYCLE_DAYS,
+                checkinLastCompletion,
+                nowMillis
+        )) {
+            return false;
+        }
+
+        int target = DailyCheckinRewards.monsterTarget(checkinDay + 1);
+        if (target <= 0 || checkinMobKills < target) {
+            return false;
+        }
+
+        checkinDay++;
+        checkinMobKills = 0;
+        checkinLastCompletion = nowMillis;
+        return true;
+    }
+
+    public synchronized boolean isCheckinRewardClaimable(int day) {
+        return checkinCycle == DailyCheckinRewards.CYCLE_ID
+                && day >= 1
+                && day <= checkinDay
+                && day <= DailyCheckinRewards.CYCLE_DAYS
+                && (checkinClaimed & (1 << (day - 1))) == 0;
+    }
+
+    public synchronized boolean hasCheckinRewardClaimable() {
+        if (checkinCycle != DailyCheckinRewards.CYCLE_ID) {
+            return false;
+        }
+        int completedMask = completedCheckinMask(checkinDay);
+        return (completedMask & ~checkinClaimed) != 0;
+    }
+
+    public synchronized boolean applyCheckinClaim(int day) {
+        if (!isCheckinRewardClaimable(day)) {
+            return false;
+        }
+
+        checkinClaimed |= 1 << (day - 1);
+        checkinLastClaim = System.currentTimeMillis();
+        return true;
+    }
+
+    public synchronized int getCheckinDay() {
+        return checkinDay;
+    }
+
+    public synchronized int getCheckinClaimed() {
+        return checkinClaimed;
+    }
+
+    public synchronized long getCheckinCooldownSeconds() {
+        return DailyCheckinSchedule.huntCooldownSeconds(
+                checkinDay,
+                DailyCheckinRewards.CYCLE_DAYS,
+                checkinLastCompletion,
+                System.currentTimeMillis()
+        );
+    }
+
+    public synchronized DailyCheckinProgress getDailyCheckinProgress() {
+        return buildDailyCheckinProgress(System.currentTimeMillis());
+    }
+
+    private boolean normalizeDailyCheckinState(long nowMillis) {
+        boolean changed = false;
+
+        if (checkinCycle == 0) {
+            boolean legacyCurrentCycle =
+                    checkinDay >= 1
+                            && checkinDay <= DailyCheckinRewards.CYCLE_DAYS
+                            && checkinLastClaim > 0
+                            && !DailyCheckinSchedule.isNewMonthlyCycle(checkinLastClaim, nowMillis);
+            if (legacyCurrentCycle) {
+                checkinCycle = DailyCheckinRewards.CYCLE_ID;
+                checkinMobKills = 0;
+                checkinLastCompletion = checkinLastClaim;
+                changed = true;
+            } else {
+                resetCheckinCycle(DailyCheckinRewards.CYCLE_ID);
+                return true;
+            }
+        } else if (checkinCycle != DailyCheckinRewards.CYCLE_ID) {
+            resetCheckinCycle(DailyCheckinRewards.CYCLE_ID);
+            return true;
+        }
+
+        int completedMask = completedCheckinMask(checkinDay);
+        int validMask = completedCheckinMask(DailyCheckinRewards.CYCLE_DAYS);
+        int currentTarget = checkinDay < DailyCheckinRewards.CYCLE_DAYS
+                ? DailyCheckinRewards.monsterTarget(checkinDay + 1)
+                : 0;
+        boolean invalid =
+                checkinDay < 0
+                        || checkinDay > DailyCheckinRewards.CYCLE_DAYS
+                        || (checkinClaimed & ~validMask) != 0
+                        || (checkinClaimed & ~completedMask) != 0
+                        || checkinMobKills < 0
+                        || checkinMobKills > currentTarget
+                        || (checkinDay == DailyCheckinRewards.CYCLE_DAYS && checkinMobKills != 0)
+                        || (checkinDay > 0
+                        && (checkinLastCompletion <= 0
+                        || checkinLastCompletion > nowMillis));
+        if (invalid) {
+            resetCheckinCycle(DailyCheckinRewards.CYCLE_ID);
+            return true;
+        }
+
+        if (checkinDay == 0 && checkinLastCompletion != 0) {
+            checkinLastCompletion = 0;
+            changed = true;
+        }
+        return changed;
+    }
+
+    private DailyCheckinProgress buildDailyCheckinProgress(long nowMillis) {
+        if (checkinDay >= DailyCheckinRewards.CYCLE_DAYS) {
+            int target = DailyCheckinRewards.monsterTarget(DailyCheckinRewards.CYCLE_DAYS);
+            return new DailyCheckinProgress(
+                    checkinDay,
+                    checkinClaimed,
+                    target,
+                    target,
+                    false,
+                    0,
+                    0
+            );
+        }
+
+        boolean activeCycle = DailyCheckinSchedule.isConfiguredCycleActive(
+                DailyCheckinRewards.CYCLE_ID,
+                nowMillis
+        );
+        if (!activeCycle) {
+            int target = DailyCheckinRewards.monsterTarget(checkinDay + 1);
+            return new DailyCheckinProgress(
+                    checkinDay,
+                    checkinClaimed,
+                    Math.min(checkinMobKills, target),
+                    target,
+                    false,
+                    target,
+                    0
+            );
+        }
+
+        boolean huntReady = activeCycle && DailyCheckinSchedule.isHuntReady(
+                checkinDay,
+                DailyCheckinRewards.CYCLE_DAYS,
+                checkinLastCompletion,
+                nowMillis
+        );
+        if (!huntReady && checkinDay > 0) {
+            int completedTarget = DailyCheckinRewards.monsterTarget(checkinDay);
+            return new DailyCheckinProgress(
+                    checkinDay,
+                    checkinClaimed,
+                    completedTarget,
+                    completedTarget,
+                    false,
+                    DailyCheckinRewards.monsterTarget(checkinDay + 1),
+                    DailyCheckinSchedule.huntCooldownSeconds(
+                            checkinDay,
+                            DailyCheckinRewards.CYCLE_DAYS,
+                            checkinLastCompletion,
+                            nowMillis
+                    )
+            );
+        }
+
+        int target = DailyCheckinRewards.monsterTarget(checkinDay + 1);
+        return new DailyCheckinProgress(
+                checkinDay,
+                checkinClaimed,
+                Math.min(checkinMobKills, target),
+                target,
+                huntReady,
+                target,
+                0
+        );
+    }
+
+    private boolean persistDailyCheckinProgress() {
+        try (Connection con = DatabaseConnection.getConnection()) {
+            saveDailyCheckinAccountState(con, 0);
+            return true;
+        } catch (SQLException e) {
+            log.error("Failed to persist Daily Check-In hunt progress for chr {}", name, e);
+            return false;
+        }
+    }
+
+    private void restoreDailyCheckinState(
+            int day,
+            int claimed,
+            long lastClaim,
+            int mobKills,
+            long lastCompletion,
+            int cycle
+    ) {
+        checkinDay = day;
+        checkinClaimed = claimed;
+        checkinLastClaim = lastClaim;
+        checkinMobKills = mobKills;
+        checkinLastCompletion = lastCompletion;
+        checkinCycle = cycle;
+    }
+
+    private static int completedCheckinMask(int completedDay) {
+        if (completedDay <= 0) {
+            return 0;
+        }
+        if (completedDay >= DailyCheckinRewards.CYCLE_DAYS) {
+            return (1 << DailyCheckinRewards.CYCLE_DAYS) - 1;
+        }
+        return (1 << completedDay) - 1;
+    }
+
+    private void resetCheckinCycle(int cycleId) {
+        checkinDay = 0;
+        checkinClaimed = 0;
+        checkinLastClaim = 0;
+        checkinMobKills = 0;
+        checkinLastCompletion = 0;
+        checkinCycle = cycleId;
+    }
+
+    public int sellAllItemsFromName(byte invTypeId, String name) {
+        //player decides from which inventory items should be sold.
+        InventoryType type = InventoryType.getByType(invTypeId);
+
+        Inventory inv = getInventory(type);
+        inv.lockInventory();
+        try {
+            Item it = inv.findByName(name);
+            if (it == null) {
+                return (-1);
+            }
+
+            ItemInformationProvider ii = ItemInformationProvider.getInstance();
+            return (sellAllItemsFromPosition(ii, type, it.getPosition()));
+        } finally {
+            inv.unlockInventory();
+        }
+    }
+
+    public int sellAllItemsFromPosition(ItemInformationProvider ii, InventoryType type, short pos) {
+        int mesoGain = 0;
+
+        Inventory inv = getInventory(type);
+        inv.lockInventory();
+        try {
+            for (short i = pos; i <= inv.getSlotLimit(); i++) {
+                if (inv.getItem(i) == null) {
+                    continue;
+                }
+                mesoGain += standaloneSell(getClient(), ii, type, i, inv.getItem(i).getQuantity());
+            }
+        } finally {
+            inv.unlockInventory();
+        }
+
+        return (mesoGain);
+    }
+
+    private int standaloneSell(Client c, ItemInformationProvider ii, InventoryType type, short slot, short quantity) {
+        if (quantity == 0xFFFF || quantity == 0) {
+            quantity = 1;
+        }
+
+        Inventory inv = getInventory(type);
+        inv.lockInventory();
+        try {
+            Item item = inv.getItem(slot);
+            if (item == null) { //Basic check
+                return (0);
+            }
+
+            int itemid = item.getItemId();
+            if (ItemConstants.isRechargeable(itemid)) {
+                quantity = item.getQuantity();
+            } else if (ItemId.isWeddingToken(itemid) || ItemId.isWeddingRing(itemid)) {
+                return (0);
+            }
+
+            if (quantity < 0) {
+                return (0);
+            }
+            short iQuant = item.getQuantity();
+            if (iQuant == 0xFFFF) {
+                iQuant = 1;
+            }
+
+            if (quantity <= iQuant && iQuant > 0) {
+                InventoryManipulator.removeFromSlot(c, type, (byte) slot, quantity, false);
+                int recvMesos = ii.getPrice(itemid, quantity);
+                if (recvMesos > 0) {
+                    gainMeso(recvMesos, false);
+                    return (recvMesos);
+                }
+            }
+
+            return (0);
+        } finally {
+            inv.unlockInventory();
+        }
+    }
+
+    private static boolean hasMergeFlag(Item item) {
+        return (item.getFlag() & ItemConstants.MERGE_UNTRADEABLE) == ItemConstants.MERGE_UNTRADEABLE;
+    }
+
+    private static void setMergeFlag(Item item) {
+        short flag = item.getFlag();
+        flag |= ItemConstants.MERGE_UNTRADEABLE;
+        flag |= ItemConstants.UNTRADEABLE;
+        item.setFlag(flag);
+    }
+
+    private List<Equip> getUpgradeableEquipped() {
+        List<Equip> list = new LinkedList<>();
+
+        ItemInformationProvider ii = ItemInformationProvider.getInstance();
+        for (Item item : getInventory(InventoryType.EQUIPPED)) {
+            if (ii.isUpgradeable(item.getItemId())) {
+                list.add((Equip) item);
+            }
+        }
+
+        return list;
+    }
+
+    private static List<Equip> getEquipsWithStat(List<Pair<Equip, Map<StatUpgrade, Short>>> equipped, StatUpgrade stat) {
+        List<Equip> equippedWithStat = new LinkedList<>();
+
+        for (Pair<Equip, Map<StatUpgrade, Short>> eq : equipped) {
+            if (eq.getRight().containsKey(stat)) {
+                equippedWithStat.add(eq.getLeft());
+            }
+        }
+
+        return equippedWithStat;
+    }
+
+    public boolean mergeAllItemsFromName(String name) {
+        InventoryType type = InventoryType.EQUIP;
+
+        Inventory inv = getInventory(type);
+        inv.lockInventory();
+        try {
+            Item it = inv.findByName(name);
+            if (it == null) {
+                return false;
+            }
+
+            Map<StatUpgrade, Float> statups = new LinkedHashMap<>();
+            mergeAllItemsFromPosition(statups, it.getPosition());
+
+            List<Pair<Equip, Map<StatUpgrade, Short>>> upgradeableEquipped = new LinkedList<>();
+            Map<Equip, List<Pair<StatUpgrade, Integer>>> equipUpgrades = new LinkedHashMap<>();
+            for (Equip eq : getUpgradeableEquipped()) {
+                upgradeableEquipped.add(new Pair<>(eq, eq.getStats()));
+                equipUpgrades.put(eq, new LinkedList<Pair<StatUpgrade, Integer>>());
+            }
+
+            /*
+            for (Entry<StatUpgrade, Float> es : statups.entrySet()) {
+                System.out.println(es);
+            }
+            */
+
+            for (Entry<StatUpgrade, Float> e : statups.entrySet()) {
+                Double ev = Math.sqrt(e.getValue());
+
+                Set<Equip> extraEquipped = new LinkedHashSet<>(equipUpgrades.keySet());
+                List<Equip> statEquipped = getEquipsWithStat(upgradeableEquipped, e.getKey());
+                float extraRate = (float) (0.2 * Math.random());
+
+                if (!statEquipped.isEmpty()) {
+                    float statRate = 1.0f - extraRate;
+
+                    int statup = (int) Math.ceil((ev * statRate) / statEquipped.size());
+                    for (Equip statEq : statEquipped) {
+                        equipUpgrades.get(statEq).add(new Pair<>(e.getKey(), statup));
+                        extraEquipped.remove(statEq);
+                    }
+                }
+
+                if (!extraEquipped.isEmpty()) {
+                    int statup = (int) Math.round((ev * extraRate) / extraEquipped.size());
+                    if (statup > 0) {
+                        for (Equip extraEq : extraEquipped) {
+                            equipUpgrades.get(extraEq).add(new Pair<>(e.getKey(), statup));
+                        }
+                    }
+                }
+            }
+
+            dropMessage(6, "EQUIPMENT MERGE operation results:");
+            for (Entry<Equip, List<Pair<StatUpgrade, Integer>>> eqpUpg : equipUpgrades.entrySet()) {
+                List<Pair<StatUpgrade, Integer>> eqpStatups = eqpUpg.getValue();
+                if (!eqpStatups.isEmpty()) {
+                    Equip eqp = eqpUpg.getKey();
+                    setMergeFlag(eqp);
+
+                    String showStr = " '" + ItemInformationProvider.getInstance().getName(eqp.getItemId()) + "': ";
+                    String upgdStr = eqp.gainStats(eqpStatups).getLeft();
+
+                    this.forceUpdateItem(eqp);
+
+                    showStr += upgdStr;
+                    dropMessage(6, showStr);
+                }
+            }
+
+            return true;
+        } finally {
+            inv.unlockInventory();
+        }
+    }
+
+    public void mergeAllItemsFromPosition(Map<StatUpgrade, Float> statups, short pos) {
+        Inventory inv = getInventory(InventoryType.EQUIP);
+        inv.lockInventory();
+        try {
+            for (short i = pos; i <= inv.getSlotLimit(); i++) {
+                standaloneMerge(statups, getClient(), InventoryType.EQUIP, i, inv.getItem(i));
+            }
+        } finally {
+            inv.unlockInventory();
+        }
+    }
+
+    private void standaloneMerge(Map<StatUpgrade, Float> statups, Client c, InventoryType type, short slot, Item item) {
+        short quantity;
+        ItemInformationProvider ii = ItemInformationProvider.getInstance();
+        if (item == null || (quantity = item.getQuantity()) < 1 || ii.isCash(item.getItemId()) || !ii.isUpgradeable(item.getItemId()) || hasMergeFlag(item)) {
+            return;
+        }
+
+        Equip e = (Equip) item;
+        for (Entry<StatUpgrade, Short> s : e.getStats().entrySet()) {
+            Float newVal = statups.get(s.getKey());
+
+            float incVal = s.getValue().floatValue();
+            switch (s.getKey()) {
+                case incPAD:
+                case incMAD:
+                case incPDD:
+                case incMDD:
+                    incVal = (float) Math.log(incVal);
+                    break;
+            }
+
+            if (newVal != null) {
+                newVal += incVal;
+            } else {
+                newVal = incVal;
+            }
+
+            statups.put(s.getKey(), newVal);
+        }
+
+        InventoryManipulator.removeFromSlot(c, type, (byte) slot, quantity, false);
     }
 
     public void setShop(Shop shop) {
@@ -9594,6 +11852,40 @@ public class Character extends AbstractCharacterObject {
             for (Character partychar : this.getPartyMembersOnSameMap()) {
                 partychar.sendPacket(PacketCreator.updatePartyMemberHP(getId(), curhp, curmaxhp));
             }
+            updatePartyStatusOverlayInternal();
+        }
+    }
+
+    public void updatePartyStatusOverlay() {
+        prtLock.lock();
+        try {
+            if (party == null || map == null) {
+                sendPacket(PacketCreator.partyStatusOverlayClear());
+                return;
+            }
+
+            updatePartyStatusOverlayInternal();
+        } finally {
+            prtLock.unlock();
+        }
+    }
+
+    private void updatePartyStatusOverlayInternal() {
+        if (party == null || map == null) {
+            sendPacket(PacketCreator.partyStatusOverlayClear());
+            return;
+        }
+
+        List<Character> partyMembers = this.getPartyMembersOnSameMap();
+        if (partyMembers.isEmpty()) {
+            sendPacket(PacketCreator.partyStatusOverlayClear());
+            return;
+        }
+
+        for (Character viewer : partyMembers) {
+            if (viewer != null && viewer.isLoggedinWorld()) {
+                viewer.sendPacket(PacketCreator.partyStatusOverlay(viewer, partyMembers));
+            }
         }
     }
 
@@ -9698,6 +11990,23 @@ public class Character extends AbstractCharacterObject {
         } else if (qs.getStatus().equals(QuestStatus.Status.COMPLETED)) {
             Quest mquest = qs.getQuest();
             short questid = mquest.getId();
+
+            //REF= QUEST RING
+            int questRingId =1115155; // ID DO ANEL
+            Inventory equipped = client.getPlayer().getInventory(InventoryType.EQUIPPED);
+            Equip eqQr = (Equip) equipped.findById(questRingId);
+
+            if (eqQr == null) {
+                // If not equipped, search in EQUIP inventory
+                Inventory equipInventory = client.getPlayer().getInventory(InventoryType.EQUIP);
+                eqQr = (Equip) equipInventory.findById(questRingId);
+            }
+
+            if (eqQr != null) {
+                //client.getPlayer().forceUpdateItem(eqQr);
+                client.getPlayer().applyQuestRingBoost();
+            }
+
             if (!mquest.isSameDayRepeatable() && !Quest.isExploitableQuest(questid)) {
                 awardQuestPoint(YamlConfig.config.server.QUEST_POINT_PER_QUEST_COMPLETE);
             }
@@ -9824,12 +12133,44 @@ public class Character extends AbstractCharacterObject {
         }
     }
 
+    private static int clampLongToInt(long value) {
+        if (value > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        }
+        if (value < Integer.MIN_VALUE) {
+            return Integer.MIN_VALUE;
+        }
+        return (int) value;
+    }
+
     public void updateSingleStat(Stat stat, int newval) {
         updateSingleStat(stat, newval, false);
     }
 
     private void updateSingleStat(Stat stat, int newval, boolean itemReaction) {
-        sendPacket(PacketCreator.updatePlayerStats(Collections.singletonList(new Pair<>(stat, Integer.valueOf(newval))), itemReaction, this));
+        List<Pair<Stat, Integer>> statup = Collections.singletonList(new Pair<>(stat, Integer.valueOf(newval)));
+        sendRealHpMpSyncIfNeeded(statup);
+        sendPacket(PacketCreator.updatePlayerStats(statup, itemReaction, this));
+    }
+
+    private static boolean hasHpMpStatUpdate(List<Pair<Stat, Integer>> stats) {
+        for (Pair<Stat, Integer> update : stats) {
+            Stat stat = update.getLeft();
+            if (stat == Stat.HP || stat == Stat.MAXHP || stat == Stat.MP || stat == Stat.MAXMP) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean shouldSendWidgetHpMpSync() {
+        return cashshop == null || !cashshop.isOpened();
+    }
+
+    private void sendRealHpMpSyncIfNeeded(List<Pair<Stat, Integer>> stats) {
+        if (hasHpMpStatUpdate(stats) && shouldSendWidgetHpMpSync()) {
+            sendPacket(PacketCreator.widgetPlayerHpMp(getHp(), getCurrentMaxHp(), getMp(), getCurrentMaxMp()));
+        }
     }
 
     public void sendPacket(Packet packet) {
@@ -10334,6 +12675,7 @@ public class Character extends AbstractCharacterObject {
 
     public void logOff() {
         this.loggedIn = false;
+        server.botcheck.BotCheckManager.getInstance().clear(this); // BOTCHECK: limpa o estado ao deslogar
 
         try (Connection con = DatabaseConnection.getConnection();
              PreparedStatement ps = con.prepareStatement("UPDATE characters SET lastLogoutTime=? WHERE id=?")) {
@@ -10404,6 +12746,14 @@ public class Character extends AbstractCharacterObject {
 
     public void setDragon(Dragon dragon) {
         this.dragon = dragon;
+    }
+
+    public void setTakingReflectDamage(boolean taking) {
+        takingReflectDamage = taking;
+    }
+
+    public boolean isTakingReflectDamage() {
+        return takingReflectDamage;
     }
 
     public void setAutopotHpAlert(float hpPortion) {
@@ -10567,7 +12917,7 @@ public class Character extends AbstractCharacterObject {
             ps.setString(1, newName);
             ps.setString(2, oldName);
             ps.executeUpdate();
-        } catch(SQLException e) { 
+        } catch(SQLException e) {
             e.printStackTrace();
             FilePrinter.printError(FilePrinter.CHANGE_CHARACTER_NAME, e, "Character ID : " + characterId);
             return false;
@@ -10577,7 +12927,7 @@ public class Character extends AbstractCharacterObject {
             ps.setString(1, newName);
             ps.setString(2, oldName);
             ps.executeUpdate();
-        } catch(SQLException e) { 
+        } catch(SQLException e) {
             e.printStackTrace();
             FilePrinter.printError(FilePrinter.CHANGE_CHARACTER_NAME, e, "Character ID : " + characterId);
             return false;
@@ -10586,7 +12936,7 @@ public class Character extends AbstractCharacterObject {
             ps.setString(1, newName);
             ps.setString(2, oldName);
             ps.executeUpdate();
-        } catch(SQLException e) { 
+        } catch(SQLException e) {
             e.printStackTrace();
             FilePrinter.printError(FilePrinter.CHANGE_CHARACTER_NAME, e, "Character ID : " + characterId);
             return false;
@@ -10596,7 +12946,7 @@ public class Character extends AbstractCharacterObject {
             ps.setString(1, newName);
             ps.setString(2, oldName);
             ps.executeUpdate();
-        } catch(SQLException e) { 
+        } catch(SQLException e) {
             e.printStackTrace();
             FilePrinter.printError(FilePrinter.CHANGE_CHARACTER_NAME, e, "Character ID : " + characterId);
             return false;
@@ -10606,7 +12956,7 @@ public class Character extends AbstractCharacterObject {
             ps.setString(1, newName);
             ps.setString(2, oldName);
             ps.executeUpdate();
-        } catch(SQLException e) { 
+        } catch(SQLException e) {
             e.printStackTrace();
             FilePrinter.printError(FilePrinter.CHANGE_CHARACTER_NAME, e, "Character ID : " + characterId);
             return false;
@@ -10616,7 +12966,7 @@ public class Character extends AbstractCharacterObject {
             ps.setString(1, newName);
             ps.setString(2, oldName);
             ps.executeUpdate();
-        } catch(SQLException e) { 
+        } catch(SQLException e) {
             e.printStackTrace();
             FilePrinter.printError(FilePrinter.CHANGE_CHARACTER_NAME, e, "Character ID : " + characterId);
             return false;
@@ -10626,7 +12976,7 @@ public class Character extends AbstractCharacterObject {
             ps.setString(1, newName);
             ps.setString(2, oldName);
             ps.executeUpdate();
-        } catch(SQLException e) { 
+        } catch(SQLException e) {
             e.printStackTrace();
             FilePrinter.printError(FilePrinter.CHANGE_CHARACTER_NAME, e, "Character ID : " + characterId);
             return false;
@@ -10636,7 +12986,7 @@ public class Character extends AbstractCharacterObject {
             ps.setString(1, newName);
             ps.setString(2, oldName);
             ps.executeUpdate();
-        } catch(SQLException e) { 
+        } catch(SQLException e) {
             e.printStackTrace();
             FilePrinter.printError(FilePrinter.CHANGE_CHARACTER_NAME, e, "Character ID : " + characterId);
             return false;
@@ -10646,7 +12996,7 @@ public class Character extends AbstractCharacterObject {
             ps.setString(1, newName);
             ps.setString(2, oldName);
             ps.executeUpdate();
-        } catch(SQLException e) { 
+        } catch(SQLException e) {
             e.printStackTrace();
             FilePrinter.printError(FilePrinter.CHANGE_CHARACTER_NAME, e, "Character ID : " + characterId);
             return false;
@@ -10656,7 +13006,7 @@ public class Character extends AbstractCharacterObject {
             ps.setString(1, newName);
             ps.setString(2, oldName);
             ps.executeUpdate();
-        } catch(SQLException e) { 
+        } catch(SQLException e) {
             e.printStackTrace();
             FilePrinter.printError(FilePrinter.CHANGE_CHARACTER_NAME, e, "Character ID : " + characterId);
             return false;
@@ -10666,7 +13016,7 @@ public class Character extends AbstractCharacterObject {
             ps.setString(1, newName);
             ps.setString(2, oldName);
             ps.executeUpdate();
-        } catch(SQLException e) { 
+        } catch(SQLException e) {
             e.printStackTrace();
             FilePrinter.printError(FilePrinter.CHANGE_CHARACTER_NAME, e, "Character ID : " + characterId);
             return false;
@@ -10888,6 +13238,327 @@ public class Character extends AbstractCharacterObject {
         }
     }
 
+    public int getEventPoints() {
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT eventpoints FROM accounts WHERE id=?;")) {
+            ps.setInt(1, accountid);
+            ResultSet resultSet = ps.executeQuery();
+            int point = -1;
+            if (resultSet.next()) {
+                point = resultSet.getInt(1);
+            }
+            return point;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public synchronized boolean canQueueDailyCheckinEventPoints(int amount) {
+        if (amount < 0) {
+            return false;
+        }
+        if (amount == 0) {
+            return true;
+        }
+
+        int currentEventPoints = getEventPoints();
+        return currentEventPoints >= 0
+                && (long) currentEventPoints + pendingDailyCheckinEventPoints + amount
+                <= Integer.MAX_VALUE;
+    }
+
+    public synchronized boolean queueDailyCheckinEventPoints(int amount) {
+        if (!canQueueDailyCheckinEventPoints(amount)) {
+            return false;
+        }
+
+        pendingDailyCheckinEventPoints += amount;
+        return true;
+    }
+
+    public synchronized void cancelQueuedDailyCheckinEventPoints(int amount) {
+        if (amount <= 0) {
+            return;
+        }
+        pendingDailyCheckinEventPoints = Math.max(
+                0,
+                pendingDailyCheckinEventPoints - amount
+        );
+    }
+
+    public void setEventPoints(int value) {
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement("UPDATE accounts SET eventpoints=? WHERE id=?;")) {
+            ps.setInt(1, value);
+            ps.setInt(2, accountid);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int getVotePoints() {
+        Connection con = null;
+        PreparedStatement ps = null;
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("SELECT votepoints FROM accounts WHERE id=?;");
+            ps.setInt(1, accountid);
+            ResultSet rs = ps.executeQuery();
+            int points = -1;
+            if (rs.next()) {
+                points = rs.getInt(1);
+            }
+            return points;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try { if (ps != null) ps.close(); } catch (Exception e) { /* ignored */ }
+            try { if (con != null) con.close(); } catch (Exception e) { /* ignored */ }
+        }
+        return -1;
+    }
+
+    public void setVotePoints(int value) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        try {
+            con = DatabaseConnection.getConnection();
+            ps = con.prepareStatement("UPDATE accounts SET votepoints=? WHERE id=?;");
+            ps.setInt(1, value);
+            ps.setInt(2, accountid);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try { if (ps != null) ps.close(); } catch (Exception e) { /* ignored */ }
+            try { if (con != null) con.close(); } catch (Exception e) { /* ignored */ }
+        }
+    }
+
+    public int getMaplePoint() {
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT maplePoint FROM accounts WHERE id=?;")) {
+            ps.setInt(1, accountid);
+            ResultSet resultSet = ps.executeQuery();
+            int point = -1;
+            if (resultSet.next()) {
+                point = resultSet.getInt(1);
+            }
+            return point;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public void setMaplePoint(int value) {
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement("UPDATE accounts SET maplePoint=? WHERE id=?;")) {
+            ps.setInt(1, value);
+            ps.setInt(2, accountid);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static final class DailyRewardData {
+        private final String lastClaim;
+        private final int dailyRewardDay;
+
+        public DailyRewardData(String lastClaim, int dailyRewardDay) {
+            this.lastClaim = lastClaim;
+            this.dailyRewardDay = dailyRewardDay;
+        }
+
+        public String getLastClaim() {
+            return lastClaim;
+        }
+
+        public int getDailyRewardDay() {
+            return dailyRewardDay;
+        }
+    }
+
+    public DailyRewardData getDailyRewardData() {
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(
+                     "SELECT last_claim, daily_reward_day FROM recompensa_diaria WHERE accountid = ?"
+             )) {
+            ps.setInt(1, accountid);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new DailyRewardData(
+                            rs.getString("last_claim"),
+                            rs.getInt("daily_reward_day")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public boolean saveDailyRewardData(String date, int day) {
+        return saveDailyRewardData(new DailyRewardData(date, day));
+    }
+
+    private boolean saveDailyRewardData(DailyRewardData data) {
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(
+                     "INSERT INTO recompensa_diaria (accountid, last_claim, daily_reward_day) VALUES (?, ?, ?) " +
+                             "ON DUPLICATE KEY UPDATE last_claim = VALUES(last_claim), daily_reward_day = VALUES(daily_reward_day)"
+             )) {
+            ps.setInt(1, accountid);
+            ps.setString(2, data.getLastClaim());
+            ps.setInt(3, data.getDailyRewardDay());
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean restoreDailyRewardData(DailyRewardData oldData) {
+        if (oldData == null) {
+            try (Connection con = DatabaseConnection.getConnection();
+                 PreparedStatement ps = con.prepareStatement(
+                         "DELETE FROM recompensa_diaria WHERE accountid = ?"
+                 )) {
+                ps.setInt(1, accountid);
+                ps.executeUpdate();
+                return true;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            return false;
+        }
+
+        return saveDailyRewardData(oldData);
+    }
+
+    // NPC 3003253-EVENTOS
+    public boolean jaResgatouEvento(String nomeEvento) {
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(
+                     "SELECT resgatou FROM eventos_resgate WHERE nome_evento = ? AND char_id = ?")) {
+
+            ps.setString(1, nomeEvento);
+            ps.setInt(2, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("resgatou") == 1;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean marcarResgateEvento(String nomeEvento) {
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(
+                     "INSERT INTO eventos_resgate (nome_evento, char_id, resgatou, data_resgate) " +
+                             "VALUES (?, ?, 1, NOW()) " +
+                             "ON DUPLICATE KEY UPDATE " +
+                             "resgatou = 1, " +
+                             "data_resgate = IF(resgatou = 1, data_resgate, NOW())")) {
+
+            ps.setString(1, nomeEvento);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    // PAPULATUS QUEST
+    public int claimPapulatusCrack() {
+        Connection con = null;
+
+        try {
+            con = DatabaseConnection.getConnection();
+            con.setAutoCommit(false);
+
+            try (PreparedStatement psSelect = con.prepareStatement(
+                    "SELECT item_received FROM papulatus_quest WHERE characterid = ? FOR UPDATE");
+                 PreparedStatement psUpsert = con.prepareStatement(
+                         "INSERT INTO papulatus_quest (characterid, item_received) VALUES (?, 1) " +
+                                 "ON DUPLICATE KEY UPDATE item_received = 1")) {
+
+                psSelect.setInt(1, id);
+
+                try (ResultSet rs = psSelect.executeQuery()) {
+                    if (rs.next() && rs.getBoolean("item_received")) {
+                        con.rollback();
+                        return 1;
+                    }
+                }
+
+                psUpsert.setInt(1, id);
+                psUpsert.executeUpdate();
+
+                con.commit();
+                return 0; // sucesso
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+            try {
+                if (con != null) {
+                    con.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+
+            return -1;
+
+        } finally {
+            try {
+                if (con != null) {
+                    con.setAutoCommit(true);
+                    con.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public boolean rollbackPapulatusCrackClaim() {
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(
+                     "DELETE FROM papulatus_quest WHERE characterid = ?")) {
+
+            ps.setInt(1, id);
+            ps.executeUpdate();
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
     //EVENTS
     private byte team = 0;
     private Fitness fitness;
@@ -11073,6 +13744,237 @@ public class Character extends AbstractCharacterObject {
         this.chasing = chasing;
     }
 
+    public void forceUpdateStats() {
+        updateLocalStats();
+    }
+
+    //BBrStory Damage Status
+    public String getCharacterPower() {
+        boolean magicDisplay = usesMagicPowerDisplay();
+        if (clientCharacterPower != null && !clientCharacterPower.isBlank()) {
+            if ((magicDisplay && clientCharacterPower.endsWith("(MAG)")) || (!magicDisplay && clientCharacterPower.endsWith("(ATK)"))) {
+                return clientCharacterPower;
+            }
+            clientCharacterPower = "";
+        }
+        if (magicDisplay) {
+            return "... (MAG)";
+        }
+        return "... (ATK)";
+    }
+
+    public void setClientCharacterPower(String powerText) {
+        if (powerText == null) {
+            clientCharacterPower = "";
+            return;
+        }
+
+        String clean = powerText.replaceAll("[\\r\\n\\t]", " ").trim();
+        if (clean.length() > 32) {
+            clean = clean.substring(0, 32);
+        }
+
+        boolean magicDisplay = usesMagicPowerDisplay();
+        boolean hasDigit = clean.chars().anyMatch(java.lang.Character::isDigit);
+
+        if (hasDigit && ((magicDisplay && clean.endsWith("(MAG)")) || (!magicDisplay && clean.endsWith("(ATK)")))) {
+            clientCharacterPower = clean;
+        }
+    }
+
+    private boolean usesMagicPowerDisplay() {
+        int jobId = job.getId();
+        return job.isA(Job.MAGICIAN)
+                || job.isA(Job.BLAZEWIZARD1)
+                || job.isA(Job.EVAN1)
+                || job == Job.EVAN
+                || jobId == 2001
+                || (jobId >= 2200 && jobId <= 2218);
+    }
+
+
+    private final Map<server.maps.MapObject, Long> itemVacValidationMap = new ConcurrentHashMap<>();
+
+    public Map<server.maps.MapObject, Long> getItemVacValidationMap() {
+        return itemVacValidationMap;
+    }
+
+    private final List<Integer> recentlyDroppedItemObjectIds = new CopyOnWriteArrayList<>();
+
+    public void addRecentlyDroppedItem(int objectId) {
+        if (!this.recentlyDroppedItemObjectIds.contains(objectId)) {
+            this.recentlyDroppedItemObjectIds.add(objectId);
+        }
+    }
+
+    // >>> VARIAVEIS DO SISTEMA DE TESTE DE DPS INDIVIDUAL <<<
+    private transient long dummyTotalDamage = 0;
+    private transient boolean isDummyTestActive = false;
+    private transient java.util.concurrent.ScheduledFuture<?> dummyTimerTask = null;
+
+    public void handleDummyDamage(long damage, boolean isSummon) {
+        // 1. Inicia o teste se nao estiver ativo
+        if (!isDummyTestActive) {
+            isDummyTestActive = true;
+            dummyTotalDamage = 0;
+            this.resetMyDps(); // Limpa o tracker global para comecar do zero
+            // REMOVIDO: this.setDpsOverlayEnabled(true); UI da cabeca foi removida
+            this.client.sendPacket(tools.PacketCreator.getClock(30));
+
+            // Guarda o agendamento na variavel de controle
+            dummyTimerTask = server.TimerManager.getInstance().schedule(new Runnable() {
+                @Override
+                public void run() {
+                    finishDummyTest();
+                }
+            }, 30 * 1000);
+        }
+
+        // 2. Acumula o dano
+        dummyTotalDamage += damage;
+
+        // 3. Mensagem no MEIO DA TELA (Hit por Hit) - Contador amarelo que some
+        String screenMsg = (isSummon ? "Dano do Summon: " : "Dano causado: ") + String.format("%,d", damage).replace(",", ".");
+        this.client.sendPacket(tools.PacketCreator.earnTitleMessage(screenMsg));
+    }   // <<< ESSA CHAVE FECHA O handleDummyDamage
+
+    private void finishDummyTest() {
+        if (!isDummyTestActive) {
+            return;
+        }
+
+        long dps = dummyTotalDamage / 30;
+
+        // Mensagem azul no chat em uma unica linha (mesmo formato do MapDpsTracker)
+        String totalDamageFormatted = String.format("%,d", dummyTotalDamage).replace(",", ".");
+        String dpsFormatted = String.format("%,d", dps).replace(",", ".");
+
+        // Uma unica linha azul com dano total e DPS
+        String finalMessage = "Dano total: " + totalDamageFormatted + " (" + dpsFormatted + "/s de DPS)";
+
+        this.dropMessage(6, finalMessage); // codigo 6 = texto azul
+
+        // Reset de estado e limpeza
+        isDummyTestActive = false;
+        // REMOVIDO: this.setDpsOverlayEnabled(false); UI da cabeca foi removida
+        this.client.sendPacket(tools.PacketCreator.removeClock());
+        this.resetMyDps();
+
+        if (dummyTimerTask != null) {
+            dummyTimerTask = null;
+        }
+    } // <<< ESSA CHAVE FECHA O finishDummyTest
+
+    //BOSSPQ
+    public boolean canPlayBossPQ() {
+        return BossPQService.canPlay(getAccountID());
+    }
+
+    public void addBossPQEntry() {
+        BossPQService.addEntry(getAccountID());
+    }
+
+    public int getBossPQEntries() {
+        return BossPQService.getEntries(getAccountID());
+    }
+
+    public void addBossPQPoints(int points) {
+        BossPQService.addPoints(getAccountID(), points);
+    }
+
+    public void deductBossPQPoints(int points) {
+        BossPQService.deductPoints(getAccountID(), points);
+    }
+
+    public int getBossPQPoints() {
+        return BossPQService.getPoints(getAccountID());
+    }
+
+    public void setBossPQPoints(int points) {
+        BossPQService.setPoints(getAccountID(), points);
+    }
+
+    public int getBossPQAttempts() {
+        return getBossPQEntries();
+    }
+
+    public void addBossPQAttempt() {
+        addBossPQEntry();
+    }
+
+    public boolean isRecentlyDropped(int objectId) {
+        return this.recentlyDroppedItemObjectIds.contains(objectId);
+    }
+
+    public void clearRecentlyDroppedItems() {
+        this.recentlyDroppedItemObjectIds.clear();
+    }
+
+    //BagExtra
+    public boolean hasBagExtraAccess() {
+        return bagExtraService.hasAccess();
+    }
+
+    public boolean createBagExtraAccess(String plainPassword) {
+        return bagExtraService.createAccess(plainPassword);
+    }
+
+    public boolean validateBagExtraPassword(String plainPassword) {
+        return bagExtraService.validatePassword(plainPassword);
+    }
+
+    public boolean isBagExtraAuthenticated() {
+        return bagExtraService.isAuthenticated();
+    }
+
+    public void setBagExtraAuthenticated(boolean authenticated) {
+        bagExtraService.setAuthenticated(authenticated);
+    }
+
+    public void sendBagExtraTooltipCache() {
+        bagExtraService.sendTooltipCache();
+    }
+
+    public void sendBagExtraInventoryTooltipCache(InventoryType invType) {
+        bagExtraService.sendInventoryTooltipCache(invType);
+    }
+
+    public java.util.List<int[]> getBagExtraItems(int limit) {
+        return bagExtraService.getItems(limit);
+    }
+
+    public boolean addBagExtraItem(int itemId, int qty) {
+        return bagExtraService.addItem(itemId, qty);
+    }
+
+    public boolean canStoreBagExtraItem(int itemId, short slot) {
+        return bagExtraService.canStoreItem(itemId, slot);
+    }
+
+    public boolean depositBagExtraItem(int itemId, short slot, int qty) {
+        return bagExtraService.depositItem(itemId, slot, qty);
+    }
+
+    public int getBagExtraMaxSlotsPerType() {
+        return bagExtraService.getMaxSlotsPerType();
+    }
+
+    public int getBagExtraUsedSlots(InventoryType invType) {
+        return bagExtraService.getUsedSlots(invType);
+    }
+
+    public int getBagExtraEntryQuantity(int entryId) {
+        return bagExtraService.getEntryQuantity(entryId);
+    }
+
+    public boolean removeBagExtraItemByEntryId(int entryId, int qty) {
+        return bagExtraService.removeItemByEntryId(entryId, qty);
+    }
+
+    public boolean withdrawBagExtraItem(int entryId, int qty) {
+        return bagExtraService.withdrawItem(entryId, qty);
+    }
+
     // ===================== Storage Bag (ore/scroll/chair/mount) =====================
     public server.OreStorage getOreStorage()    { return orestorage; }
     public server.OreStorage getScrollStorage() { return scrollstorage; }
@@ -11101,5 +14003,10 @@ public class Character extends AbstractCharacterObject {
             case 3:  return constants.inventory.ItemConstants.isMountBagAllowed(itemId);
             default: return constants.inventory.ItemConstants.isOreBagAllowed(itemId);
         }
+    }
+
+    //PointMarket
+    public PointMarketService getPointMarket() {
+        return pointMarketService;
     }
 }

@@ -47,10 +47,10 @@ public enum ItemFactory {
     CASH_OVERALL(7, true),
     MARRIAGE_GIFTS(8, false),
     DUEY(9, false),
-    OREBAG(10, false),
-    SCROLLBAG(11, false),
-    CHAIRBAG(12, false),
-    MOUNTBAG(13, false);
+    OREBAG(10, false),      // Storage Bag: aba Minerio    (per-CHARACTER: account=false -> keyed by characterid)
+    SCROLLBAG(11, false),   // Storage Bag: aba Pergaminho
+    CHAIRBAG(12, false),    // Storage Bag: aba Cadeira
+    MOUNTBAG(13, false);    // Storage Bag: aba Montarias
     private final int value;
     private final boolean account;
 
@@ -122,6 +122,7 @@ public enum ItemFactory {
         equip.setExpiration(rs.getLong("expiration"));
         equip.setGiftFrom(rs.getString("giftFrom"));
         equip.setRingId(rs.getInt("ringid"));
+        equip.setAnvilItemId(rs.getInt("anvilItemId"));
 
         return equip;
     }
@@ -184,7 +185,7 @@ public enum ItemFactory {
                                 petid = -1;
                             }
 
-                            Item item = new Item(rs.getInt("itemid"), (byte) rs.getInt("position"), (short) rs.getInt("quantity"), petid);
+                            Item item = new Item(rs.getInt("itemid"), (short) rs.getInt("position"), (short) rs.getInt("quantity"), petid);
                             item.setOwner(rs.getString("owner"));
                             item.setExpiration(rs.getLong("expiration"));
                             item.setGiftFrom(rs.getString("giftFrom"));
@@ -232,7 +233,7 @@ public enum ItemFactory {
                         psItem.executeUpdate();
 
                         if (mit.equals(InventoryType.EQUIP) || mit.equals(InventoryType.EQUIPPED)) {
-                            try (PreparedStatement psEquip = con.prepareStatement("INSERT INTO `inventoryequipment` VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                            try (PreparedStatement psEquip = con.prepareStatement("INSERT INTO `inventoryequipment` VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                                 try (ResultSet rs = psItem.getGeneratedKeys()) {
                                     if (!rs.next()) {
                                         throw new RuntimeException("Inserting item failed.");
@@ -264,6 +265,7 @@ public enum ItemFactory {
                                 psEquip.setInt(21, equip.getItemLevel());
                                 psEquip.setInt(22, equip.getItemExp());
                                 psEquip.setInt(23, equip.getRingId());
+                                psEquip.setInt(24, equip.getAnvilItemId());
                                 psEquip.executeUpdate();
                             }
                         }
@@ -392,7 +394,7 @@ public enum ItemFactory {
 
                 // Equipment
                 if (mit.equals(InventoryType.EQUIP) || mit.equals(InventoryType.EQUIPPED)) {
-                    try (PreparedStatement ps = con.prepareStatement("INSERT INTO `inventoryequipment` VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    try (PreparedStatement ps = con.prepareStatement("INSERT INTO `inventoryequipment` VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                         ps.setInt(1, genKey);
 
                         Equip equip = (Equip) item;
@@ -418,6 +420,7 @@ public enum ItemFactory {
                         ps.setInt(21, equip.getItemLevel());
                         ps.setInt(22, equip.getItemExp());
                         ps.setInt(23, equip.getRingId());
+                        ps.setInt(24, equip.getAnvilItemId());
                         ps.executeUpdate();
                     }
                 }

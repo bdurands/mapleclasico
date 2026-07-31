@@ -22,13 +22,12 @@
 package net.opcodes;
 
 public enum SendOpcode {
-    DAILY_CHECKIN(0x17C),
 
     LOGIN_STATUS(0x00),
     GUEST_ID_LOGIN(0x01),
-    ACCOUNT_INFO(0x02), // I guess this was in v83 too :)
-    SERVERSTATUS(0x03), // CHECK_USER_LIMIT_RESULT
-    GENDER_DONE(0x04), // SET_ACCOUNT_RESULT
+    ACCOUNT_INFO(0x02),//I guess this was in v83 too :)
+    SERVERSTATUS(0x03),//CHECK_USER_LIMIT_RESULT
+    GENDER_DONE(0x04),//SET_ACCOUNT_RESULT
     CONFIRM_EULA_RESULT(0x05),
     CHECK_PINCODE(0x06),
     UPDATE_PINCODE(0x07),
@@ -44,16 +43,16 @@ public enum SendOpcode {
     DELETE_CHAR_RESPONSE(0x0F),
     CHANGE_CHANNEL(0x10),
     PING(0x11),
-    KOREAN_INTERNET_CAFE_SHIT(0x12), // Useless ignore it.
+    KOREAN_INTERNET_CAFE_SHIT(0x12),//Useless ignore it.
     CHANNEL_SELECTED(0x14),
-    HACKSHIELD_REQUEST(0x15), // maybe this is RELOG_RESPONSE, can't care less
+    HACKSHIELD_REQUEST(0x15),//maybe this is RELOG_RESPONSE, can't care less
     RELOG_RESPONSE(0x16),
     CHECK_CRC_RESULT(0x19),
     LAST_CONNECTED_WORLD(0x1A),
     RECOMMENDED_WORLD_MESSAGE(0x1B),
     CHECK_SPW_RESULT(0x1C),
 
-    /* CWvsContext::OnPacket */
+    /*CWvsContext::OnPacket*/
     INVENTORY_OPERATION(0x1D),
     INVENTORY_GROW(0x1E),
     STAT_CHANGED(0x1F),
@@ -68,7 +67,7 @@ public enum SendOpcode {
     OPEN_FULL_CLIENT_DOWNLOAD_LINK(0x28),
     MEMO_RESULT(0x29),
     MAP_TRANSFER_RESULT(0x2A),
-    WEDDING_PHOTO(0x2B), // ANTI_MACRO_RESULT(0x2B),
+    WEDDING_PHOTO(0x2B), //ANTI_MACRO_RESULT(0x2B),
     CLAIM_RESULT(0x2D),
     CLAIM_AVAILABLE_TIME(0x2E),
     CLAIM_STATUS_CHANGED(0x2F),
@@ -116,7 +115,7 @@ public enum SendOpcode {
     SESSION_VALUE(0x5A),
     PARTY_VALUE(0x5B),
     FIELD_SET_VARIABLE(0x5C),
-    BONUS_EXP_CHANGED(0x5D), // pendant of spirit etc (guess, not sure about the opcode in v83)
+    BONUS_EXP_CHANGED(0x5D),//pendant of spirit etc (guess, not sure about the opcode in v83)
 
     FAMILY_CHART_RESULT(0x5E),
     FAMILY_INFO_RESULT(0x5F),
@@ -126,22 +125,22 @@ public enum SendOpcode {
     FAMILY_JOIN_ACCEPTED(0x63),
     FAMILY_PRIVILEGE_LIST(0x64),
     FAMILY_REP_GAIN(0x65),
-    FAMILY_NOTIFY_LOGIN_OR_LOGOUT(0x66), // ? is logged in. LOLWUT
+    FAMILY_NOTIFY_LOGIN_OR_LOGOUT(0x66), //? is logged in. LOLWUT
     FAMILY_SET_PRIVILEGE(0x67),
     FAMILY_SUMMON_REQUEST(0x68),
 
     NOTIFY_LEVELUP(0x69),
     NOTIFY_MARRIAGE(0x6A),
     NOTIFY_JOB_CHANGE(0x6B),
-    // SET_BUY_EQUIP_EXT(0x6C), //probably extra pendant slot for other versions?
-    MAPLE_TV_USE_RES(0x6D), // It's not blank, It's a popup nibs
-    AVATAR_MEGAPHONE_RESULT(0x6E), // bot useless..
+    //SET_BUY_EQUIP_EXT(0x6C),  //probably extra pendant slot for other versions?
+    MAPLE_TV_USE_RES(0x6D), //It's not blank, It's a popup nibs
+    AVATAR_MEGAPHONE_RESULT(0x6E),//bot useless..
     SET_AVATAR_MEGAPHONE(0x6F),
     CLEAR_AVATAR_MEGAPHONE(0x70),
     CANCEL_NAME_CHANGE_RESULT(0x71),
     CANCEL_TRANSFER_WORLD_RESULT(0x72),
     DESTROY_SHOP_RESULT(0x73),
-    FAKE_GM_NOTICE(0x74), // bad asses
+    FAKE_GM_NOTICE(0x74),//bad asses
     SUCCESS_IN_USE_GACHAPON_BOX(0x75),
     NEW_YEAR_CARD_RES(0x76),
     RANDOM_MORPH_RES(0x77),
@@ -151,22 +150,22 @@ public enum SendOpcode {
     DATA_CRC_CHECK_FAILED(0x7B),
     MACRO_SYS_DATA_INIT(0x7C),
 
-    /* CStage::OnPacket */
+    /*CStage::OnPacket*/
     SET_FIELD(0x7D),
     SET_ITC(0x7E),
     SET_CASH_SHOP(0x7F),
 
-    /* CField::OnPacket */
+    /*CField::OnPacket*/
     SET_BACK_EFFECT(0x80),
-    SET_MAP_OBJECT_VISIBLE(0x81), // CMapLoadable::OnSetMapObjectVisible O_O
+    SET_MAP_OBJECT_VISIBLE(0x81),//CMapLoadable::OnSetMapObjectVisible O_O
     CLEAR_BACK_EFFECT(0x82),
-    BLOCKED_MAP(0x83), // TransferFieldRequestIgnored
+    BLOCKED_MAP(0x83),//TransferFieldRequestIgnored
     BLOCKED_SERVER(0x84),
-    FORCED_MAP_EQUIP(0x85), // FIELD_SPECIFIC_DATA
+    FORCED_MAP_EQUIP(0x85),//FIELD_SPECIFIC_DATA
     MULTICHAT(0x86),
     WHISPER(0x87),
     SPOUSE_CHAT(0x88),
-    SUMMON_ITEM_INAVAILABLE(0x89), // You can't use it in this map
+    SUMMON_ITEM_INAVAILABLE(0x89), //You can't use it in this map
 
     FIELD_EFFECT(0x8A),
     FIELD_OBSTACLE_ONOFF(0x8B),
@@ -176,24 +175,24 @@ public enum SendOpcode {
     PLAY_JUKEBOX(0x8F),
 
     ADMIN_RESULT(0x90),
-    OX_QUIZ(0x91), // QUIZ
-    GMEVENT_INSTRUCTIONS(0x92), // DESC
+    OX_QUIZ(0x91),//QUIZ
+    GMEVENT_INSTRUCTIONS(0x92),//DESC
     CLOCK(0x93),
     CONTI_MOVE(0x94),
     CONTI_STATE(0x95),
     SET_QUEST_CLEAR(0x96),
     SET_QUEST_TIME(0x97),
-    ARIANT_RESULT(0x98), // thanks lrenex
+    ARIANT_RESULT(0x98),    // thanks lrenex
     SET_OBJECT_STATE(0x99),
     STOP_CLOCK(0x9A),
     ARIANT_ARENA_SHOW_RESULT(0x9B),
     PYRAMID_GAUGE(0x9D),
     PYRAMID_SCORE(0x9E),
-    QUICKSLOT_INIT(0x9F), // LP_QuickslotMappedInit
+    QUICKSLOT_INIT(0x9F),//LP_QuickslotMappedInit
     SPAWN_PLAYER(0xA0),
     REMOVE_PLAYER_FROM_MAP(0xA1),
-    CHATTEXT(0xA2), // 0
-    CHATTEXT1(0xA3), // 1
+    CHATTEXT(0xA2), //0
+    CHATTEXT1(0xA3), //1
     CHALKBOARD(0xA4),
     UPDATE_CHAR_BOX(0xA5),
     SHOW_CONSUME_EFFECT(0xA6),
@@ -257,8 +256,8 @@ public enum SendOpcode {
     MOVE_MONSTER_RESPONSE(0xF0),
     APPLY_MONSTER_STATUS(0xF2),
     CANCEL_MONSTER_STATUS(0xF3),
-    RESET_MONSTER_ANIMATION(0xF4), // LOL? o.o
-    // Something with mob, but can't figure out00
+    RESET_MONSTER_ANIMATION(0xF4),//LOL? o.o
+    //Something with mob, but can't figure out00
     DAMAGE_MONSTER(0xF6),
     ARIANT_THING(0xF9),
     SHOW_MONSTER_HP(0xFA),
@@ -304,13 +303,13 @@ public enum SendOpcode {
     ARIANT_ARENA_USER_SCORE(0x129),
     SHEEP_RANCH_INFO(0x12B),
     SHEEP_RANCH_CLOTHES(0x12C),
-    WITCH_TOWER_SCORE_UPDATE(0x12D), // thanks lrenex
+    WITCH_TOWER_SCORE_UPDATE(0x12D),    // thanks lrenex
     HORNTAIL_CAVE(0x12E),
     ZAKUM_SHRINE(0x12F),
     NPC_TALK(0x130),
     OPEN_NPC_SHOP(0x131),
     CONFIRM_SHOP_TRANSACTION(0x132),
-    ADMIN_SHOP_MESSAGE(0x133), // lame :P
+    ADMIN_SHOP_MESSAGE(0x133),//lame :P
     ADMIN_SHOP(0x134),
     STORAGE(0x135),
     FREDRICK_MESSAGE(0x136),
@@ -323,9 +322,9 @@ public enum SendOpcode {
     TOURNAMENT_MATCH_TABLE(0x13C),
     TOURNAMENT_SET_PRIZE(0x13D),
     TOURNAMENT_UEW(0x13E),
-    TOURNAMENT_CHARACTERS(0x13F), // they never coded this :|
+    TOURNAMENT_CHARACTERS(0x13F),//they never coded this :|
 
-    WEDDING_PROGRESS(0x140), // byte step, int groomid, int brideid
+    WEDDING_PROGRESS(0x140),//byte step, int groomid, int brideid
     WEDDING_CEREMONY_END(0x141),
 
     PARCEL(0x142),
@@ -333,7 +332,7 @@ public enum SendOpcode {
     CHARGE_PARAM_RESULT(0x143),
     QUERY_CASH_RESULT(0x144),
     CASHSHOP_OPERATION(0x145),
-    CASHSHOP_PURCHASE_EXP_CHANGED(0x146), // found thanks to Arnah (Vertisy)
+    CASHSHOP_PURCHASE_EXP_CHANGED(0x146),   // found thanks to Arnah (Vertisy)
     CASHSHOP_GIFT_INFO_RESULT(0x147),
     CASHSHOP_CHECK_NAME_CHANGE(0x148),
     CASHSHOP_CHECK_NAME_CHANGE_POSSIBLE_RESULT(0x149),
@@ -355,13 +354,22 @@ public enum SendOpcode {
     MAPLELIFE_ERROR(0x15E),
     VICIOUS_HAMMER(0x162),
     VEGA_SCROLL(0x166),
+    WIDGET_RESPONSE(0x3713),
+    DPT_TRACKER(0x3714),
+    BAG_EXTRA_AUTH(0x3715),
+    SET_BONUS_TOOLTIP(0x3716), // Set Bonus: servidor envia payload (title + lines) da tooltip de set
+    SET_BONUS_VIRTUAL_STATS(0x3718), // Set Bonus: bonus virtual para a janela de status (sem item ancora)
+    PARTY_STATUS_OVERLAY(0x3719), // Party HUD custom: HP% + buffs dos membros do grupo
+    DAILY_CHECKIN(0x371A),
+    BOTCHECK_CHALLENGE(0x3720),   // BotCheck: servidor manda a conta (a, operador, b) e abre a caixinha no cliente
+    BOTCHECK_FOCUS_QUERY(0x3721),  // BotCheck: servidor pergunta ao cliente se o jogo esta em foco (gatilho rapido 40s)
+    BAG_WINDOW(0x3725),           // Storage Bag: snapshot da janela (ore/scroll/chair/cash) - LP_BagWindow
     DAMAGE_SKIN_CATALOG(0x170),
     DAMAGE_SKIN_INVENTORY(0x171),
     DAMAGE_SKIN_RESULT(0x172),
     DAMAGE_SKIN_BROADCAST(0x173),
     BEAUTY_RESULT(0x174),
-    BAG_WINDOW(0x3725);
-
+    BBR_CHAT_CONFIG(0x4716);
     private int code = -2;
 
     SendOpcode(int code) {

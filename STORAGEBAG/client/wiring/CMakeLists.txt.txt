@@ -1,0 +1,16 @@
+========================================================================
+ WIRING 2/3  ->  src/CMakeLists.txt
+========================================================================
+Add storagebag.cpp to the injector target's source list.
+
+Inside  add_library(injector SHARED  ...  )  add the line:
+
+    "storagebag.cpp"
+
+slotlock.cpp is (in this project) an already-existing file. If your build
+does NOT already compile it, add it too:
+
+    "slotlock.cpp"
+
+No new include dirs or link libraries are required - the module only uses
+what the injector target already links (Detours, WzLib, psapi).

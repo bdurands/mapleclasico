@@ -31,6 +31,10 @@ import net.server.channel.handlers.AllianceOperationHandler;
 import net.server.channel.handlers.AranComboHandler;
 import net.server.channel.handlers.AutoAggroHandler;
 import net.server.channel.handlers.AutoAssignHandler;
+import net.server.channel.handlers.BagExtraHandler;
+import net.server.channel.handlers.BotCheckAnswerHandler;
+import net.server.channel.handlers.BotCheckFocusHandler;
+import net.server.channel.handlers.SetBonusTooltipRequestHandler;
 import net.server.channel.handlers.BBSOperationHandler;
 import net.server.channel.handlers.BeholderHandler;
 import net.server.channel.handlers.BuddylistModifyHandler;
@@ -49,9 +53,8 @@ import net.server.channel.handlers.CloseChalkboardHandler;
 import net.server.channel.handlers.CloseRangeDamageHandler;
 import net.server.channel.handlers.CoconutHandler;
 import net.server.channel.handlers.CouponCodeHandler;
-import net.server.channel.handlers.DamageSkinApplyHandler;
-import net.server.channel.handlers.DamageSkinPurchaseHandler;
 import net.server.channel.handlers.DamageSummonHandler;
+import net.server.channel.handlers.DailyCheckinHandler;
 import net.server.channel.handlers.DenyAllianceRequestHandler;
 import net.server.channel.handlers.DenyGuildRequestHandler;
 import net.server.channel.handlers.DenyPartyRequestHandler;
@@ -193,9 +196,12 @@ import net.server.handlers.login.ViewAllCharHandler;
 import net.server.handlers.login.ViewAllCharRegisterPicHandler;
 import net.server.handlers.login.ViewAllCharSelectedHandler;
 import net.server.handlers.login.ViewAllCharSelectedWithPicHandler;
+import net.server.channel.handlers.DamageSkinApplyHandler;
+import net.server.channel.handlers.DamageSkinPurchaseHandler;
+import net.server.channel.handlers.BeautyHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.server.channel.handlers.BeautyHandler;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -318,6 +324,7 @@ public final class PacketProcessor {
         registerHandler(RecvOpcode.ITEM_SORT, new InventoryMergeHandler());
         registerHandler(RecvOpcode.ITEM_MOVE, new ItemMoveHandler());
         registerHandler(RecvOpcode.MESO_DROP, new MesoDropHandler());
+        registerHandler(RecvOpcode.DAILY_CHECKIN, new DailyCheckinHandler());
         registerHandler(RecvOpcode.PLAYER_LOGGEDIN, new PlayerLoggedinHandler(channelDeps.noteService()));
         registerHandler(RecvOpcode.CHANGE_MAP, new ChangeMapHandler());
         registerHandler(RecvOpcode.MOVE_LIFE, new MoveLifeHandler());
@@ -352,6 +359,11 @@ public final class PacketProcessor {
         registerHandler(RecvOpcode.MULTI_CHAT, new MultiChatHandler());
         registerHandler(RecvOpcode.USE_DOOR, new DoorHandler());
         registerHandler(RecvOpcode.ENTER_MTS, new EnterMTSHandler());
+        registerHandler(RecvOpcode.BAG_EXTRA, new BagExtraHandler());
+        registerHandler(RecvOpcode.SET_BONUS_TOOLTIP_REQUEST, new SetBonusTooltipRequestHandler());
+        registerHandler(RecvOpcode.BOTCHECK_ANSWER, new BotCheckAnswerHandler());
+        registerHandler(RecvOpcode.BOTCHECK_FOCUS_REPLY, new BotCheckFocusHandler());
+        registerHandler(RecvOpcode.BAG_WINDOW, new net.server.channel.handlers.BagWindowHandler());
         registerHandler(RecvOpcode.ENTER_CASHSHOP, new EnterCashShopHandler());
         registerHandler(RecvOpcode.DAMAGE_SUMMON, new DamageSummonHandler());
         registerHandler(RecvOpcode.MOVE_SUMMON, new MoveSummonHandler());
@@ -409,6 +421,8 @@ public final class PacketProcessor {
         registerHandler(RecvOpcode.CHANGE_FAMILY_MESSAGE, new FamilyPreceptsHandler());
         registerHandler(RecvOpcode.FAMILY_SUMMON_RESPONSE, new FamilySummonResponseHandler());
         registerHandler(RecvOpcode.USE_HAMMER, new UseHammerHandler());
+        registerHandler(RecvOpcode.DAMAGE_SKIN_APPLY, new DamageSkinApplyHandler());
+        registerHandler(RecvOpcode.DAMAGE_SKIN_PURCHASE, new DamageSkinPurchaseHandler());
         registerHandler(RecvOpcode.SCRIPTED_ITEM, new ScriptedItemHandler());
         registerHandler(RecvOpcode.TOUCHING_REACTOR, new TouchReactorHandler());
         registerHandler(RecvOpcode.BEHOLDER, new BeholderHandler());
@@ -428,8 +442,6 @@ public final class PacketProcessor {
         registerHandler(RecvOpcode.PLAYER_MAP_TRANSFER, new PlayerMapTransitionHandler());
         registerHandler(RecvOpcode.USE_MAPLELIFE, new UseMapleLifeHandler());
         registerHandler(RecvOpcode.USE_CATCH_ITEM, new UseCatchItemHandler());
-        registerHandler(RecvOpcode.DAMAGE_SKIN_APPLY, new DamageSkinApplyHandler());
-        registerHandler(RecvOpcode.DAMAGE_SKIN_PURCHASE, new DamageSkinPurchaseHandler());
         registerHandler(RecvOpcode.FIELD_DAMAGE_MOB, new FieldDamageMobHandler());
         registerHandler(RecvOpcode.MOB_DAMAGE_MOB_FRIENDLY, new MobDamageMobFriendlyHandler());
         registerHandler(RecvOpcode.PARTY_SEARCH_REGISTER, new PartySearchRegisterHandler());
@@ -454,7 +466,5 @@ public final class PacketProcessor {
         registerHandler(RecvOpcode.USE_ITEMUI, new RaiseIncExpHandler());
         registerHandler(RecvOpcode.CHANGE_QUICKSLOT, new QuickslotKeyMappedModifiedHandler());
         registerHandler(RecvOpcode.BEAUTY_ACTION, new BeautyHandler());
-        registerHandler(RecvOpcode.DAILY_CHECKIN, new net.server.channel.handlers.DailyCheckinHandler());
-        registerHandler(RecvOpcode.BAG_WINDOW, new net.server.channel.handlers.BagWindowHandler());
     }
 }

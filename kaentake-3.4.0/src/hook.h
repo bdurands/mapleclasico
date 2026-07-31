@@ -61,6 +61,7 @@ void AttachBeautyShopMod();
 void AttachFaceHairMod();
 void AttachDailyCheckinMod();
 void AttachFixCashItemsMod();
+void AttachBagWindowMod();
 
 inline void AttachClientHooks() {
     AttachClientBypass();
@@ -80,6 +81,7 @@ inline void AttachClientHooks() {
     AttachFaceHairMod();
     AttachDailyCheckinMod();
     AttachFixCashItemsMod();
+    AttachBagWindowMod();
 }
 
 

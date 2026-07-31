@@ -1,0 +1,28 @@
+========================================================================
+ WIRING 3/3  ->  src/PacketDispatcher.cpp  (your custom-opcode router)
+========================================================================
+The server replies to every bag action with opcode 0x3725 (LP_BagWindow).
+Route that opcode to the module's exported handler.
+
+------------------------------------------------------------------------
+(A) Near the top, with the other opcode constants + externs:
+------------------------------------------------------------------------
+static constexpr unsigned short kBagWindowOpcode = 0x3725; // Storage Bag: snapshot LP_BagWindow
+extern void BagWindow_HandleSnapshotPacket(CInPacket* pPacket);   // storagebag.cpp
+
+------------------------------------------------------------------------
+(B) Inside your incoming-packet switch/if-chain, add:
+------------------------------------------------------------------------
+    if (nType == kBagWindowOpcode) {
+        BagWindow_HandleSnapshotPacket(iPacket);
+        return;
+    }
+
+NOTE ON OPCODES
+---------------
+  client -> server : 0x3724  (CP_BagWindow, requests: open/withdraw/deposit/move/merge/setAuto)
+  server -> client : 0x3725  (LP_BagWindow, snapshot reply)
+Both are defined inside storagebag.cpp (kOpcode_Bag_Send / kOpcode_Bag_Recv)
+and MUST match the server's RecvOpcode.BAG_WINDOW / SendOpcode.BAG_WINDOW.
+If 0x3724 / 0x3725 collide with an opcode you already use, change them in
+BOTH the client (storagebag.cpp) and the server (RecvOpcode/SendOpcode).

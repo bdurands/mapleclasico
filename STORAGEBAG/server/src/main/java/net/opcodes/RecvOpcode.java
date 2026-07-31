@@ -22,8 +22,13 @@
 package net.opcodes;
 
 public enum RecvOpcode {
-    CUSTOM_PACKET(0x3713), // 13 37 lol
-    DAILY_CHECKIN(0x11A),
+    CUSTOM_PACKET(0x3713),//13 37 lol
+    BAG_EXTRA(0x3715),
+    SET_BONUS_TOOLTIP_REQUEST(0x3717), // Set Bonus: cliente pede tooltip de set ao passar o mouse num item
+    DAILY_CHECKIN(0x371A),
+    BOTCHECK_ANSWER(0x3722),       // BotCheck: cliente manda a resposta digitada
+    BOTCHECK_FOCUS_REPLY(0x3723),  // BotCheck: cliente (DLL) responde se o jogo esta em foco
+    BAG_WINDOW(0x3724),            // Storage Bag: pedidos da janela (ore/scroll/chair/cash) - CP_BagWindow
 
     LOGIN_PASSWORD(0x01),
     GUEST_LOGIN(0x02),
@@ -80,8 +85,8 @@ public enum RecvOpcode {
     HIRED_MERCHANT_REQUEST(0x3F),
     FREDRICK_ACTION(0x40),
     DUEY_ACTION(0x41),
-    OWL_ACTION(0x42), // sends most searched info to client
-    OWL_WARP(0x43), // handles player warp to store
+    OWL_ACTION(0x42),   //sends most searched info to client
+    OWL_WARP(0x43),     //handles player warp to store
     ADMIN_SHOP(0x44),
     ITEM_SORT(0x45),
     ITEM_SORT2(0x46),
@@ -93,7 +98,7 @@ public enum RecvOpcode {
     USE_MOUNT_FOOD(0x4D),
     SCRIPTED_ITEM(0x4E),
     USE_CASH_ITEM(0x4F),
-    // USE_OWL_ITEM(0x50), ... no idea
+    //USE_OWL_ITEM(0x50), ... no idea
     USE_CATCH_ITEM(0x51),
     USE_SKILL_BOOK(0x52),
     USE_TELEPORT_ROCK(0x54),
@@ -116,7 +121,7 @@ public enum RecvOpcode {
     TROCK_ADD_MAP(0x66),
     REPORT(0x6A),
     QUEST_ACTION(0x6B),
-    // USER_CALC_DAMAGE_STAT_SET_REQUEST(0x6C),
+    //USER_CALC_DAMAGE_STAT_SET_REQUEST(0x6C),
     GRENADE_EFFECT(0x6D),
     SKILL_MACRO(0x6E),
     USE_ITEM_REWARD(0x70),
@@ -174,7 +179,7 @@ public enum RecvOpcode {
     DAMAGE_SUMMON(0xB1),
     BEHOLDER(0xB2),
     MOVE_DRAGON(0xB5),
-    CHANGE_QUICKSLOT(0xB7), // CP_QuickslotKeyMappedModified
+    CHANGE_QUICKSLOT(0xB7),//CP_QuickslotKeyMappedModified
     MOVE_LIFE(0xBC),
     AUTO_AGGRO(0xBD),
     FIELD_DAMAGE_MOB(0xBF),
@@ -186,11 +191,11 @@ public enum RecvOpcode {
     DAMAGE_REACTOR(0xCD),
     TOUCHING_REACTOR(0xCE),
     PLAYER_MAP_TRANSFER(0xCF),
-    MAPLETV(0xFFFE), // Don't know
+    MAPLETV(0xFFFE),//Don't know
     SNOWBALL(0xD3),
     LEFT_KNOCKBACK(0xD4),
     COCONUT(0xD5),
-    MATCH_TABLE(0xD6), // Would be cool if I ever get it to work :)
+    MATCH_TABLE(0xD6),//Would be cool if I ever get it to work :)
     MONSTER_CARNIVAL(0xDA),
     PARTY_SEARCH_REGISTER(0xDC),
     PARTY_SEARCH_START(0xDE),
@@ -206,8 +211,7 @@ public enum RecvOpcode {
     USE_HAMMER(0x104),
     DAMAGE_SKIN_APPLY(0x110),
     DAMAGE_SKIN_PURCHASE(0x111),
-    BEAUTY_ACTION(0x174),
-    BAG_WINDOW(0x3724);
+    BEAUTY_ACTION(0x174);
 
     private int code = -2;
 

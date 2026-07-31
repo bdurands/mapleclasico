@@ -265,7 +265,8 @@ public final class ItemConstants {
     }
 
     public static boolean isFishingChair(int itemId) {
-        return itemId == ItemId.FISHING_CHAIR;
+        return itemId == ItemId.FISHING_CHAIR_1
+                || itemId == ItemId.FISHING_CHAIR_2;
     }
 
     public static boolean isMedal(int itemId) {
@@ -277,6 +278,6 @@ public final class ItemConstants {
     }
 
     public static boolean isHair(int itemId) {
-        return (itemId >= 30000 && itemId < 40000) || (itemId >= 40000 && itemId < 50000) || (itemId >= 60000 && itemId < 70000);
+        return itemId >= 30000 && itemId < 35000;
     }
 }

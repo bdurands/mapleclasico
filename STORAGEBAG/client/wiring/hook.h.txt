@@ -1,0 +1,18 @@
+========================================================================
+ WIRING 1/3  ->  src/hook.h
+========================================================================
+The bag module exposes one attach function. Declare it next to the other
+Attach*Mod() prototypes, and CALL it inside AttachClientHooks().
+
+------------------------------------------------------------------------
+(A) Add the prototype (near the other "void Attach...Mod();" lines):
+------------------------------------------------------------------------
+void AttachBagWindowMod();       // Storage Bag (ore/scroll/chair/mount) - inventory BAG button
+
+------------------------------------------------------------------------
+(B) Add the call inside AttachClientHooks() { ... }:
+------------------------------------------------------------------------
+    AttachBagWindowMod();   // Storage Bag (ore/scroll/chair/mount)
+
+Order is not critical, but attaching it AFTER the inventory / slot-lock
+hooks keeps the BAG button + right-click-deposit behavior consistent.

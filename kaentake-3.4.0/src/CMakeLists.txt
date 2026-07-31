@@ -20,6 +20,8 @@ add_library(injector SHARED
     debug.cpp
     dailycheckin.cpp
     fixcashitems.cpp
+    storagebag.cpp
+    slotlock.cpp
     hook.cpp
 )
 

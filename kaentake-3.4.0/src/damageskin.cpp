@@ -601,11 +601,16 @@ static void OnPacket_Broadcast(CInPacket* p) {
 static auto CClientSocket_ProcessPacket =
         reinterpret_cast<void(__thiscall*)(void*, CInPacket*)>(kAddr_ClientSocket_ProcessPacket);
 
+extern void BagWindow_HandleSnapshotPacket(CInPacket* pPacket);
+
 static void __fastcall CClientSocket_ProcessPacket_hook(
         void* pThis, void* /*edx*/, CInPacket* pPacket) {
     size_t saved = PacketOffset(pPacket);
     uint16_t op = InPacket_Decode2(pPacket);
     switch (op) {
+    case 0x3724: // BAG_WINDOW
+        BagWindow_HandleSnapshotPacket(pPacket);
+        return;
     case kOp_S2C_Catalog:
         OnPacket_Catalog(pPacket);
         return;
