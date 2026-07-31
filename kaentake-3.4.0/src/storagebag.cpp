@@ -345,8 +345,9 @@ static void DropRef(GW_ItemSlotBase* p) { if (p) { ZRef<GW_ItemSlotBase> t(p, fa
 // ---------------------------------------------------------------------------
 static constexpr int kOpcode_Bag_Send = 0x3724;   // CP_BagWindow (client -> server) - BBrStory custom opcode
 static constexpr int kOpcode_Bag_Recv = 0x3725;   // LP_BagWindow (server -> client) - BBrStory custom opcode
-static constexpr int kReq_Open = 0, kReq_Withdraw = 1, kReq_Deposit = 2, kReq_Merge = 3, kReq_SetAuto = 4, kReq_Move = 5;
 static constexpr int kResp_Snapshot = 1;
+static constexpr int kResp_Error = 2;
+static constexpr int kReq_Open = 0, kReq_Withdraw = 1, kReq_Deposit = 2, kReq_Merge = 3, kReq_SetAuto = 4, kReq_Move = 5;
 static constexpr int kKindOre = 0, kKindScroll = 1, kKindChair = 2, kKindCash = 3;
 static constexpr int kKindCount = 4;
 
@@ -1482,7 +1483,14 @@ static void HandleSnapshotPacketImpl(CInPacket* pPacket) {
             offset += 2;                      // consume opcode
             int respType = -1;                // only advance the cursor on a successful read
             if (offset + 1 <= length) { respType = data[offset]; offset += 1; }
-            if (respType == kResp_Snapshot) HandleBagSnapshot(pPacket, data, offset, length);
+            if (respType == kResp_Snapshot) {
+                HandleBagSnapshot(pPacket, data, offset, length);
+            } else if (respType == kResp_Error) {
+                s_bAwaitingSnapshot = false;
+                if (auto p = CUIBagWindow::GetInstance()) {
+                    p->SetVisible(false); // Close it gracefully
+                }
+            }
         }
     }
 }

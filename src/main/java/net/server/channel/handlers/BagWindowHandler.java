@@ -58,6 +58,13 @@ public final class BagWindowHandler extends AbstractPacketHandler {
             return;
         }
 
+        // Check if the player has purchased this bag kind (Quest IDs 800000 to 800003)
+        if (player.getQuestStatus(800000 + bagKind) != 2) {
+            player.dropMessage(1, "Debes comprar esta bolsa con el admin.");
+            c.sendPacket(PacketCreator.bagWindowError());
+            return;
+        }
+
         try {
             switch (action) {
                 case REQ_OPEN:

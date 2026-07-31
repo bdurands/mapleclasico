@@ -7533,4 +7533,10 @@ public class PacketCreator {
         p.writeByte(auto ? 1 : 0);      // Auto-collect flag for this bag kind (drives the Auto button)
         return p;
     }
+
+    public static Packet bagWindowError() {
+        final OutPacket p = OutPacket.create(SendOpcode.BAG_WINDOW);
+        p.writeByte(2);                 // RESP_ERROR
+        return p;
+    }
 }
