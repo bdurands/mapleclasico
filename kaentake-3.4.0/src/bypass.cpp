@@ -364,7 +364,15 @@ int CLogin::SendCheckPasswordPacket_hook(char* sID, char* sPasswd) {
 
 extern bool BagWindow_HandleMouseMessage(UINT& msg, WPARAM wParam, LPARAM lParam, LRESULT* plResult);
 
+#include "discord.h"
+
 int CWndMan::TranslateMessage_hook(UINT& msg, WPARAM& wParam, LPARAM& lParam, LRESULT* plResult) {
+    static bool discordInit = false;
+    if (!discordInit) {
+        DiscordAPI::Initialize("1533132758484918140");
+        discordInit = true;
+    }
+    DiscordAPI::RunCallbacks();
     if (msg == WM_MOUSEWHEEL) {
         // CWndMan::ProcessMouse(this, msg, wParam, lParam);
         *plResult = reinterpret_cast<LRESULT(__thiscall*)(CWndMan*, UINT, WPARAM, LPARAM)>(0x009E3AE6)(this, msg, wParam, lParam);

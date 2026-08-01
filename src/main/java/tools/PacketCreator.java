@@ -7539,4 +7539,15 @@ public class PacketCreator {
         p.writeByte(2);                 // RESP_ERROR
         return p;
     }
+    public static Packet discordUpdate(client.Character chr) {
+        final OutPacket p = OutPacket.create(SendOpcode.DISCORD_UPDATE);
+        p.writeString(chr.getName());
+        p.writeInt(chr.getLevel());
+        p.writeString(client.Job.getById(chr.getJob().getId()).name());
+        p.writeString(chr.getMap().getMapName());
+        return p;
+    }
+    public static Packet openDiscordUI() {
+        return OutPacket.create(SendOpcode.OPEN_DISCORD_UI);
+    }
 }

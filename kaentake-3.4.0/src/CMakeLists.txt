@@ -23,6 +23,8 @@ add_library(injector SHARED
     storagebag.cpp
     slotlock.cpp
     hook.cpp
+    discord.cpp
+    discord_ui.cpp
 )
 
 target_precompile_headers(injector PRIVATE pch.h)
@@ -30,6 +32,10 @@ target_precompile_headers(injector PRIVATE pch.h)
 target_link_libraries(injector PRIVATE
     Detours
     WzLib
+)
+
+target_link_directories(injector PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 set_target_properties(injector PROPERTIES

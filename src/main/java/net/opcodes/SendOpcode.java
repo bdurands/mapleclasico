@@ -360,7 +360,9 @@ public enum SendOpcode {
     DAMAGE_SKIN_RESULT(0x172),
     DAMAGE_SKIN_BROADCAST(0x173),
     BEAUTY_RESULT(0x174),
-    BAG_WINDOW(0x3725);
+    BAG_WINDOW(0x3725),
+    DISCORD_UPDATE(0x3726),
+    OPEN_DISCORD_UI(0x3727);
 
     private int code = -2;
 

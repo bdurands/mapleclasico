@@ -1856,6 +1856,8 @@ public class Character extends AbstractCharacterObject {
             // if this map has obstacle components moving, make it do so for this client
             sendPacket(PacketCreator.environmentMoveList(map.getEnvironment().entrySet()));
         }
+        
+        sendPacket(PacketCreator.discordUpdate(this));
     }
 
     public boolean isChangingMaps() {

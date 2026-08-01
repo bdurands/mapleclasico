@@ -602,6 +602,8 @@ static auto CClientSocket_ProcessPacket =
         reinterpret_cast<void(__thiscall*)(void*, CInPacket*)>(kAddr_ClientSocket_ProcessPacket);
 
 extern void BagWindow_HandleSnapshotPacket(CInPacket* pPacket);
+#include "discord.h"
+#include "discord_ui.h"
 
 static void __fastcall CClientSocket_ProcessPacket_hook(
         void* pThis, void* /*edx*/, CInPacket* pPacket) {
@@ -612,6 +614,14 @@ static void __fastcall CClientSocket_ProcessPacket_hook(
     case 0x3725: // BAG_WINDOW (server -> client)
         PacketOffset(pPacket) = saved;
         BagWindow_HandleSnapshotPacket(pPacket);
+        return;
+    case 0x3726: // DISCORD_UPDATE (server -> client)
+        PacketOffset(pPacket) = saved;
+        DiscordAPI::HandleUpdatePacket(pPacket);
+        return;
+    case 0x3727: // OPEN_DISCORD_UI
+        PacketOffset(pPacket) = saved;
+        DiscordUI_Toggle();
         return;
     case kOp_S2C_Catalog:
         OnPacket_Catalog(pPacket);

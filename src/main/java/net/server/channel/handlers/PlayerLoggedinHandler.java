@@ -490,6 +490,7 @@ public final class PlayerLoggedinHandler extends AbstractPacketHandler {
                 c.sendPacket(PacketCreator.dailyCheckinSnapshot(
                         checkinClaimable, c.getPlayer().getCheckinClaimed(), 0));
             }
+            c.sendPacket(PacketCreator.discordUpdate(player));
         }
     }
 
