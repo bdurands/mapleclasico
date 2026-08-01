@@ -50,6 +50,7 @@ import client.command.commands.gm0.StatStrCommand;
 import client.command.commands.gm0.TimeCommand;
 import client.command.commands.gm0.ToggleExpCommand;
 import client.command.commands.gm0.UptimeCommand;
+import client.command.commands.gm0.DiscordCommand;
 import client.command.commands.gm1.BossHpCommand;
 import client.command.commands.gm1.BuffMeCommand;
 import client.command.commands.gm1.GotoCommand;
@@ -369,6 +370,7 @@ public class CommandsExecutor {
         addCommand("mylawn", MapOwnerClaimCommand.class);
         addCommand("bosshp", BossHpCommand.class);
         addCommand("mobhp", MobHpCommand.class);
+        addCommand("discord", DiscordCommand.class);
 
         commandsNameDesc.add(levelCommandsCursor);
     }
