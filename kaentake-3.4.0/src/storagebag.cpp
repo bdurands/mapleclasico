@@ -1487,8 +1487,8 @@ static void HandleSnapshotPacketImpl(CInPacket* pPacket) {
                 HandleBagSnapshot(pPacket, data, offset, length);
             } else if (respType == kResp_Error) {
                 s_bAwaitingSnapshot = false;
-                if (auto p = CUIBagWindow::GetInstance()) {
-                    p->SetVisible(false); // Close it gracefully
+                if (auto p = CUIBagWindow::ms_pInstance) {
+                    p->Destroy(); // Close it gracefully
                 }
             }
         }
