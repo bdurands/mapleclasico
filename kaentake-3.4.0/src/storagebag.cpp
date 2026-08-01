@@ -1178,7 +1178,7 @@ void CUIBagWindow::Draw(const RECT* pRect) {
             try { pCanvas->DrawTextA(kSearchTextX, kSearchTextY, Ztl_bstr_t(m_search), pfDk, Ztl_variant_t(), Ztl_variant_t()); } catch (...) {}
         } else if (!m_searchActive) {
             static const wchar_t* kHints[kKindCount] =
-                { L"Buscar minérios...", L"Buscar pergaminhos...", L"Buscar cadeiras...", L"Buscar montarias..." };
+                { L"Buscar ores...", L"Buscar scrolls...", L"Buscar ...", L"Buscar ..." };
             const wchar_t* hint = kHints[m_activeKind];
             try { pCanvas->DrawTextA(kSearchTextX, kSearchTextY, Ztl_bstr_t(hint), pfDk, Ztl_variant_t(), Ztl_variant_t()); } catch (...) {}
         }
@@ -1486,10 +1486,7 @@ static void HandleSnapshotPacketImpl(CInPacket* pPacket) {
             if (respType == kResp_Snapshot) {
                 HandleBagSnapshot(pPacket, data, offset, length);
             } else if (respType == kResp_Error) {
-                s_bAwaitingSnapshot = false;
-                if (auto p = CUIBagWindow::ms_pInstance) {
-                    p->Destroy(); // Close it gracefully
-                }
+                s_bAwaitingSnapshot = false; // Just re-enable the UI so they can click other tabs
             }
         }
     }
