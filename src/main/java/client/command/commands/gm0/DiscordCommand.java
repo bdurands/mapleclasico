@@ -12,6 +12,7 @@ public class DiscordCommand extends Command {
 
     @Override
     public void execute(Client c, String[] args) {
+        c.sendPacket(PacketCreator.discordUpdate(c.getPlayer()));
         c.sendPacket(PacketCreator.openDiscordUI());
     }
 }
