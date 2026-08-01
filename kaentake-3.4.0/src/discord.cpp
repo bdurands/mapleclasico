@@ -44,6 +44,9 @@ namespace DiscordAPI {
         unsigned int&   offset = *reinterpret_cast<unsigned int*>(base + 0x14);
         unsigned short  length = *reinterpret_cast<unsigned short*>(base + 0xC);
 
+        // Skip 2-byte opcode since damageskin.cpp reset the offset
+        offset += 2;
+
         auto readString = [&]() -> std::string {
             if (offset + 2 > length) return "";
             unsigned short strLen = *reinterpret_cast<unsigned short*>(data + offset);

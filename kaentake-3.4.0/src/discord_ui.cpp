@@ -21,14 +21,15 @@ static constexpr int  kTitleH = 30;
 static constexpr RECT kRcClose = { 268, 4, 296, 28 };
 
 // Text positions inside the window (adjust to match your art layout)
-static constexpr int kTextX       = 20;   // left margin for all text
-static constexpr int kNameY       = 60;   // "Jugador: Nombre"
-static constexpr int kLevelY      = 85;   // "Nivel: 10  Job: Beginners"
-static constexpr int kMapY        = 110;  // "Mapa: Henesys"
-static constexpr int kDividerY    = 145;  // separator line visual (just spacing)
-static constexpr int kServerNameY = 170;  // "Servidor: EllinMS"
-static constexpr int kInviteLabelY = 195; // "Unete al Discord:"
-static constexpr int kInviteLinkY  = 220; // "discord.gg/n4myxhd3UC"
+static constexpr int kLabelX      = 35;   // Column for labels ("Jugador:", etc)
+static constexpr int kValueX      = 95;   // Column for values ("Nion", etc)
+static constexpr int kNameY       = 65;
+static constexpr int kLevelY      = 95;
+static constexpr int kMapY        = 125;
+static constexpr int kServerNameY = 170;
+static constexpr int kInviteLabelY = 195;
+static constexpr int kInviteLinkY  = 220;
+
 
 // Server invite link — hardcoded
 static constexpr const char* kInviteLink   = "discord.gg/n4myxhd3UC";
@@ -85,8 +86,10 @@ public:
     int m_nClosePressed = 0;
     RECT m_rcClose{};
 
-    IWzCanvasPtr m_pBg;     // UI/UIWindow.img/DiscordUI/base  (your 300x400 image)
-    IWzFontPtr   m_pFont;   // basic game font for text
+    IWzCanvasPtr m_pBg;
+    IWzFontPtr   m_pFontLbl; // Labels font (Discord Blurple color)
+    IWzFontPtr   m_pFontVal; // Values font (Dark grey)
+
 
     // -----------------------------------------------------------------------
     CUIDiscordWindow(int nLeft, int nTop)
@@ -95,17 +98,27 @@ public:
         ms_pInstance = this;
         m_rcClose    = kRcClose;
 
-        m_pBg   = Discord_LoadSprite(L"UI/UIWindow.img/DiscordUI/base");
-        m_pFont = nullptr;
+        m_pBg      = Discord_LoadSprite(L"UI/UIWindow.img/DiscordUI/base");
+        m_pFontLbl = nullptr;
+        m_pFontVal = nullptr;
+
         try {
-            PcCreateObject<IWzFontPtr>(L"Canvas#Font", m_pFont, nullptr);
-            if (m_pFont) {
+            PcCreateObject<IWzFontPtr>(L"Canvas#Font", m_pFontLbl, nullptr);
+            if (m_pFontLbl) {
                 HRESULT hr = reinterpret_cast<HRESULT(__thiscall*)(IWzFont*, Ztl_bstr_t, unsigned long,
                     unsigned long, const Ztl_variant_t&)>(kAddr_SetFont)(
-                    m_pFont, L"Dotum", 11, 0xFF202020, Ztl_variant_t(L"")); // Dark grey text
-                if (FAILED(hr)) m_pFont = nullptr;
+                    m_pFontLbl, L"Dotum", 11, 0xFFE05030, Ztl_variant_t(L"")); // Maple Red for labels
+                if (FAILED(hr)) m_pFontLbl = nullptr;
             }
-        } catch (...) { m_pFont = nullptr; }
+            PcCreateObject<IWzFontPtr>(L"Canvas#Font", m_pFontVal, nullptr);
+            if (m_pFontVal) {
+                HRESULT hr = reinterpret_cast<HRESULT(__thiscall*)(IWzFont*, Ztl_bstr_t, unsigned long,
+                    unsigned long, const Ztl_variant_t&)>(kAddr_SetFont)(
+                    m_pFontVal, L"Dotum", 11, 0xFF303030, Ztl_variant_t(L"")); // Dark grey for values
+                if (FAILED(hr)) m_pFontVal = nullptr;
+            }
+        } catch (...) { m_pFontLbl = nullptr; m_pFontVal = nullptr; }
+
 
         CWnd::CreateWnd(this, nLeft, nTop, kWndW, kWndH, 10, 1, nullptr, 0);
     }
@@ -127,45 +140,63 @@ public:
         // 1) Background image (your 300x400 Discord-themed art)
         Discord_BlitAt(pCanvas, m_pBg, 0, 0);
 
-        // 2) Try to get font (retry each frame in case it failed at construct time)
-        if (!m_pFont) {
+        // 2) Try to load fonts if missing
+        if (!m_pFontLbl) {
             try {
-                PcCreateObject<IWzFontPtr>(L"Canvas#Font", m_pFont, nullptr);
-                if (m_pFont) {
+                PcCreateObject<IWzFontPtr>(L"Canvas#Font", m_pFontLbl, nullptr);
+                if (m_pFontLbl) {
                     HRESULT hr = reinterpret_cast<HRESULT(__thiscall*)(IWzFont*, Ztl_bstr_t, unsigned long,
                         unsigned long, const Ztl_variant_t&)>(kAddr_SetFont)(
-                        m_pFont, L"Dotum", 11, 0xFF202020, Ztl_variant_t(L""));
-                    if (FAILED(hr)) m_pFont = nullptr;
+                        m_pFontLbl, L"Dotum", 11, 0xFFE05030, Ztl_variant_t(L"")); // Red labels
+                    if (FAILED(hr)) m_pFontLbl = nullptr;
                 }
-            } catch (...) { m_pFont = nullptr; }
+            } catch (...) { m_pFontLbl = nullptr; }
         }
-        IWzFontPtr pf = m_pFont;
+        if (!m_pFontVal) {
+            try {
+                PcCreateObject<IWzFontPtr>(L"Canvas#Font", m_pFontVal, nullptr);
+                if (m_pFontVal) {
+                    HRESULT hr = reinterpret_cast<HRESULT(__thiscall*)(IWzFont*, Ztl_bstr_t, unsigned long,
+                        unsigned long, const Ztl_variant_t&)>(kAddr_SetFont)(
+                        m_pFontVal, L"Dotum", 11, 0xFF303030, Ztl_variant_t(L"")); // Grey values
+                    if (FAILED(hr)) m_pFontVal = nullptr;
+                }
+            } catch (...) { m_pFontVal = nullptr; }
+        }
 
-        // 3) Player info text
+        IWzFontPtr pLbl = m_pFontLbl;
+        IWzFontPtr pVal = m_pFontVal;
+
+        // 3) Draw Labels & Values in columns
         char bufName[128], bufLevel[128], bufMap[128];
 
         if (!g_discord_playerName.empty()) {
-            _snprintf_s(bufName,  sizeof(bufName),  _TRUNCATE, "Jugador: %s",
-                        g_discord_playerName.c_str());
-            _snprintf_s(bufLevel, sizeof(bufLevel), _TRUNCATE, "Nivel: %d  |  %s",
-                        g_discord_level, g_discord_jobName.c_str());
-            _snprintf_s(bufMap,   sizeof(bufMap),   _TRUNCATE, "Mapa: %s",
-                        g_discord_mapName.c_str());
+            _snprintf_s(bufName,  sizeof(bufName),  _TRUNCATE, "%s", g_discord_playerName.c_str());
+            _snprintf_s(bufLevel, sizeof(bufLevel), _TRUNCATE, "%d  (%s)", g_discord_level, g_discord_jobName.c_str());
+            _snprintf_s(bufMap,   sizeof(bufMap),   _TRUNCATE, "%s", g_discord_mapName.c_str());
         } else {
-            _snprintf_s(bufName,  sizeof(bufName),  _TRUNCATE, "Jugador: --");
-            _snprintf_s(bufLevel, sizeof(bufLevel), _TRUNCATE, "Nivel: --");
-            _snprintf_s(bufMap,   sizeof(bufMap),   _TRUNCATE, "Mapa: --");
+            _snprintf_s(bufName,  sizeof(bufName),  _TRUNCATE, "Cargando...");
+            _snprintf_s(bufLevel, sizeof(bufLevel), _TRUNCATE, "Cargando...");
+            _snprintf_s(bufMap,   sizeof(bufMap),   _TRUNCATE, "Cargando...");
         }
 
-        if (pf) {
-            Discord_DrawText(pCanvas, pf, kTextX, kNameY,        bufName);
-            Discord_DrawText(pCanvas, pf, kTextX, kLevelY,       bufLevel);
-            Discord_DrawText(pCanvas, pf, kTextX, kMapY,         bufMap);
+        if (pLbl && pVal) {
+            // Player info
+            Discord_DrawText(pCanvas, pLbl, kLabelX, kNameY,  "Jugador:");
+            Discord_DrawText(pCanvas, pVal, kValueX, kNameY,  bufName);
 
-            // 4) Server info + invite link
-            Discord_DrawText(pCanvas, pf, kTextX, kServerNameY,   "Servidor: EllinMS");
-            Discord_DrawText(pCanvas, pf, kTextX, kInviteLabelY,  "Unete al Discord:");
-            Discord_DrawText(pCanvas, pf, kTextX, kInviteLinkY,   kInviteLink);
+            Discord_DrawText(pCanvas, pLbl, kLabelX, kLevelY, "Nivel:");
+            Discord_DrawText(pCanvas, pVal, kValueX, kLevelY, bufLevel);
+
+            Discord_DrawText(pCanvas, pLbl, kLabelX, kMapY,   "Mapa:");
+            Discord_DrawText(pCanvas, pVal, kValueX, kMapY,   bufMap);
+
+            // Discord info
+            Discord_DrawText(pCanvas, pLbl, kLabelX, kServerNameY, "Estado:");
+            Discord_DrawText(pCanvas, pVal, kValueX, kServerNameY, kServerName);
+
+            Discord_DrawText(pCanvas, pLbl, kLabelX, kInviteLabelY, "Link Discord:");
+            Discord_DrawText(pCanvas, pVal, kLabelX, kInviteLinkY,  kInviteLink);
         }
     }
 
@@ -220,8 +251,9 @@ public:
     // -----------------------------------------------------------------------
     virtual void OnDestroy() override
     {
-        m_pBg   = nullptr;
-        m_pFont = nullptr;
+        m_pBg      = nullptr;
+        m_pFontLbl = nullptr;
+        m_pFontVal = nullptr;
         if (ms_pInstance == this) ms_pInstance = nullptr;
         CWnd::OnDestroy();
     }
