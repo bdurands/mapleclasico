@@ -253,6 +253,10 @@ public class LifeFactory {
             MonsterStats stats = monsterStats.get(mid);
             if (stats == null) {
                 Pair<MonsterStats, List<MobAttackInfoHolder>> mobStats = getMonsterStats(mid);
+                if (mobStats == null) {
+                    log.error("[SEVERE] MOB {} failed to load because it doesn't exist in Mob.wz.", mid);
+                    return null;
+                }
                 stats = mobStats.getLeft();
                 setMonsterAttackInfo(mid, mobStats.getRight());
 
