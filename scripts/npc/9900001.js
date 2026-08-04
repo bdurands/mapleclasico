@@ -19,11 +19,7 @@ function pushIfItemExists(array, itemid) {
 }
 
 function start() {
-    if (cm.getPlayer().isMale()) {
-        cm.sendSimple("Hey there, you can change your look for " + price + " mesos. What would you like to change?\r\n#L1#Male Hair (Part 1)#l\r\n#L2#Male Hair (Part 2)#l\r\n#L3#Male Hair (Part 3)#l\r\n#L4#Hair Color#l");
-    } else {
-        cm.sendSimple("Hey there, you can change your look for " + price + " mesos. What would you like to change?\r\n#L5#Female Hair (Part 1)#l\r\n#L6#Female Hair (Part 2)#l\r\n#L7#Female Hair (Part 3)#l\r\n#L4#Hair Color#l");
-    }
+    cm.sendSimple("Hey there, you can change your look for " + price + " mesos. What would you like to change?\r\n#L1#Male Hair (Part 1)#l\r\n#L2#Male Hair (Part 2)#l\r\n#L3#Male Hair (Part 3)#l\r\n#L5#Female Hair (Part 1)#l\r\n#L6#Female Hair (Part 2)#l\r\n#L7#Female Hair (Part 3)#l\r\n#L4#Hair Color#l");
 }
 
 function action(mode, type, selection) {
