@@ -131,10 +131,9 @@ public final class ItemConstants {
         return itemId / 10000 == 301;         // 3010000-3019999
     }
 
-    /** Mounts / taming mobs (equip ids 1902xxx and 1912xxx) - the items the mount bag holds. */
+    /** Mounts / taming mobs - the items the mount bag holds. */
     public static boolean isMountBagAllowed(int itemId) {
-        int t = itemId / 1000;
-        return t == 1902 || t == 1912;
+        return isTaming(itemId);
     }
 
     public static boolean isArrowForCrossBow(int itemId) {
@@ -150,7 +149,8 @@ public final class ItemConstants {
     }
 
     public static boolean isPet(int itemId) {
-        return itemId / 1000 == 5000;
+        int t = itemId / 1000;
+        return t >= 5000 && t <= 5002;
     }
 
     public static boolean isExpirablePet(int itemId) {
@@ -170,12 +170,14 @@ public final class ItemConstants {
     }
 
     public static boolean isAccessory(int itemId) {
-        return itemId >= 1110000 && itemId < 1140000;
+        return itemId >= 1110000 && itemId < 1143000;
     }
 
     public static boolean isTaming(int itemId) {
         int itemType = itemId / 1000;
-        return itemType == 1902 || itemType == 1912;
+        return itemType == 1902 || itemType == 1912 || itemType == 1930
+                || itemType == 1932 || itemType == 1939 || itemType == 1982
+                || itemType == 1983 || itemType == 1992;
     }
 
     public static boolean isTownScroll(int itemId) {
@@ -257,7 +259,7 @@ public final class ItemConstants {
     }
 
     public static boolean isWeapon(int itemId) {
-        return itemId >= 1302000 && itemId < 1493000;
+        return itemId >= 1302000 && itemId < 1800000;
     }
 
     public static boolean isEquipment(int itemId) {
@@ -273,7 +275,7 @@ public final class ItemConstants {
     }
 
     public static boolean isFace(int itemId) {
-        return itemId >= 20000 && itemId < 22000;
+        return (itemId >= 20000 && itemId < 29000) || (itemId >= 50000 && itemId < 51000);
     }
 
     public static boolean isHair(int itemId) {

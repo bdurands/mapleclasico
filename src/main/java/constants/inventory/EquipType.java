@@ -45,6 +45,12 @@ public enum EquipType {
     SHOES(107),
     TAMING(190),
     TAMING_SADDLE(191),
+    TAMING_1930(1930),
+    TAMING_1932(1932),
+    TAMING_1939(1939),
+    TAMING_1982(1982),
+    TAMING_1983(1983),
+    TAMING_1992(1992),
     SWORD(1302),
     AXE(1312),
     MACE(1322),
@@ -60,10 +66,27 @@ public enum EquipType {
     CROSSBOW(1462),
     CLAW(1472),
     KNUCKLER(1482),
-    PISTOL(1492);
+    PISTOL(1492),
+    SHINING_ROD(1502),
+    SOUL_SHOOTER(1512),
+    DESPERADO(1522),
+    WHIP_BLADE(1532),
+    ENERGY_SWORD(1542),
+    ESP_LIMITER(1552),
+    CHAIN(1562),
+    MAGIC_GAUNTLET(1572),
+    RITUAL_FAN(1582),
+    WHISTLE_FLUTE(1592),
+    BREATH_SHOOTER(1602),
+    BLADE(1662),
+    TUNER(1672),
+    DOOMSDAY_STAFF(1690),
+    LUCENT_GAUNTLET(1701),
+    CANE(1702),
+    UMBRELLA(1703);
 
     private final int i;
-    private static final Map<Integer, EquipType> map = new HashMap(34);
+    private static final Map<Integer, EquipType> map = new HashMap<>(64);
 
     EquipType(int val) {
         this.i = val;
@@ -83,7 +106,7 @@ public enum EquipType {
         EquipType ret;
         int val = itemid / 100000;
 
-        if (val == 13 || val == 14) {
+        if (val >= 13 && val <= 17) {
             ret = map.get(itemid / 1000);
         } else {
             ret = map.get(itemid / 10000);

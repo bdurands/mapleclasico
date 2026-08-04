@@ -91,6 +91,7 @@ public class ItemInformationProvider {
     protected Data cashStringData;
     protected Data consumeStringData;
     protected Data eqpStringData;
+    protected Data eqpStringData2;
     protected Data etcStringData;
     protected Data insStringData;
     protected Data petStringData;
@@ -150,6 +151,7 @@ public class ItemInformationProvider {
         cashStringData = stringData.getData("Cash.img");
         consumeStringData = stringData.getData("Consume.img");
         eqpStringData = stringData.getData("Eqp.img");
+        eqpStringData2 = stringData.getData("Eqp2.img");
         etcStringData = stringData.getData("Etc.img");
         insStringData = stringData.getData("Ins.img");
         petStringData = stringData.getData("Pet.img");
@@ -177,6 +179,17 @@ public class ItemInformationProvider {
         for (Data eqpType : itemsData.getChildren()) {
             for (Data itemFolder : eqpType.getChildren()) {
                 itemPairs.add(new Pair<>(Integer.parseInt(itemFolder.getName()), DataTool.getString("name", itemFolder, "NO-NAME")));
+            }
+        }
+        Data eqp2Data = stringData.getData("Eqp2.img");
+        if (eqp2Data != null) {
+            Data eqp2Eqp = eqp2Data.getChildByPath("Eqp");
+            if (eqp2Eqp != null) {
+                for (Data eqpType : eqp2Eqp.getChildren()) {
+                    for (Data itemFolder : eqpType.getChildren()) {
+                        itemPairs.add(new Pair<>(Integer.parseInt(itemFolder.getName()), DataTool.getString("name", itemFolder, "NO-NAME")));
+                    }
+                }
             }
         }
         itemsData = stringData.getData("Etc.img").getChildByPath("Etc");
@@ -216,7 +229,7 @@ public class ItemInformationProvider {
             theData = cashStringData;
         } else if (itemId >= 2000000 && itemId < 3000000) {
             theData = consumeStringData;
-        } else if ((itemId >= 1010000 && itemId < 1040000) || (itemId >= 1122000 && itemId < 1123000) || (itemId >= 1132000 && itemId < 1133000) || (itemId >= 1142000 && itemId < 1143000)) {
+        } else if ((itemId >= 1010000 && itemId < 1040000) || (itemId >= 1122000 && itemId < 1123000) || (itemId >= 1132000 && itemId < 1133000) || (itemId >= 1140000 && itemId < 1143000)) {
             theData = eqpStringData;
             cat = "Eqp/Accessory";
         } else if (itemId >= 1000000 && itemId < 1010000) {
@@ -272,9 +285,15 @@ public class ItemInformationProvider {
             return null;
         }
         if (cat.equalsIgnoreCase("null")) {
-            return theData.getChildByPath(String.valueOf(itemId));
+            Data result = theData.getChildByPath(String.valueOf(itemId));
+            return result;
         } else {
-            return theData.getChildByPath(cat + "/" + itemId);
+            Data result = theData.getChildByPath(cat + "/" + itemId);
+            // Fallback to Eqp2.img if not found in Eqp.img
+            if (result == null && theData == eqpStringData && eqpStringData2 != null) {
+                result = eqpStringData2.getChildByPath(cat + "/" + itemId);
+            }
+            return result;
         }
     }
 
@@ -616,10 +635,14 @@ public class ItemInformationProvider {
     public WeaponType getWeaponType(int itemId) {
         int cat = (itemId / 10000) % 100;
         WeaponType[] type = {WeaponType.SWORD1H, WeaponType.GENERAL1H_SWING, WeaponType.GENERAL1H_SWING, WeaponType.DAGGER_OTHER, WeaponType.NOT_A_WEAPON, WeaponType.NOT_A_WEAPON, WeaponType.NOT_A_WEAPON, WeaponType.WAND, WeaponType.STAFF, WeaponType.NOT_A_WEAPON, WeaponType.SWORD2H, WeaponType.GENERAL2H_SWING, WeaponType.GENERAL2H_SWING, WeaponType.SPEAR_STAB, WeaponType.POLE_ARM_SWING, WeaponType.BOW, WeaponType.CROSSBOW, WeaponType.CLAW, WeaponType.KNUCKLE, WeaponType.GUN};
-        if (cat < 30 || cat > 49) {
-            return WeaponType.NOT_A_WEAPON;
+        if (cat >= 30 && cat <= 49) {
+            return type[cat - 30];
         }
-        return type[cat - 30];
+        // New weapon categories (cat >= 50) - treat as generic 1H swing weapon
+        if (cat >= 50 && ItemConstants.isWeapon(itemId)) {
+            return WeaponType.GENERAL1H_SWING;
+        }
+        return WeaponType.NOT_A_WEAPON;
     }
 
     private static double testYourLuck(double prop, int dices) {   // revamped testYourLuck author: David A.

@@ -114,11 +114,13 @@ public class NoItemNameFetcher {
 
     private static boolean isTamingMob(int itemId) {
         int itemType = itemId / 1000;
-        return itemType == 1902 || itemType == 1912;
+        return itemType == 1902 || itemType == 1912 || itemType == 1930
+                || itemType == 1932 || itemType == 1939 || itemType == 1982
+                || itemType == 1983 || itemType == 1992;
     }
 
     private static boolean isAccessory(int itemId) {
-        return itemId >= 1110000 && itemId < 1140000;
+        return itemId >= 1110000 && itemId < 1143000;
     }
 
     private static ItemType getItemTypeFromDirectoryName(String dirName) {

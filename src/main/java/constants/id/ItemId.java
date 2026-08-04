@@ -189,7 +189,8 @@ public class ItemId {
     public static final int ITEM_IGNORE = 1812007;
 
     public static boolean isPet(int itemId) {
-        return itemId / 1000 == 5000;
+        int t = itemId / 1000;
+        return t >= 5000 && t <= 5002;
     }
 
     // Expirable pet
