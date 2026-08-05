@@ -271,7 +271,7 @@ public class ItemInformationProvider {
         } else if (itemId >= 1900000 && itemId < 2000000) {
             theData = eqpStringData;
             cat = "Eqp/Taming";
-        } else if (itemId >= 1300000 && itemId < 1800000) {
+        } else if (itemId >= 1210000 && itemId < 1800000) {
             theData = eqpStringData;
             cat = "Eqp/Weapon";
         } else if (itemId >= 4000000 && itemId < 5000000) {
@@ -289,9 +289,18 @@ public class ItemInformationProvider {
             return result;
         } else {
             Data result = theData.getChildByPath(cat + "/" + itemId);
+            
+            // Modern WZ fallback: newer Rings are often placed in Accessory folder instead of Ring
+            if (result == null && cat.equals("Eqp/Ring")) {
+                result = theData.getChildByPath("Eqp/Accessory/" + itemId);
+            }
+
             // Fallback to Eqp2.img if not found in Eqp.img
             if (result == null && theData == eqpStringData && eqpStringData2 != null) {
                 result = eqpStringData2.getChildByPath(cat + "/" + itemId);
+                if (result == null && cat.equals("Eqp/Ring")) {
+                    result = eqpStringData2.getChildByPath("Eqp/Accessory/" + itemId);
+                }
             }
             return result;
         }

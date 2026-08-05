@@ -106,8 +106,11 @@ public enum EquipType {
         EquipType ret;
         int val = itemid / 100000;
 
-        if (val >= 13 && val <= 17) {
+        if (val >= 12 && val <= 17) {
             ret = map.get(itemid / 1000);
+            if (ret == null) {
+                return EquipType.SWORD; // Generic fallback for new weapon types so they are equippable
+            }
         } else {
             ret = map.get(itemid / 10000);
         }
