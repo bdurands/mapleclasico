@@ -196,6 +196,7 @@ import net.server.handlers.login.ViewAllCharSelectedWithPicHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.server.channel.handlers.BeautyHandler;
+import net.server.channel.handlers.CashShopWindowHandler;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -456,5 +457,6 @@ public final class PacketProcessor {
         registerHandler(RecvOpcode.BEAUTY_ACTION, new BeautyHandler());
         registerHandler(RecvOpcode.DAILY_CHECKIN, new net.server.channel.handlers.DailyCheckinHandler());
         registerHandler(RecvOpcode.BAG_WINDOW, new net.server.channel.handlers.BagWindowHandler());
+        registerHandler(RecvOpcode.CASHSHOP_WINDOW_ACTION, new CashShopWindowHandler());
     }
 }

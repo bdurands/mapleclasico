@@ -25,6 +25,7 @@ add_library(injector SHARED
     hook.cpp
     discord.cpp
     discord_ui.cpp
+    cashshopwnd.cpp
 )
 
 target_precompile_headers(injector PRIVATE pch.h)

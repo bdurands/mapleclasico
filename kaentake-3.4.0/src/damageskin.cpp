@@ -604,6 +604,7 @@ static auto CClientSocket_ProcessPacket =
 extern void BagWindow_HandleSnapshotPacket(CInPacket* pPacket);
 #include "discord.h"
 #include "discord_ui.h"
+#include "cashshopwnd.h"
 
 static void __fastcall CClientSocket_ProcessPacket_hook(
         void* pThis, void* /*edx*/, CInPacket* pPacket) {
@@ -622,6 +623,9 @@ static void __fastcall CClientSocket_ProcessPacket_hook(
     case 0x3727: // OPEN_DISCORD_UI
         PacketOffset(pPacket) = saved;
         DiscordUI_Toggle();
+        return;
+    case kCashShopSyncOpcode: // CASHSHOP_WINDOW_SYNC (server -> client)
+        CashShopWnd_HandleSync(pPacket);
         return;
     case kOp_S2C_Catalog:
         OnPacket_Catalog(pPacket);

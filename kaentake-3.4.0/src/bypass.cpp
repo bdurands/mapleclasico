@@ -220,7 +220,10 @@ void CWvsApp::SetUp_hook() {
     reinterpret_cast<void(__cdecl*)(CStage*, void*)>(0x00777347)(pStage, nullptr);
 }
 
+extern void CashShopWnd_Tick();
+
 void CWvsApp::CallUpdate_hook(int tCurTime) {
+    CashShopWnd_Tick();
     if (m_bFirstUpdate) {
         m_tUpdateTime = tCurTime;
         m_bFirstUpdate = 0;

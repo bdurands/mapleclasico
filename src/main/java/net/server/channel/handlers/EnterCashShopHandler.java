@@ -26,6 +26,8 @@ import client.Client;
 import net.AbstractPacketHandler;
 import net.packet.InPacket;
 import net.server.Server;
+import server.cashshop.CashShopCatalog;
+import server.cashshop.CashShopWindowPackets;
 import server.maps.MiniDungeonInfo;
 import tools.PacketCreator;
 
@@ -33,6 +35,9 @@ import tools.PacketCreator;
  * @author Flav
  */
 public class EnterCashShopHandler extends AbstractPacketHandler {
+
+    private static final boolean USE_STANDALONE_WINDOW = true;
+
     @Override
     public void handlePacket(InPacket p, Client c) {
         try {
@@ -59,6 +64,16 @@ public class EnterCashShopHandler extends AbstractPacketHandler {
                 return;
             }
 
+            if (USE_STANDALONE_WINDOW) {
+                // No stage change, no channel/map detach, no buff teardown: the player stays
+                // exactly where they are and a window opens over the field.
+                c.sendPacket(PacketCreator.enableActions());
+                c.sendPacket(CashShopWindowPackets.open(mc));
+                CashShopWindowHandler.sendCatalog(c, mc);
+                return;
+            }
+
+            // --- Original stage-based cash shop path (kept as fallback) ---
             mc.closePlayerInteractions();
             mc.closePartySearchInteractions();
 

@@ -882,6 +882,7 @@ public class Server {
         futures.add(initExecutor.submit(Quest::loadAllQuests));
         futures.add(initExecutor.submit(SkillbookInformationProvider::loadAllSkillbookInformation));
         futures.add(initExecutor.submit(client.DamageSkinCatalog::loadOrSeed));
+        futures.add(initExecutor.submit(server.cashshop.CashShopCatalog::load));
         initExecutor.shutdown();
 
         TimeZone.setDefault(TimeZone.getTimeZone(YamlConfig.config.server.TIMEZONE));
