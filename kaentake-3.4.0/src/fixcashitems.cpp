@@ -12,4 +12,8 @@ void AttachFixCashItemsMod() {
     Patch4(0x0093C689 + 1, 0x1F5);  // cmp eax, 501
     Patch4(0x0095B112 + 1, 0x2710); // mov ecx, 10000
     Patch4(0x0095B11F + 1, 0x1F5);  // cmp eax, 501
+
+    // CItemInfo::EQUIPITEM::IsAbleToStickWithWeapon
+    // Bypasses the bitmask check to allow weapon covers on any weapon
+    PatchNop(0x0046D3CE, 0x0046D3CE + 2);
 }

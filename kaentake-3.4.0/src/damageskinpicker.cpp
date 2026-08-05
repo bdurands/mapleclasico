@@ -1225,7 +1225,7 @@ void CUIDamageSkinPicker::OnMouseButton(unsigned int msg, unsigned int /*wParam*
             if (m_nMySel >= 0 && m_nMySel < (int)m_vMyList.size()) {
                 int id = m_vMyList[m_nMySel];
                 Send_DamageSkinApply(id);
-                play_ui_sound(L"anvil");
+                play_ui_sound(L"MenuUp");
                 PickerLog("Apply clicked — requested skin=%d", id);
             }
             InvalidateRect(nullptr);
