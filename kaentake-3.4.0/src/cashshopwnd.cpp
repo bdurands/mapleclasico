@@ -47,6 +47,15 @@
 #include "debug.h"
 #include "cashshopwnd.h"
 
+// LOG_ONCE / LogMessage — the original DLL framework provided these; define them
+// here so the file compiles standalone. LOG_ONCE fires its debug print at most once.
+#ifndef LOG_ONCE
+#define LOG_ONCE(fmt, ...) do { static bool _once = false; if (!_once) { _once = true; DEBUG_MESSAGE(fmt, __VA_ARGS__); } } while(0)
+#endif
+#ifndef LogMessage
+#define LogMessage(fmt, ...) DEBUG_MESSAGE(fmt, __VA_ARGS__)
+#endif
+
 #include "wvs/iteminfo.h"
 #include "wvs/packet.h"
 #include "wvs/util.h"

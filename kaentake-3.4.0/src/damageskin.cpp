@@ -625,6 +625,7 @@ static void __fastcall CClientSocket_ProcessPacket_hook(
         DiscordUI_Toggle();
         return;
     case kCashShopSyncOpcode: // CASHSHOP_WINDOW_SYNC (server -> client)
+        PacketOffset(pPacket) = saved;
         CashShopWnd_HandleSync(pPacket);
         return;
     case kOp_S2C_Catalog:
