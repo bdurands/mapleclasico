@@ -1401,28 +1401,28 @@
 1102218	3500	1	2	11	0	2	Winged Costume
 1102223	3000	1	2	11	0	2	Star Tail
 1102224	3600	1	2	11	0	2	Lamby Cape
-5150001	5700	1	3	1	0	2	Henesys Hair Style Coupon (VIP)
-5150003	5700	1	3	1	0	2	Kerning City Hair Style Coupon (VIP)
-5150005	5700	1	3	1	0	2	Orbis Hair Style Coupon (VIP)
-5150007	5700	1	3	1	0	2	Ludibrium Hair Style Coupon (VIP)
-5150008	2100	1	3	1	0	2	Showa Hair Style Coupon (REG)
-5150009	5700	1	3	1	0	2	Showa Hair Style Coupon (VIP)
-5150010	2100	1	3	1	0	2	Henesys Hair Style Coupon (EXP)
-5150011	2100	1	3	1	0	2	Kerning City Hair Style Coupon (EXP)
-5150012	2100	1	3	1	0	2	Ludibrium Hair Style Coupon (EXP)
-5150013	2100	1	3	1	0	2	Orbis Hair Style Coupon (EXP)
-5150019	2100	1	3	1	0	2	Amoria Hairstyle Coupon (EXP)
-5150020	5700	1	3	1	0	2	Amoria Hairstyle Coupon (VIP)
-5150024	2100	1	3	1	0	2	Mu Lung Hair Style Coupon (EXP)
-5150025	5700	1	3	1	0	2	Mu Lung Hair Style Coupon (VIP)
-5150026	2100	1	3	1	0	2	Ariant Hair Style Coupon (REG)
-5150027	5700	1	3	1	0	2	Ariant Hair Style Coupon (VIP)
-5150030	2100	1	3	1	0	2	NLC Hairstyle Coupon (EXP)
-5150031	5700	1	3	1	0	2	NLC Hairstyle Coupon (VIP)
-5150032	2100	1	3	1	0	2	CBD Hair Style Coupon (REG)
-5150033	5700	1	3	1	0	2	CBD Hair Style Coupon (VIP)
-5150040	7000	1	3	1	0	2	Royal Hair Coupon
-5150044	11000	1	3	1	0	2	Special Royal Hair Coupon
+5150001	5700	1	5	0	0	2	Henesys Hair Style Coupon (VIP)
+5150003	5700	1	5	0	0	2	Kerning City Hair Style Coupon (VIP)
+5150005	5700	1	5	0	0	2	Orbis Hair Style Coupon (VIP)
+5150007	5700	1	5	0	0	2	Ludibrium Hair Style Coupon (VIP)
+5150008	2100	1	5	0	0	2	Showa Hair Style Coupon (REG)
+5150009	5700	1	5	0	0	2	Showa Hair Style Coupon (VIP)
+5150010	2100	1	5	0	0	2	Henesys Hair Style Coupon (EXP)
+5150011	2100	1	5	0	0	2	Kerning City Hair Style Coupon (EXP)
+5150012	2100	1	5	0	0	2	Ludibrium Hair Style Coupon (EXP)
+5150013	2100	1	5	0	0	2	Orbis Hair Style Coupon (EXP)
+5150019	2100	1	5	0	0	2	Amoria Hairstyle Coupon (EXP)
+5150020	5700	1	5	0	0	2	Amoria Hairstyle Coupon (VIP)
+5150024	2100	1	5	0	0	2	Mu Lung Hair Style Coupon (EXP)
+5150025	5700	1	5	0	0	2	Mu Lung Hair Style Coupon (VIP)
+5150026	2100	1	5	0	0	2	Ariant Hair Style Coupon (REG)
+5150027	5700	1	5	0	0	2	Ariant Hair Style Coupon (VIP)
+5150030	2100	1	5	0	0	2	NLC Hairstyle Coupon (EXP)
+5150031	5700	1	5	0	0	2	NLC Hairstyle Coupon (VIP)
+5150032	2100	1	5	0	0	2	CBD Hair Style Coupon (REG)
+5150033	5700	1	5	0	0	2	CBD Hair Style Coupon (VIP)
+5150040	7000	1	5	0	0	2	Royal Hair Coupon
+5150044	11000	1	5	0	0	2	Special Royal Hair Coupon
 5120000	3000	11	3	2	0	2	Snowy Snow
 5120002	3000	11	3	2	0	2	Soap Bubbles
 5120003	3000	11	3	2	0	2	Snowflakes
@@ -1516,15 +1516,15 @@
 5061002	2900	1	5	2	0	2	Item Guard : 90 days
 5061003	3100	1	5	2	0	2	Item Guard : 365 Days
 5071000	3000	11	5	2	0	2	Megaphone
-5072000	13000	13	5	2	0	2	Super Megaphone
-5075000	10000	11	5	2	0	2	MapleTV Messenger
-5075001	12000	11	5	2	0	2	MapleTV Star Messenger
-5075002	14000	11	5	2	0	2	MapleTV Heart Messenger
-5075003	19000	11	5	2	0	2	Megassenger
-5075004	20000	11	5	2	0	2	Star Megassenger
-5075005	22000	11	5	2	0	2	Heart Megassenger
-5076000	13000	11	5	2	0	2	Item Megaphone
-5077000	25000	11	5	2	0	2	Triple Megaphone
+5072000	13000	13	5	1	0	2	Super Megaphone
+5075000	10000	11	3	1	0	2	MapleTV Messenger
+5075001	12000	11	3	1	0	2	MapleTV Star Messenger
+5075002	14000	11	3	1	0	2	MapleTV Heart Messenger
+5075003	19000	11	3	1	0	2	Megassenger
+5075004	20000	11	3	1	0	2	Star Megassenger
+5075005	22000	11	3	1	0	2	Heart Megassenger
+5076000	13000	11	3	1	0	2	Item Megaphone
+5077000	25000	11	3	1	0	2	Triple Megaphone
 5080000	3000	1	5	2	0	2	Korean Kite
 5080001	2700	1	5	2	0	2	Heart Balloon
 5080002	2500	1	5	2	0	2	Graduation Banner
@@ -1598,11 +1598,11 @@
 5360042	1500	1	5	2	0	2	4 hour 2 x Drop special coupon
 5370000	1000	1	5	2	0	2	Chalkboard
 5380000	5500	1	5	2	0	2	The Rock of Evolution
-5390000	7500	5	5	2	0	2	Diablo Messenger
-5390001	7500	5	5	2	0	2	Cloud 9 Messenger
-5390002	7500	5	5	2	0	2	Loveholic Messenger
-5390005	7500	5	5	2	0	2	Cute Tiger Messenger
-5390006	20000	11	5	2	0	2	Roaring Tiger Messenger
+5390000	7500	5	3	1	0	2	Diablo Messenger
+5390001	7500	5	3	1	0	2	Cloud 9 Messenger
+5390002	7500	5	3	1	0	2	Loveholic Messenger
+5390005	7500	5	3	1	0	2	Cute Tiger Messenger
+5390006	20000	11	5	1	0	2	Roaring Tiger Messenger
 5400000	10000	1	5	2	0	2	Character Name Change
 5401000	25000	1	5	2	0	2	Character Transfer
 5420000	11000	1	5	2	0	2	Amoria Hair Membership Coupon
@@ -1624,50 +1624,50 @@
 5570000	8500	2	5	2	0	2	Vicious' Hammer
 5610000	4200	1	5	2	0	2	Vega's Spell(10%)
 5610001	5000	1	5	2	0	2	Vega's Spell(60%)
-5152000	2100	1	5	3	0	2	Henesys Face Coupon (REG)
-5152001	5100	1	5	3	0	2	Henesys Face Coupon (VIP)
-5152004	2100	1	5	3	0	2	Orbis Face Coupon (REG)
-5152005	5100	1	5	3	0	2	Orbis Face Coupon (VIP)
-5152006	2100	1	5	3	0	2	Ludibrium Face Coupon (REG)
-5152007	5100	1	5	3	0	2	Ludibrium Face Coupon (VIP)
-5152008	2100	1	5	3	0	2	Showa Face Coupon (REG)
-5152009	5100	1	5	3	0	2	Showa Face Coupon (VIP)
-5152010	1800	1	5	3	0	2	Henesys Cosmetic Lens Coupon (REG)
-5152011	1800	1	5	3	0	2	Orbis Cosmetic Lens Coupon (REG)
-5152012	1800	1	5	3	0	2	Ludibrium Cosmetic Lens Coupon (REG)
-5152013	4900	1	5	3	0	2	Henesys Cosmetic Lens Coupon (VIP)
-5152014	4900	1	5	3	0	2	Orbis Cosmetic Lens Coupon (VIP)
-5152015	4900	1	5	3	0	2	Ludibrium Cosmetic Lens Coupon (VIP)
-5152021	2100	1	5	3	0	2	Amoria Face Coupon (REG)
-5152022	5100	1	5	3	0	2	Amoria Face Coupon (VIP)
-5152025	1800	1	5	3	0	2	Amoria Cosmetic Lens Coupon (REG)
-5152026	4900	1	5	3	0	2	Amoria Cosmetic Lens Coupon (VIP)
-5152027	2100	1	5	3	0	2	Mu Lung Plastic Surgery Coupon (REG)
-5152028	4300	1	5	3	0	2	Mu Lung Plastic Surgery Coupon (VIP)
-5152029	2100	1	5	3	0	2	Ariant Face Coupon (REG)
-5152030	5100	1	5	3	0	2	Ariant Face Coupon (VIP)
-5152033	2100	1	5	3	0	2	NLC Face Coupon (REG)
-5152034	4300	1	5	3	0	2	NLC Face Coupon (VIP)
-5152035	1800	1	5	3	0	2	NLC Cosmetic Lens Coupon (REG)
-5152036	4900	1	5	3	0	2	NLC Cosmetic Lens Coupon (VIP)
-5152037	2100	1	5	3	0	2	CBD Face Coupon (REG)
-5152038	5100	1	5	3	0	2	CBD Face Coupon (VIP)
-5152039	1800	1	5	3	0	2	CBD Cosmetic Lens Coupon (REG)
-5152040	4900	1	5	3	0	2	CBD Cosmetic Lens Coupon (VIP)
-5152041	4900	1	5	3	0	2	Mu Lung Cosmetic Lens Coupon (VIP)
-5152042	1800	1	5	3	0	2	Mu Lung Cosmetic Lens Coupon (REG)
-5152045	4900	1	5	3	0	2	Showa Cosmetic Lens Coupon (VIP)
-5152046	1800	1	5	3	0	2	Showa Cosmetic Lens Coupon (REG)
-5152047	4900	1	5	3	0	2	Ariant Cosmetic Lens Coupon (VIP)
-5152048	1800	1	5	3	0	2	Ariant Cosmetic Lens Coupon (REG)
-5152100	4700	1	5	3	0	2	One-Time Cosmetic Lens (Black)
-5152101	4700	1	5	3	0	2	One-Time Cosmetic Lens (Blue)
-5152102	4700	1	5	3	0	2	One-Time Cosmetic Lens (Red)
-5152103	4700	1	5	3	0	2	One-Time Cosmetic Lens (Green)
-5152104	4700	1	5	3	0	2	One-Time Cosmetic Lens (Brown)
-5152105	4700	1	5	3	0	2	One-Time Cosmetic Lens (Emerald)
-5152106	4700	1	5	3	0	2	One-Time Cosmetic Lens (Purple)
-5152107	4700	1	5	3	0	2	One-Time Cosmetic Lens (Amethyst)
+5152000	2100	1	5	0	0	2	Henesys Face Coupon (REG)
+5152001	5100	1	5	0	0	2	Henesys Face Coupon (VIP)
+5152004	2100	1	5	0	0	2	Orbis Face Coupon (REG)
+5152005	5100	1	5	0	0	2	Orbis Face Coupon (VIP)
+5152006	2100	1	5	0	0	2	Ludibrium Face Coupon (REG)
+5152007	5100	1	5	0	0	2	Ludibrium Face Coupon (VIP)
+5152008	2100	1	5	0	0	2	Showa Face Coupon (REG)
+5152009	5100	1	5	0	0	2	Showa Face Coupon (VIP)
+5152010	1800	1	5	0	0	2	Henesys Cosmetic Lens Coupon (REG)
+5152011	1800	1	5	0	0	2	Orbis Cosmetic Lens Coupon (REG)
+5152012	1800	1	5	0	0	2	Ludibrium Cosmetic Lens Coupon (REG)
+5152013	4900	1	5	0	0	2	Henesys Cosmetic Lens Coupon (VIP)
+5152014	4900	1	5	0	0	2	Orbis Cosmetic Lens Coupon (VIP)
+5152015	4900	1	5	0	0	2	Ludibrium Cosmetic Lens Coupon (VIP)
+5152021	2100	1	5	0	0	2	Amoria Face Coupon (REG)
+5152022	5100	1	5	0	0	2	Amoria Face Coupon (VIP)
+5152025	1800	1	5	0	0	2	Amoria Cosmetic Lens Coupon (REG)
+5152026	4900	1	5	0	0	2	Amoria Cosmetic Lens Coupon (VIP)
+5152027	2100	1	5	0	0	2	Mu Lung Plastic Surgery Coupon (REG)
+5152028	4300	1	5	0	0	2	Mu Lung Plastic Surgery Coupon (VIP)
+5152029	2100	1	5	0	0	2	Ariant Face Coupon (REG)
+5152030	5100	1	5	0	0	2	Ariant Face Coupon (VIP)
+5152033	2100	1	5	0	0	2	NLC Face Coupon (REG)
+5152034	4300	1	5	0	0	2	NLC Face Coupon (VIP)
+5152035	1800	1	5	0	0	2	NLC Cosmetic Lens Coupon (REG)
+5152036	4900	1	5	0	0	2	NLC Cosmetic Lens Coupon (VIP)
+5152037	2100	1	5	0	0	2	CBD Face Coupon (REG)
+5152038	5100	1	5	0	0	2	CBD Face Coupon (VIP)
+5152039	1800	1	5	0	0	2	CBD Cosmetic Lens Coupon (REG)
+5152040	4900	1	5	0	0	2	CBD Cosmetic Lens Coupon (VIP)
+5152041	4900	1	5	0	0	2	Mu Lung Cosmetic Lens Coupon (VIP)
+5152042	1800	1	5	0	0	2	Mu Lung Cosmetic Lens Coupon (REG)
+5152045	4900	1	5	0	0	2	Showa Cosmetic Lens Coupon (VIP)
+5152046	1800	1	5	0	0	2	Showa Cosmetic Lens Coupon (REG)
+5152047	4900	1	5	0	0	2	Ariant Cosmetic Lens Coupon (VIP)
+5152048	1800	1	5	0	0	2	Ariant Cosmetic Lens Coupon (REG)
+5152100	4700	1	5	0	0	2	One-Time Cosmetic Lens (Black)
+5152101	4700	1	5	0	0	2	One-Time Cosmetic Lens (Blue)
+5152102	4700	1	5	0	0	2	One-Time Cosmetic Lens (Red)
+5152103	4700	1	5	0	0	2	One-Time Cosmetic Lens (Green)
+5152104	4700	1	5	0	0	2	One-Time Cosmetic Lens (Brown)
+5152105	4700	1	5	0	0	2	One-Time Cosmetic Lens (Emerald)
+5152106	4700	1	5	0	0	2	One-Time Cosmetic Lens (Purple)
+5152107	4700	1	5	0	0	2	One-Time Cosmetic Lens (Amethyst)
 5160000	1000	1	5	3	0	2	Queasy
 5160001	1000	1	5	3	0	2	Panicky
 5160002	1000	1	5	3	0	2	Sweetness
