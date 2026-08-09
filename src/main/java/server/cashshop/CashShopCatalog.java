@@ -57,10 +57,11 @@ public final class CashShopCatalog {
     /**
      * A single line of merchandise.
      *
-     * @param period days before the item expires, 0 = permanent
+     * @param period   days before the item expires, 0 = permanent
+     * @param currency 0 = NX Credit, 1 = Maple Points
      */
     public record Row(int itemId, int price, int count,
-                      int tab, int category, int period, int gender, String name) {
+                      int tab, int category, int period, int gender, int currency, String name) {
         public int bucket() {
             return (tab << 8) | category;
         }
@@ -161,7 +162,23 @@ public final class CashShopCatalog {
                     continue;
                 }
 
-                String name = f.length > 7 ? f[7].strip() : "";
+                // Column 7 is optional currency (0=NX, 1=MP). Column 8 is optional name.
+                // Legacy rows with 8 columns and no currency field: f[7] is the name.
+                // New rows with 9+ columns: f[7]=currency, f[8]=name.
+                int currency = 0;
+                String name;
+                if (f.length >= 9) {
+                    // Try to parse f[7] as currency; if it fails treat it as the name start.
+                    try {
+                        currency = Integer.parseInt(f[7].strip());
+                        name = f[8].strip();
+                    } catch (NumberFormatException ex) {
+                        currency = 0;
+                        name = f[7].strip();
+                    }
+                } else {
+                    name = f.length > 7 ? f[7].strip() : "";
+                }
                 if (name.isEmpty()) {
                     name = ii.getName(itemId);
                 }
@@ -176,7 +193,8 @@ public final class CashShopCatalog {
                 }
 
                 final Row row = new Row(itemId, Math.max(0, price), Math.max(1, count),
-                        tab, cat, Math.max(0, period), gender, name);
+                        tab, cat, Math.max(0, period), gender,
+                        (currency == 1 ? 1 : 0), name);
                 final Row prev = seen.putIfAbsent(itemId, row);
                 if (prev != null) {
                     if (dupe++ < 5) {

@@ -162,13 +162,26 @@ public final class CashShopWindowPurchase {
             // ---- PHASE 2: affordability, once, for the whole cart ----
             // Summed as a long: 24 items near Integer.MAX_VALUE would overflow an int into a
             // negative total and pass the check.
+            // All items in a cart must use the same currency; a mixed cart is rejected.
             long total = 0;
+            int cartCurrency = items.get(0).currency(); // 0=NX, 1=MP
             for (CashShopCatalog.Row r : items) {
+                if (r.currency() != cartCurrency) {
+                    return new Result(CashShopWindowPackets.BUY_BAD_CART, 0, 0, 0);
+                }
                 total += r.price();
             }
             final CashShop cs = chr.getCashShop();
-            if (total > cs.getCash(CashShop.NX_CREDIT)) {
-                return new Result(CashShopWindowPackets.BUY_NO_NX, 0, 0, 0);
+            if (cartCurrency == 1) {
+                // Maple Points
+                if (total > cs.getCash(CashShop.MAPLE_POINT)) {
+                    return new Result(CashShopWindowPackets.BUY_NO_MP, 0, 0, 0);
+                }
+            } else {
+                // NX Credit
+                if (total > cs.getCash(CashShop.NX_CREDIT)) {
+                    return new Result(CashShopWindowPackets.BUY_NO_NX, 0, 0, 0);
+                }
             }
 
             // ---- PHASE 3: space, once, cumulatively ----
@@ -251,10 +264,15 @@ public final class CashShopWindowPurchase {
             }
 
             // ---- PHASE 5: deduct, and only now ----
-            cs.gainCash(CashShop.NX_CREDIT, (int) -total);
+            if (cartCurrency == 1) {
+                cs.gainCash(CashShop.MAPLE_POINT, (int) -total);
+            } else {
+                cs.gainCash(CashShop.NX_CREDIT, (int) -total);
+            }
 
-            log.info("{} bought {} cash item(s) for {} NX from the Cash Shop window",
-                    chr.getName(), delivered, total);
+            final String currencyName = (cartCurrency == 1) ? "MP" : "NX";
+            log.info("{} bought {} cash item(s) for {} {} from the Cash Shop window",
+                    chr.getName(), delivered, total, currencyName);
             return new Result(CashShopWindowPackets.BUY_OK, 0, delivered, (int) total);
         } catch (Exception e) {
             log.error("Cash Shop window: cart purchase failed for {}", chr.getName(), e);

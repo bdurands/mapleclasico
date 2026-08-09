@@ -102,6 +102,7 @@ const char* const kBuyMsg[] = {
     "That item is not on sale.",
     "Another purchase is already in progress.",
     "That cart is not valid.",
+    "Not enough Maple Points.",
 };
 
 // Sanity ceilings. A truncated or hostile packet must be rejected whole, the way
@@ -1047,6 +1048,7 @@ struct Entry {
     int count = 1;
     int tab = 0;
     int cat = 0;
+    int currency = 0;    // 0 = NX Credit, 1 = Maple Points
     std::string name;
 };
 
@@ -1493,7 +1495,7 @@ public:
     bool  m_bAvatarDirty;
 
     // --- the cart -----------------------------------------------------------
-    struct CartEntry { int itemId; int price; };
+    struct CartEntry { int itemId; int price; int currency; };
     CartEntry m_cart[kCartMax];
     int       m_nCartCount;
     // The serials actually handed to the server, snapshotted when BUY CART was pressed.
@@ -1549,6 +1551,19 @@ public:
     IWzCanvasPtr m_pSubTab[2];
     int m_nPrevBg;                      // which one is showing
 
+    // --- confirmation overlay -----------------------------------------------
+    bool m_bConfirm;                    // overlay is visible
+    int  m_bConfirmOkPress;             // OK button state
+    int  m_bConfirmCancelPress;
+    int  m_bConfirmOkHover;
+    int  m_bConfirmCancelHover;
+    // Pending purchase data filled before showing overlay
+    int  m_nPendingItemId;              // 0 = cart buy
+    int  m_nPendingCurrency;            // 0=NX, 1=MP
+    int  m_nPendingTotal;
+    char m_szPendingName[48];           // display name of item (single buy) or "X items"
+    // For cart buy: snapshot of ids already in m_sentIds / m_nSentCount
+
     explicit CUICashShop(int nLeft, int nTop);
     virtual ~CUICashShop() override {
         ReleaseEffect();                   // BEFORE the avatar: it holds the avatar's vectors
@@ -1557,6 +1572,7 @@ public:
     }
 
     virtual void Draw(const RECT* pRect) override;
+    void DrawConfirmOverlay(IWzCanvasPtr c);   // modal purchase confirmation panel
     virtual void OnMouseButton(unsigned int msg, unsigned int wParam, int rx, int ry) override;
     virtual int  OnMouseMove(int rx, int ry) override;
     virtual int  OnMouseWheel(int, int, int nWheel) override {
@@ -1902,7 +1918,7 @@ public:
             if (m_cart[i].itemId == itemId) return i;
         return -1;
     }
-    void CartToggle(int itemId, int price);
+    void CartToggle(int itemId, int price, int currency);
     void BuildLook(LookOverride& out) const;
     int  CartTotalPrice() const;
 
@@ -2241,7 +2257,11 @@ CUICashShop::CUICashShop(int nLeft, int nTop)
       m_nLastMA(-1), m_nLastCode(kNoActionCode), m_nPendingEmotion(kNoEmotion),
       m_nSearchLen(0), m_bSearchActive(false),
       m_nPrevBg(s_nPrevBg), m_pEffectLayer(nullptr), m_nEffectItem(0),
-      m_nEffectMA(-1), m_nEffectCode(kNoActionCode) {
+      m_nEffectMA(-1), m_nEffectCode(kNoActionCode),
+      m_bConfirm(false), m_bConfirmOkPress(0), m_bConfirmCancelPress(0),
+      m_bConfirmOkHover(0), m_bConfirmCancelHover(0),
+      m_nPendingItemId(0), m_nPendingCurrency(0), m_nPendingTotal(0) {
+    m_szPendingName[0] = '\0';
     m_avatarRef[0] = m_avatarRef[1] = 0;
     for (auto& e : m_cart) { e.itemId = 0; e.price = 0; }
     for (auto& s : m_sentIds) s = 0;
@@ -2468,7 +2488,7 @@ unsigned int LookHash(const LookOverride& lk) {
     return h;
 }
 
-void CUICashShop::CartToggle(int itemId, int price) {
+void CUICashShop::CartToggle(int itemId, int price, int currency) {
     if (itemId == 0) return;
     const int at = CartIndexOfItem(itemId);
     if (at >= 0) {
@@ -2483,8 +2503,9 @@ void CUICashShop::CartToggle(int itemId, int price) {
             InvalidateRect(nullptr);
             return;
         }
-        m_cart[m_nCartCount].itemId = itemId;
-        m_cart[m_nCartCount].price = price;
+        m_cart[m_nCartCount].itemId   = itemId;
+        m_cart[m_nCartCount].price    = price;
+        m_cart[m_nCartCount].currency = currency;
         ++m_nCartCount;
     }
     play_ui_sound(L"DragEnd");
@@ -2893,8 +2914,8 @@ void CUICashShop::DrawGrid(IWzCanvasPtr c, const std::vector<Entry>& vis) {
                 StrCenter(c, fi, cx, by + kCellBox + 17, l2);
             }
 
-            char pr[24];
-            _snprintf(pr, sizeof(pr), "%d NX", e.price);
+            char pr[32];
+            _snprintf(pr, sizeof(pr), "%d %s", e.price, e.currency == 1 ? "MP" : "NX");
             pr[sizeof(pr) - 1] = 0;
             StrCenter(c, sel ? kF_Sel : kF_Price, cx, by + kCellBox + 31, pr);
         }
@@ -3051,6 +3072,80 @@ void CUICashShop::DrawPreview(IWzCanvasPtr c, const std::vector<Entry>& vis) {
     StrRight(c, kF_Text, kCashMpRight, kCashValueY, v);
 }
 
+// ============================================================
+// CONFIRMATION OVERLAY
+// A modal panel painted on top of the whole window. It dims the background
+// with a semi-transparent fill, then draws a centred dialogue with the item
+// name, price, balances, and OK / CANCEL buttons using the same BtBuy art
+// the window already owns. Input is blocked to this panel while it is visible.
+// ============================================================
+
+// Overlay panel dimensions, centred on the window.
+constexpr int kCfW       = 340;
+constexpr int kCfH       = 168;
+constexpr int kCfX       = (kWndW - kCfW) / 2;
+constexpr int kCfY       = (kWndH - kCfH) / 2;
+// OK / CANCEL buttons inside the panel.
+constexpr int kCfBtnW    = 80;
+constexpr int kCfBtnGap  = 12;
+constexpr int kCfBtnY    = kCfY + kCfH - kBtnH - 12;
+constexpr int kCfOkX     = kCfX + (kCfW - (kCfBtnW * 2 + kCfBtnGap)) / 2;
+constexpr int kCfCancelX = kCfOkX + kCfBtnW + kCfBtnGap;
+
+void CUICashShop::DrawConfirmOverlay(IWzCanvasPtr c) {
+    // Dim the entire window behind the panel.
+    FilledRect(c, 0, 0, kWndW, kWndH, 0xAA000000u);
+
+    // Panel background — same plate colour as the main window.
+    FilledRect(c, kCfX, kCfY, kCfW, kCfH, kColPlate);
+    // Border: outer shadow, inner bright, then frame.
+    Border(c, kCfX,     kCfY,     kCfW,     kCfH,     kColShadow);
+    Border(c, kCfX + 1, kCfY + 1, kCfW - 2, kCfH - 2, kColWhite);
+    Border(c, kCfX + 2, kCfY + 2, kCfW - 4, kCfH - 4, kColFrame);
+
+    // Title bar — accent fill + white text.
+    FilledRect(c, kCfX + 3, kCfY + 3, kCfW - 6, 18, kColAccent);
+    StrCenter(c, kF_Tab, kCfX + kCfW / 2, kCfY + 5, "Confirm Purchase");
+
+    // Item name and price.
+    const int textX = kCfX + kCfW / 2;
+    StrCenter(c, kF_Text, textX, kCfY + 30, m_szPendingName);
+
+    char priceLine[64];
+    _snprintf(priceLine, sizeof(priceLine), "Price: %d %s",
+              m_nPendingTotal, m_nPendingCurrency == 1 ? "MP" : "NX");
+    priceLine[sizeof(priceLine) - 1] = 0;
+    StrCenter(c, kF_Sel, textX, kCfY + 50, priceLine);
+
+    // Current balance and post-purchase balance.
+    int cash[3];
+    { std::lock_guard<std::mutex> lk(g_mtx); cash[0] = g_cash[0]; cash[1] = g_cash[1]; cash[2] = g_cash[2]; }
+    const int balance = (m_nPendingCurrency == 1) ? cash[1] : cash[0];
+    const int after   = balance - m_nPendingTotal;
+    const char* curLabel = (m_nPendingCurrency == 1) ? "MP" : "NX";
+
+    char balLine[64];
+    _snprintf(balLine, sizeof(balLine), "Balance: %d %s", balance, curLabel);
+    balLine[sizeof(balLine) - 1] = 0;
+    StrCenter(c, kF_Dim, textX, kCfY + 70, balLine);
+
+    char afterLine[64];
+    _snprintf(afterLine, sizeof(afterLine), "After purchase: %d %s", after, curLabel);
+    afterLine[sizeof(afterLine) - 1] = 0;
+    // Show after-purchase in red (kF_Price) if it would go negative.
+    StrCenter(c, after >= 0 ? kF_Dim : kF_Price, textX, kCfY + 88, afterLine);
+
+    // Separator.
+    FilledRect(c, kCfX + 8, kCfBtnY - 8, kCfW - 16, 1, kColRule);
+
+    // OK button.
+    DrawVanillaButton(c, kCfOkX,     kCfBtnY, kCfBtnW, "OK",
+                      true, m_bConfirmOkPress != 0, m_bConfirmOkHover != 0, m_pBtBuy);
+    // CANCEL button.
+    DrawVanillaButton(c, kCfCancelX, kCfBtnY, kCfBtnW, "CANCEL",
+                      true, m_bConfirmCancelPress != 0, m_bConfirmCancelHover != 0, m_pBtCart);
+}
+
 // THE BUY BAR, full width under both panes. Its furniture is the decoded stock footer band:
 // a #557799 opening rule, a three-row lighter lip, then FLAT #99BBCC.
 void CUICashShop::DrawBuyBar(IWzCanvasPtr c) {
@@ -3094,6 +3189,9 @@ void CUICashShop::Draw(const RECT* pRect) {
     DrawScrollbar(c, static_cast<int>(vis.size()));
     DrawPreview(c, vis);
     DrawBuyBar(c);        // buttons and the status line; no selection info
+
+    // Confirmation overlay goes on top of everything else.
+    if (m_bConfirm) DrawConfirmOverlay(c);
 }
 
 // ---------------------------------------------------------------------------
@@ -3125,6 +3223,13 @@ void CUICashShop::DragThumbTo(int localY) {
 }
 
 int CUICashShop::OnMouseMove(int rx, int ry) {
+    // If the confirmation overlay is active, only update its own button hovers.
+    if (m_bConfirm) {
+        m_bConfirmOkHover     = In(rx, ry, kCfOkX,     kCfBtnY, kCfBtnW, kBtnH) ? 1 : 0;
+        m_bConfirmCancelHover = In(rx, ry, kCfCancelX, kCfBtnY, kCfBtnW, kBtnH) ? 1 : 0;
+        InvalidateRect(nullptr);
+        return 1;
+    }
     m_nCloseHover   = In(rx, ry, kCloseX, kCloseY, kCloseSize, kCloseSize) ? 1 : 0;
     m_nBuyHover     = In(rx, ry, kBuyX, kBtnY, kBtnW, kBtnH) ? 1 : 0;
     m_nBuyCartHover = In(rx, ry, kCartBuyX, kBtnY, kBtnW, kBtnH) ? 1 : 0;
@@ -3148,6 +3253,48 @@ int CUICashShop::OnMouseMove(int rx, int ry) {
 }
 
 void CUICashShop::OnMouseButton(unsigned int msg, unsigned int /*wParam*/, int rx, int ry) {
+    // ---- CONFIRMATION OVERLAY ---- has exclusive input while visible.
+    if (m_bConfirm) {
+        if (msg == WM_LBUTTONDOWN) {
+            if (In(rx, ry, kCfOkX,     kCfBtnY, kCfBtnW, kBtnH)) { m_bConfirmOkPress     = 1; InvalidateRect(nullptr); return; }
+            if (In(rx, ry, kCfCancelX, kCfBtnY, kCfBtnW, kBtnH)) { m_bConfirmCancelPress = 1; InvalidateRect(nullptr); return; }
+            return; // swallow all other clicks
+        }
+        if (msg == WM_LBUTTONUP) {
+            if (m_bConfirmOkPress) {
+                m_bConfirmOkPress = 0;
+                m_bConfirm = false;
+                if (In(rx, ry, kCfOkX, kCfBtnY, kCfBtnW, kBtnH)) {
+                    play_ui_sound(L"BtMouseClick");
+                    if (m_nPendingItemId != 0) {
+                        // Single buy
+                        _snprintf(g_szStatus, sizeof(g_szStatus), "Buying...");
+                        g_szStatus[sizeof(g_szStatus) - 1] = 0;
+                        SendBuy(m_nPendingItemId);
+                    } else {
+                        // Cart buy (ids/count already snapshotted in m_sentIds/m_nSentCount)
+                        _snprintf(g_szStatus, sizeof(g_szStatus),
+                                  "Buying %d item%s...", m_nSentCount, m_nSentCount == 1 ? "" : "s");
+                        g_szStatus[sizeof(g_szStatus) - 1] = 0;
+                        SendBuyCart(m_sentIds, m_nSentCount);
+                    }
+                }
+            }
+            if (m_bConfirmCancelPress) {
+                m_bConfirmCancelPress = 0;
+                if (In(rx, ry, kCfCancelX, kCfBtnY, kCfBtnW, kBtnH)) {
+                    play_ui_sound(L"BtMouseClick");
+                    _snprintf(g_szStatus, sizeof(g_szStatus), "Purchase cancelled.");
+                    g_szStatus[sizeof(g_szStatus) - 1] = 0;
+                }
+                m_bConfirm = false;
+                m_nPendingItemId = 0;
+            }
+            InvalidateRect(nullptr);
+        }
+        return; // overlay owns all remaining messages
+    }
+
     // WM_LBUTTONDBLCLK reaches us VERBATIM. CInputSystem synthesizes it itself at
     // 0x0059AD20 from the user's real GetDoubleClickTime / SM_CXDOUBLECLK / SM_CYDOUBLECLK,
     // both message pumps admit 0x200..0x20A, and CWndMan::ProcessMouse matches none of its
@@ -3163,7 +3310,7 @@ void CUICashShop::OnMouseButton(unsigned int msg, unsigned int /*wParam*/, int r
             const int bx = kCartX0 + (i % kCartCols) * (kCartBox + kCartGap);
             const int by = kCartY + 2 + (i / kCartCols) * (kCartBox + kCartGap);
             if (In(rx, ry, bx, by, kCartBox, kCartBox)) {
-                CartToggle(m_cart[i].itemId, m_cart[i].price);
+                CartToggle(m_cart[i].itemId, m_cart[i].price, m_cart[i].currency);
                 return;
             }
         }
@@ -3179,7 +3326,7 @@ void CUICashShop::OnMouseButton(unsigned int msg, unsigned int /*wParam*/, int r
                        kCellW - 1, kCellH - 1)) {
                     const int idx = (m_nScroll + r) * kCols + col;
                     if (idx >= 0 && idx < static_cast<int>(vis.size()))
-                        CartToggle(vis[idx].itemId, vis[idx].price);
+                        CartToggle(vis[idx].itemId, vis[idx].price, vis[idx].currency);
                     return;
                 }
         return;
@@ -3269,22 +3416,50 @@ void CUICashShop::OnMouseButton(unsigned int msg, unsigned int /*wParam*/, int r
         if (m_nBuyPressed) {
             m_nBuyPressed = 0;
             if (m_nSelItemId && In(rx, ry, kBuyX, kBtnY, kBtnW, kBtnH)) {
+                // Show confirmation overlay instead of buying immediately.
                 play_ui_sound(L"BtMouseClick");
-                _snprintf(g_szStatus, sizeof(g_szStatus), "Buying...");
-                g_szStatus[sizeof(g_szStatus) - 1] = 0;
-                SendBuy(m_nSelItemId);
+                // Resolve selected item details from the catalog.
+                std::vector<Entry> vis;
+                {
+                    std::lock_guard<std::mutex> lk(g_mtx);
+                    CollectLocked(vis);
+                }
+                int selPrice = 0; int selCurrency = 0;
+                for (auto& e : vis) {
+                    if (e.itemId == m_nSelItemId) { selPrice = e.price; selCurrency = e.currency; break; }
+                }
+                m_nPendingItemId   = m_nSelItemId;
+                m_nPendingTotal    = selPrice;
+                m_nPendingCurrency = selCurrency;
+                // Build a display name for the pending item.
+                const char* nm = "";
+                for (auto& e : vis) { if (e.itemId == m_nSelItemId) { nm = e.name.c_str(); break; } }
+                _snprintf(m_szPendingName, sizeof(m_szPendingName), "%s", nm);
+                m_szPendingName[sizeof(m_szPendingName) - 1] = 0;
+                m_bConfirm = true;
+                InvalidateRect(nullptr);
             }
         }
         if (m_nBuyCartPressed) {
             m_nBuyCartPressed = 0;
             if (m_nCartCount > 0 && In(rx, ry, kCartBuyX, kBtnY, kBtnW, kBtnH)) {
+                // Show confirmation overlay for cart buy.
                 play_ui_sound(L"BtMouseClick");
+                // Snapshot cart before showing overlay (same as original).
                 m_nSentCount = m_nCartCount;
                 for (int i = 0; i < m_nSentCount; ++i) m_sentIds[i] = m_cart[i].itemId;
-                _snprintf(g_szStatus, sizeof(g_szStatus),
-                          "Buying %d item%s...", m_nSentCount, m_nSentCount == 1 ? "" : "s");
-                g_szStatus[sizeof(g_szStatus) - 1] = 0;
-                SendBuyCart(m_sentIds, m_nSentCount);
+                // Compute total and dominant currency from cart.
+                long total = 0;
+                int currency = (m_nCartCount > 0) ? m_cart[0].currency : 0;
+                for (int i = 0; i < m_nCartCount; ++i) total += m_cart[i].price;
+                m_nPendingItemId   = 0;   // 0 = cart buy
+                m_nPendingTotal    = static_cast<int>(total);
+                m_nPendingCurrency = currency;
+                _snprintf(m_szPendingName, sizeof(m_szPendingName),
+                          "%d item%s", m_nSentCount, m_nSentCount == 1 ? "" : "s");
+                m_szPendingName[sizeof(m_szPendingName) - 1] = 0;
+                m_bConfirm = true;
+                InvalidateRect(nullptr);
             }
         }
         m_bDragging = 0;
@@ -3375,6 +3550,7 @@ void CashShopWnd_HandleSync(CInPacket* pPacket) {
                 e.tab    = r.Decode1();
                 e.cat    = r.Decode1();
                 e.name   = r.DecodeStr();
+                e.currency = r.Decode1();   // 0=NX, 1=MP
                 if (r.bad) return;                       // whole chunk dropped
                 parsed.push_back(std::move(e));
             }
