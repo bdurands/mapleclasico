@@ -709,7 +709,7 @@ public class MapleMap {
     private Equip generateSquishyShoesStats(ItemInformationProvider ii) {
         Equip equip = (Equip) ii.randomizeStats((Equip) ii.getEquipById(1072369));
         
-        int chance = server.Randomizer.nextInt(100);
+        int chance = Randomizer.nextInt(100);
         if (chance < 5) { // 5% chance
             equip.setStr((short) (equip.getStr() + 10));
             equip.setDex((short) (equip.getDex() + 10));
