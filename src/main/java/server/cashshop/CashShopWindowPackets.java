@@ -50,7 +50,7 @@ public final class CashShopWindowPackets {
     public static final int BUY_NOT_ON_SALE = 4;
     public static final int BUY_BUSY = 5;
     public static final int BUY_BAD_CART = 6;
-    public static final int BUY_NO_MP = 7;     // not enough Maple Points
+    public static final int BUY_NO_DP = 7;     // not enough Donor Points
 
     /**
      * Entries per packet. The wire cap is a hard 64KB on both sides (16-bit length in
@@ -153,7 +153,7 @@ public final class CashShopWindowPackets {
                 p.writeByte(r.tab());
                 p.writeByte(r.category());
                 p.writeString(r.name());
-                p.writeByte(r.currency());   // 0=NX, 1=Maple Points
+                p.writeByte(r.currency());   // 0=NX, 1=Donor Points
             }
             out.add(p);
             if (total == 0) {

@@ -58,7 +58,7 @@ public final class CashShopCatalog {
      * A single line of merchandise.
      *
      * @param period   days before the item expires, 0 = permanent
-     * @param currency 0 = NX Credit, 1 = Maple Points
+     * @param currency 0 = NX Credit, 1 = Donor Points
      */
     public record Row(int itemId, int price, int count,
                       int tab, int category, int period, int gender, int currency, String name) {
@@ -162,7 +162,7 @@ public final class CashShopCatalog {
                     continue;
                 }
 
-                // Column 7 is optional currency (0=NX, 1=MP). Column 8 is optional name.
+                // Column 7 is optional currency (0=NX, 1=DP). Column 8 is optional name.
                 // Legacy rows with 8 columns and no currency field: f[7] is the name.
                 // New rows with 9+ columns: f[7]=currency, f[8]=name.
                 int currency = 0;

@@ -173,9 +173,9 @@ public final class CashShopWindowPurchase {
             }
             final CashShop cs = chr.getCashShop();
             if (cartCurrency == 1) {
-                // Maple Points
+                // Donor Points
                 if (total > cs.getCash(CashShop.MAPLE_POINT)) {
-                    return new Result(CashShopWindowPackets.BUY_NO_MP, 0, 0, 0);
+                    return new Result(CashShopWindowPackets.BUY_NO_DP, 0, 0, 0);
                 }
             } else {
                 // NX Credit
@@ -270,7 +270,7 @@ public final class CashShopWindowPurchase {
                 cs.gainCash(CashShop.NX_CREDIT, (int) -total);
             }
 
-            final String currencyName = (cartCurrency == 1) ? "MP" : "NX";
+            final String currencyName = (cartCurrency == 1) ? "DP" : "NX";
             log.info("{} bought {} cash item(s) for {} {} from the Cash Shop window",
                     chr.getName(), delivered, total, currencyName);
             return new Result(CashShopWindowPackets.BUY_OK, 0, delivered, (int) total);

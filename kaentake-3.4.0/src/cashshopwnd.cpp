@@ -102,7 +102,7 @@ const char* const kBuyMsg[] = {
     "That item is not on sale.",
     "Another purchase is already in progress.",
     "That cart is not valid.",
-    "Not enough Maple Points.",
+    "Not enough Donor Points.",
 };
 
 // Sanity ceilings. A truncated or hostile packet must be rejected whole, the way
@@ -559,18 +559,15 @@ const CatDef kCats[] = {
     { 5, 0,  "Beauty Parlor" }, { 5, 1, "Store"    }, { 5, 2,  "Game"    },
     { 5, 3,  "Facial Expression" }, { 5, 4, "Wedding" }, { 5, 5, "Effect" },
     { 5, 6,  "Character"  },
-    { 6, 0,  "Pet"        }, { 6, 1,  "Pet Equip." }, { 6, 2,  "Pet Use" },
-    { 7, 0,  "Package"    },
-    // Tab 8 ("Guide": How to Use / How to Gift) is deliberately absent. It sold nothing --
-    // in v83 its only members are four 403xxxx manual items -- and a tab of instructions
-    // has no place in a window that is already the instructions.
+    { 6, 0,  "Pet"        }, { 6, 1,  "Pet Equip." }, { 6, 2,  "Consume" },
+    { 7, 0,  "Donor"      },
 };
 constexpr int kCatCount = static_cast<int>(_countof(kCats));
 
 // Tab ids in display order, with the labels the stock shop uses for each group.
 struct TabDef { int id; const char* name; };
 const TabDef kTabs[] = {
-    { 2, "Equip" }, { 3, "Use" }, { 5, "Setup" }, { 6, "Pet" }, { 7, "Package" },
+    { 2, "Equip" }, { 3, "Use" }, { 5, "Setup" }, { 6, "Pet" }, { 7, "Donor" },
 };
 constexpr int kTabCount = static_cast<int>(_countof(kTabs));
 
@@ -1557,6 +1554,8 @@ public:
     int  m_bConfirmCancelPress;
     int  m_bConfirmOkHover;
     int  m_bConfirmCancelHover;
+    int  m_bConfirmClosePress;          // Close (X) button state
+    int  m_bConfirmCloseHover;
     // Pending purchase data filled before showing overlay
     int  m_nPendingItemId;              // 0 = cart buy
     int  m_nPendingCurrency;            // 0=NX, 1=MP
@@ -2260,6 +2259,7 @@ CUICashShop::CUICashShop(int nLeft, int nTop)
       m_nEffectMA(-1), m_nEffectCode(kNoActionCode),
       m_bConfirm(false), m_bConfirmOkPress(0), m_bConfirmCancelPress(0),
       m_bConfirmOkHover(0), m_bConfirmCancelHover(0),
+      m_bConfirmClosePress(0), m_bConfirmCloseHover(0),
       m_nPendingItemId(0), m_nPendingCurrency(0), m_nPendingTotal(0) {
     m_szPendingName[0] = '\0';
     m_avatarRef[0] = m_avatarRef[1] = 0;
@@ -2915,7 +2915,7 @@ void CUICashShop::DrawGrid(IWzCanvasPtr c, const std::vector<Entry>& vis) {
             }
 
             char pr[32];
-            _snprintf(pr, sizeof(pr), "%d %s", e.price, e.currency == 1 ? "MP" : "NX");
+            _snprintf(pr, sizeof(pr), "%d %s", e.price, e.currency == 1 ? "DP" : "NX");
             pr[sizeof(pr) - 1] = 0;
             StrCenter(c, sel ? kF_Sel : kF_Price, cx, by + kCellBox + 31, pr);
         }
@@ -3091,21 +3091,23 @@ constexpr int kCfBtnGap  = 12;
 constexpr int kCfBtnY    = kCfY + kCfH - kBtnH - 12;
 constexpr int kCfOkX     = kCfX + (kCfW - (kCfBtnW * 2 + kCfBtnGap)) / 2;
 constexpr int kCfCancelX = kCfOkX + kCfBtnW + kCfBtnGap;
+constexpr int kCfCloseX  = kCfX + kCfW - kCloseSize - 6;
+constexpr int kCfCloseY  = kCfY + 6;
 
 void CUICashShop::DrawConfirmOverlay(IWzCanvasPtr c) {
     // Dim the entire window behind the panel.
-    FilledRect(c, 0, 0, kWndW, kWndH, 0xAA000000u);
+    Fill(c, 0, 0, kWndW, kWndH, 0xAA000000u);
 
     // Panel background — same plate colour as the main window.
-    FilledRect(c, kCfX, kCfY, kCfW, kCfH, kColPlate);
+    Fill(c, kCfX, kCfY, kCfW, kCfH, kColPlate);
     // Border: outer shadow, inner bright, then frame.
     Border(c, kCfX,     kCfY,     kCfW,     kCfH,     kColShadow);
     Border(c, kCfX + 1, kCfY + 1, kCfW - 2, kCfH - 2, kColWhite);
     Border(c, kCfX + 2, kCfY + 2, kCfW - 4, kCfH - 4, kColFrame);
 
     // Title bar — accent fill + white text.
-    FilledRect(c, kCfX + 3, kCfY + 3, kCfW - 6, 18, kColAccent);
-    StrCenter(c, kF_Tab, kCfX + kCfW / 2, kCfY + 5, "Confirm Purchase");
+    Fill(c, kCfX + 3, kCfY + 3, kCfW - 6, 18, kColAccent);
+    StrCenter(c, kF_Text, kCfX + kCfW / 2, kCfY + 5, "Confirm Purchase");
 
     // Item name and price.
     const int textX = kCfX + kCfW / 2;
@@ -3113,7 +3115,7 @@ void CUICashShop::DrawConfirmOverlay(IWzCanvasPtr c) {
 
     char priceLine[64];
     _snprintf(priceLine, sizeof(priceLine), "Price: %d %s",
-              m_nPendingTotal, m_nPendingCurrency == 1 ? "MP" : "NX");
+              m_nPendingTotal, m_nPendingCurrency == 1 ? "DP" : "NX");
     priceLine[sizeof(priceLine) - 1] = 0;
     StrCenter(c, kF_Sel, textX, kCfY + 50, priceLine);
 
@@ -3122,7 +3124,7 @@ void CUICashShop::DrawConfirmOverlay(IWzCanvasPtr c) {
     { std::lock_guard<std::mutex> lk(g_mtx); cash[0] = g_cash[0]; cash[1] = g_cash[1]; cash[2] = g_cash[2]; }
     const int balance = (m_nPendingCurrency == 1) ? cash[1] : cash[0];
     const int after   = balance - m_nPendingTotal;
-    const char* curLabel = (m_nPendingCurrency == 1) ? "MP" : "NX";
+    const char* curLabel = (m_nPendingCurrency == 1) ? "DP" : "NX";
 
     char balLine[64];
     _snprintf(balLine, sizeof(balLine), "Balance: %d %s", balance, curLabel);
@@ -3136,7 +3138,7 @@ void CUICashShop::DrawConfirmOverlay(IWzCanvasPtr c) {
     StrCenter(c, after >= 0 ? kF_Dim : kF_Price, textX, kCfY + 88, afterLine);
 
     // Separator.
-    FilledRect(c, kCfX + 8, kCfBtnY - 8, kCfW - 16, 1, kColRule);
+    Fill(c, kCfX + 8, kCfBtnY - 8, kCfW - 16, 1, kColRule);
 
     // OK button.
     DrawVanillaButton(c, kCfOkX,     kCfBtnY, kCfBtnW, "OK",
@@ -3144,6 +3146,17 @@ void CUICashShop::DrawConfirmOverlay(IWzCanvasPtr c) {
     // CANCEL button.
     DrawVanillaButton(c, kCfCancelX, kCfBtnY, kCfBtnW, "CANCEL",
                       true, m_bConfirmCancelPress != 0, m_bConfirmCancelHover != 0, m_pBtCart);
+
+    // X close button.
+    const int cState = m_bConfirmClosePress ? 1 : (m_bConfirmCloseHover ? 3 : 0);
+    if (m_pBtClose[cState]) {
+        BlitA(c, m_pBtClose[cState], kCfCloseX, kCfCloseY);
+    } else {
+        for (int i = 0; i < kCloseSize; ++i) {
+            Fill(c, kCfCloseX + i, kCfCloseY + i, 2, 1, kColWhite);
+            Fill(c, kCfCloseX + (kCloseSize - 1 - i), kCfCloseY + i, 2, 1, kColWhite);
+        }
+    }
 }
 
 // THE BUY BAR, full width under both panes. Its furniture is the decoded stock footer band:
@@ -3227,6 +3240,7 @@ int CUICashShop::OnMouseMove(int rx, int ry) {
     if (m_bConfirm) {
         m_bConfirmOkHover     = In(rx, ry, kCfOkX,     kCfBtnY, kCfBtnW, kBtnH) ? 1 : 0;
         m_bConfirmCancelHover = In(rx, ry, kCfCancelX, kCfBtnY, kCfBtnW, kBtnH) ? 1 : 0;
+        m_bConfirmCloseHover  = In(rx, ry, kCfCloseX,  kCfCloseY, kCloseSize, kCloseSize) ? 1 : 0;
         InvalidateRect(nullptr);
         return 1;
     }
@@ -3258,6 +3272,7 @@ void CUICashShop::OnMouseButton(unsigned int msg, unsigned int /*wParam*/, int r
         if (msg == WM_LBUTTONDOWN) {
             if (In(rx, ry, kCfOkX,     kCfBtnY, kCfBtnW, kBtnH)) { m_bConfirmOkPress     = 1; InvalidateRect(nullptr); return; }
             if (In(rx, ry, kCfCancelX, kCfBtnY, kCfBtnW, kBtnH)) { m_bConfirmCancelPress = 1; InvalidateRect(nullptr); return; }
+            if (In(rx, ry, kCfCloseX,  kCfCloseY, kCloseSize, kCloseSize)) { m_bConfirmClosePress = 1; InvalidateRect(nullptr); return; }
             return; // swallow all other clicks
         }
         if (msg == WM_LBUTTONUP) {
@@ -3280,9 +3295,13 @@ void CUICashShop::OnMouseButton(unsigned int msg, unsigned int /*wParam*/, int r
                     }
                 }
             }
-            if (m_bConfirmCancelPress) {
+            if (m_bConfirmCancelPress || m_bConfirmClosePress) {
+                const int wasCancel = m_bConfirmCancelPress;
+                const int wasClose  = m_bConfirmClosePress;
                 m_bConfirmCancelPress = 0;
-                if (In(rx, ry, kCfCancelX, kCfBtnY, kCfBtnW, kBtnH)) {
+                m_bConfirmClosePress = 0;
+                if ((wasCancel && In(rx, ry, kCfCancelX, kCfBtnY, kCfBtnW, kBtnH)) ||
+                    (wasClose && In(rx, ry, kCfCloseX, kCfCloseY, kCloseSize, kCloseSize))) {
                     play_ui_sound(L"BtMouseClick");
                     _snprintf(g_szStatus, sizeof(g_szStatus), "Purchase cancelled.");
                     g_szStatus[sizeof(g_szStatus) - 1] = 0;
