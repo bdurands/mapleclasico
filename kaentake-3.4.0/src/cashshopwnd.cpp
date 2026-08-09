@@ -560,7 +560,8 @@ const CatDef kCats[] = {
     { 5, 3,  "Facial Expression" }, { 5, 4, "Wedding" }, { 5, 5, "Effect" },
     { 5, 6,  "Character"  },
     { 6, 0,  "Pet"        }, { 6, 1,  "Pet Equip." }, { 6, 2,  "Consume" },
-    { 7, 0,  "Donor"      },
+    { 7, 0,  "Donor"      }, { 7, 1,  "Weapons"    }, { 7, 2,  "Chairs"  },
+    { 7, 3,  "Pets"       },
 };
 constexpr int kCatCount = static_cast<int>(_countof(kCats));
 
