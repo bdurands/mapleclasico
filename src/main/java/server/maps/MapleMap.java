@@ -689,7 +689,11 @@ public class MapleMap {
                     }
                 } else {
                     if (ItemConstants.getInventoryType(de.itemId) == InventoryType.EQUIP) {
-                        idrop = ii.randomizeStats((Equip) ii.getEquipById(de.itemId));
+                        if (mob.getId() == 9300003 && de.itemId == 1072369) {
+                            idrop = generateSquishyShoesStats(ii);
+                        } else {
+                            idrop = ii.randomizeStats((Equip) ii.getEquipById(de.itemId));
+                        }
                     } else {
                         idrop = new Item(de.itemId, (short) 0, (short) (de.Maximum != 1 ? Randomizer.nextInt(de.Maximum - de.Minimum) + de.Minimum : 1));
                     }
@@ -700,6 +704,34 @@ public class MapleMap {
         }
 
         return index;
+    }
+
+    private Equip generateSquishyShoesStats(ItemInformationProvider ii) {
+        Equip equip = (Equip) ii.randomizeStats((Equip) ii.getEquipById(1072369));
+        
+        int chance = server.Randomizer.nextInt(100);
+        if (chance < 5) { // 5% chance
+            equip.setStr((short) (equip.getStr() + 10));
+            equip.setDex((short) (equip.getDex() + 10));
+            equip.setInt((short) (equip.getInt() + 10));
+            equip.setLuk((short) (equip.getLuk() + 10));
+            equip.setWatk((short) (equip.getWatk() + 5));
+            equip.setMatk((short) (equip.getMatk() + 5));
+        } else if (chance < 20) { // 15% chance
+            equip.setStr((short) (equip.getStr() + 5));
+            equip.setDex((short) (equip.getDex() + 5));
+            equip.setInt((short) (equip.getInt() + 5));
+            equip.setLuk((short) (equip.getLuk() + 5));
+            equip.setWatk((short) (equip.getWatk() + 2));
+            equip.setMatk((short) (equip.getMatk() + 2));
+        } else if (chance < 50) { // 30% chance
+            equip.setStr((short) (equip.getStr() + 2));
+            equip.setDex((short) (equip.getDex() + 2));
+            equip.setInt((short) (equip.getInt() + 2));
+            equip.setLuk((short) (equip.getLuk() + 2));
+        }
+        // remaining 50% chance keeps normal randomized stats
+        return equip;
     }
 
     private byte dropGlobalItemsFromMonsterOnMap(List<MonsterGlobalDropEntry> globalEntry, Point pos, byte d,
