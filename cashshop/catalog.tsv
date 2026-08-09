@@ -1467,13 +1467,11 @@
 5021024	4400	1	5	2	0	2	Throwing Eggs Weapon
 5021025	4000	1	5	2	0	2	Charm of the Undead
 5021026	3200	1	5	2	0	2	Gift Box Throwing Stars
-5030000	5900	1	5	1	0	2	Mushroom House Elf
-5030001	1700	1	5	1	0	2	Mushroom House Elf
 5030002	5900	1	5	1	0	2	Cashier: Teddy Bear Clerk
 5030003	1700	1	5	1	0	2	Cashier: Teddy Bear Clerk
 5030004	5900	1	5	1	0	2	The Robot Stand
 5030005	1700	1	5	1	0	2	The Robot Stand
-5030006	9900	1	5	1	0	2	Mushroom House Elf
+5030006	20000	1	5	1	0	2	Mushroom House Elf Eterno
 5030008	1700	1	5	1	0	2	Homely Coffeehouse
 5030010	1700	1	5	1	0	2	Granny's Food Stand
 5030012	1700	1	5	1	0	2	Tiki Torch Store
@@ -1515,31 +1513,31 @@
 5121019	3000	11	5	2	0	2	Winter Knit Fest
 5122000	3000	11	5	2	0	2	Hearty Party Bear
 5130000	3200	5	5	2	0	2	Safety Charm
-5151000	2100	1	5	2	0	2	Henesys Hair Color Coupon (REG)
-5151001	4500	1	5	2	0	2	Henesys Hair Color Coupon (VIP)
-5151002	2100	1	5	2	0	2	Kerning City Hair Color Coupon (REG)
-5151003	4500	1	5	2	0	2	Kerning City Hair Color Coupon (VIP)
-5151004	2100	1	5	2	0	2	Orbis Hair Color Coupon (REG)
-5151005	4500	1	5	2	0	2	Orbis Hair Color Coupon (VIP)
-5151006	2100	1	5	2	0	2	Ludibrium Hair Color Coupon (REG)
-5151007	4500	1	5	2	0	2	Ludibrium Hair Color Coupon (VIP)
-5151008	2100	1	5	2	0	2	Showa Hair Color Coupon (REG)
-5151009	4500	1	5	2	0	2	Showa Hair Color Coupon (VIP)
-5151016	2100	1	5	2	0	2	Amoria Hair Color Coupon (REG) 
-5151017	4500	1	5	2	0	2	Amoria Hair Color Coupon (VIP)
-5151019	2100	1	5	2	0	2	Mu Lung Hair Color Coupon (REG)
-5151020	4500	1	5	2	0	2	Mu Lung Hair Color Coupon (VIP)
-5151021	2100	1	5	2	0	2	Ariant Hair Color Coupon (REG)
-5151022	4500	1	5	2	0	2	Ariant Hair Color Coupon (VIP)
-5151025	2100	1	5	2	0	2	NLC Hair Color Coupon (REG)
-5151026	4500	1	5	2	0	2	NLC Hair Color Coupon (VIP)
-5153000	2700	1	5	2	0	2	Henesys Skin Coupon
-5153001	2700	1	5	2	0	2	Orbis Skin Coupon
-5153002	2700	1	5	2	0	2	Ludibrium Skin Coupon
-5153006	2700	1	5	2	0	2	Mu Lung Skin Care Coupon
-5153007	2700	1	5	2	0	2	Ariant Skin Care Coupon
-5153009	2700	1	5	2	0	2	NLC Skin Coupon
-5153010	2700	1	5	2	0	2	CBD Skin Coupon
+5151000	2100	1	5	0	0	2	Henesys Hair Color Coupon (REG)
+5151001	4500	1	5	0	0	2	Henesys Hair Color Coupon (VIP)
+5151002	2100	1	5	0	0	2	Kerning City Hair Color Coupon (REG)
+5151003	4500	1	5	0	0	2	Kerning City Hair Color Coupon (VIP)
+5151004	2100	1	5	0	0	2	Orbis Hair Color Coupon (REG)
+5151005	4500	1	5	0	0	2	Orbis Hair Color Coupon (VIP)
+5151006	2100	1	5	0	0	2	Ludibrium Hair Color Coupon (REG)
+5151007	4500	1	5	0	0	2	Ludibrium Hair Color Coupon (VIP)
+5151008	2100	1	5	0	0	2	Showa Hair Color Coupon (REG)
+5151009	4500	1	5	0	0	2	Showa Hair Color Coupon (VIP)
+5151016	2100	1	5	0	0	2	Amoria Hair Color Coupon (REG)
+5151017	4500	1	5	0	0	2	Amoria Hair Color Coupon (VIP)
+5151019	2100	1	5	0	0	2	Mu Lung Hair Color Coupon (REG)
+5151020	4500	1	5	0	0	2	Mu Lung Hair Color Coupon (VIP)
+5151021	2100	1	5	0	0	2	Ariant Hair Color Coupon (REG)
+5151022	4500	1	5	0	0	2	Ariant Hair Color Coupon (VIP)
+5151025	2100	1	5	0	0	2	NLC Hair Color Coupon (REG)
+5151026	4500	1	5	0	0	2	NLC Hair Color Coupon (VIP)
+5153000	2700	1	5	0	0	2	Henesys Skin Coupon
+5153001	2700	1	5	0	0	2	Orbis Skin Coupon
+5153002	2700	1	5	0	0	2	Ludibrium Skin Coupon
+5153006	2700	1	5	0	0	2	Mu Lung Skin Care Coupon
+5153007	2700	1	5	0	0	2	Ariant Skin Care Coupon
+5153009	2700	1	5	0	0	2	NLC Skin Coupon
+5153010	2700	1	5	0	0	2	CBD Skin Coupon
 5180000	2400	1	5	2	0	2	Water of Life
 5222000	9500	11	5	2	0	2	Cash Shop Surprise
 5230000	3000	6	5	2	0	2	The Owl of Minerva
