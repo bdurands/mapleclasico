@@ -2,9 +2,12 @@ package server;
 
 import client.Character;
 import constants.id.ItemId;
+import client.inventory.WeaponType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import provider.Data;
+import provider.DataDirectoryEntry;
+import provider.DataFileEntry;
 import provider.DataProvider;
 import server.life.MonsterDropEntry;
 import server.life.MonsterInformationProvider;
@@ -38,6 +41,9 @@ public class DropSearchService {
     private static final List<Pair<Integer, String>> itemNamesNormalized = new ArrayList<>();
     // Also keep original names for display
     private static final Map<Integer, String> itemNamesOriginal = new HashMap<>();
+    
+    // Set of equip IDs that exist in the WZ files
+    private static final Set<Integer> equipIdsInWz = new HashSet<>();
 
     private static final Object lock = new Object();
 
@@ -47,6 +53,7 @@ public class DropSearchService {
             mobNames.clear();
             itemNamesNormalized.clear();
             itemNamesOriginal.clear();
+            equipIdsInWz.clear();
         }
     }
 
@@ -56,6 +63,7 @@ public class DropSearchService {
             if (cachesLoaded) return;
             loadMobNames();
             loadItemNames();
+            loadEquipIds();
             cachesLoaded = true;
             log.info("DropSearchService caches loaded: {} mobs, {} items", mobNames.size(), itemNamesNormalized.size());
         }
@@ -106,15 +114,34 @@ public class DropSearchService {
         return text.replace("#", "");
     }
 
+    private static void loadEquipIds() {
+        DataProvider equipData = ItemInformationProvider.getInstance().equipData;
+        if (equipData != null) {
+            for (DataDirectoryEntry typeDir : equipData.getRoot().getSubdirectories()) {
+                for (DataFileEntry file : typeDir.getFiles()) {
+                    String name = file.getName();
+                    if (name.endsWith(".img")) {
+                        try {
+                            equipIdsInWz.add(Integer.parseInt(name.substring(0, name.length() - 4)));
+                        } catch (NumberFormatException ignored) {}
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Checks if a given item id is safe to render inline with #i markup.
      * Equip items that don't exist in the WZ can crash the client.
-     * For simplicity, we only show icons for non-equip items.
      */
     private static boolean hasSafeIcon(int itemId) {
-        // Equip items (prefix 1xxxxxx) can crash the client if the WZ entry is missing
-        // For safety, only show icon for non-equips (use, etc, cash items)
-        return itemId / 1000000 != 1;
+        if (itemId / 1000000 != 1) return true;
+        if (!equipIdsInWz.contains(itemId)) return false;
+        int prefix = itemId / 10000;
+        if (prefix >= 121 && prefix <= 169) {
+            return ItemInformationProvider.getInstance().getWeaponType(itemId) != WeaponType.NOT_A_WEAPON;
+        }
+        return true;
     }
 
     // ─── Search ───
