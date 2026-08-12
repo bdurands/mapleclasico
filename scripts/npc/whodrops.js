@@ -1,164 +1,191 @@
+/**
+ * whodrops.js — NPC script for @whodrops / @wd
+ * Opens in ITEM search mode (find which monsters drop an item).
+ *
+ * State machine:
+ *   status 0 → main menu (sendSimple)
+ *   status 1 → handle main menu selection → send text input (sendGetText)
+ *   status 2 → process text input → show list or detail (sendSimple)
+ *   status 3 → handle list/detail selection
+ *
+ * The key rule: every cm.sendXxx() call pauses the script.
+ * The next user interaction calls action() again.
+ * NEVER call action() recursively — set status and let it flow through.
+ */
 var DropSearchService = Java.type("server.DropSearchService");
 
-var status = -1;
-var mobMode = false;
-var query = "";
-var page = 0;
-var results = [];
-var selectedId = -1;
-var detailPages = [];
+var status;
+var mobMode;     // false = item search (whodrops), true = mob search (whatdropsfrom)
+var query;
+var page;
+var results;     // int[] from DropSearchService
+var detailPages; // String[] from DropSearchService
+var detailPage;
 
 function start() {
-    mobMode = false;
-    query = cm.getPlayer().getLastCommandMessage();
-    if (query != null && query.trim() !== "") {
-        query = query.trim();
-        status = 1; // start from list step
-        action(1, 0, 0);
+    status = -1;
+    mobMode = false; // whodrops starts in item mode
+    query = "";
+    page = 0;
+    results = null;
+    detailPages = null;
+    detailPage = 0;
+
+    // Check if the command had a search term
+    var cmdMsg = cm.getPlayer().getLastCommandMessage();
+    if (cmdMsg != null && cmdMsg.trim().length() > 0) {
+        query = cmdMsg.trim();
+        // Skip to search processing
+        doSearch();
     } else {
-        query = "";
-        status = -1;
-        action(1, 0, 0);
+        // Show main menu
+        cm.sendSimple(DropSearchService.mainMenu(""));
+        status = 0;
     }
 }
 
 function action(mode, type, selection) {
-    if (mode == -1 || mode == 0) {
+    if (mode == -1) {
         cm.dispose();
         return;
     }
-    if (mode == 1) {
-        status++;
-    }
 
     if (status == 0) {
-        // Main Menu state
-        cm.sendSimple(DropSearchService.mainMenu(""));
-    } else if (status == 1) {
-        // Selection from Main Menu
-        if (query === "") {
-            if (selection == 10000006) {
-                mobMode = true;
-            } else if (selection == 10000007) {
-                mobMode = false;
-            } else {
-                cm.dispose();
-                return;
-            }
-            cm.sendGetText(DropSearchService.searchPrompt(mobMode));
+        // User responded to main menu
+        if (mode == 0) { cm.dispose(); return; }
+        if (selection == 0) {
+            mobMode = false; // item search
+        } else if (selection == 1) {
+            mobMode = true;  // mob search
         } else {
-            // Processing query from quick search or main menu jump
-            status++; // go to processing
-            action(1, 0, 0);
+            cm.dispose();
+            return;
         }
-    } else if (status == 2) {
-        // Process Input
-        if (query === "") {
-            query = cm.getText();
+        cm.sendGetText(DropSearchService.searchPrompt(mobMode));
+        status = 1;
+
+    } else if (status == 1) {
+        // User responded to text input
+        if (mode == 0) {
+            // Cancelled text input → back to main menu
+            cm.sendSimple(DropSearchService.mainMenu(""));
+            status = 0;
+            return;
         }
-        if (query == null || query.trim() === "") {
-            status = -1;
-            query = "";
-            action(1, 0, 0);
+        query = cm.getText();
+        if (query == null || query.trim().length() == 0) {
+            cm.sendSimple(DropSearchService.mainMenu(""));
+            status = 0;
             return;
         }
         query = query.trim();
+        doSearch();
 
-        if (mobMode) {
-            results = DropSearchService.findMobs(query);
-        } else {
-            results = DropSearchService.findItems(query);
-        }
-
-        if (results.length === 0) {
-            cm.sendSimple(DropSearchService.mainMenu("No results found for '" + DropSearchService.escapeUserText(query) + "'."));
+    } else if (status == 2) {
+        // User responded to search result list
+        if (mode == 0) {
+            // Back → main menu
+            cm.sendSimple(DropSearchService.mainMenu(""));
             status = 0;
-            query = ""; // reset
-        } else if (results.length === 1) {
-            // Auto-select if only 1 result
-            selectedId = results[0];
-            page = 0;
-            if (mobMode) {
-                detailPages = DropSearchService.mobDropPages(cm.getPlayer(), selectedId, false);
-            } else {
-                detailPages = DropSearchService.itemDropperPages(cm.getPlayer(), selectedId, false);
-            }
-            status = 4; // jump to Detail View display
-            action(1, 0, 0);
-        } else {
-            // List View
-            page = 0;
-            status = 3;
-            action(1, 0, 0);
+            return;
         }
+        handleListSelection(selection);
+
     } else if (status == 3) {
-        // Display List View
-        var text = mobMode ? DropSearchService.mobListPage(query, results, page) : DropSearchService.itemListPage(query, results, page);
-        cm.sendSimple(text);
-    } else if (status == 4) {
-        // Handle List View selection
-        if (selection == 10000001) {
-            page--;
-            status = 2; // back to List View rendering
-            action(1, 0, 0);
-            return;
-        } else if (selection == 10000002) {
-            page++;
-            status = 2;
-            action(1, 0, 0);
-            return;
-        } else if (selection >= 0 && selection < 10000000) {
-            // User selected an item/mob from the list
-            selectedId = selection;
-            page = 0;
-            if (mobMode) {
-                detailPages = DropSearchService.mobDropPages(cm.getPlayer(), selectedId, true);
+        // User responded to detail view
+        if (mode == 0) {
+            // Back → show list again if we have results, else main menu
+            if (results != null && results.length > 1) {
+                showList();
             } else {
-                detailPages = DropSearchService.itemDropperPages(cm.getPlayer(), selectedId, true);
+                cm.sendSimple(DropSearchService.mainMenu(""));
+                status = 0;
             }
-            status = 5; // move to Detail View display
-            action(1, 0, 0);
-        } else {
-            cm.dispose();
+            return;
         }
-    } else if (status == 5) {
-        // Display Detail View
-        cm.sendSimple(detailPages[page]);
-    } else if (status == 6) {
-        // Handle Detail View selection
-        if (selection == 10000001) {
-            page--;
-            status = 4; // loop back to detail display
-            action(1, 0, 0);
-        } else if (selection == 10000002) {
-            page++;
-            status = 4;
-            action(1, 0, 0);
-        } else if (selection == 10000004) {
-            // Back to main menu
-            query = "";
-            status = -1;
-            action(1, 0, 0);
-        } else if (selection == 10000005) {
-            // Back to results
-            page = 0;
-            status = 2;
-            action(1, 0, 0);
-        } else if (selection >= 0 && selection < 10000000) {
-            // Selected an item inside a mob's drop list, or a mob inside an item's dropper list.
-            // Switch modes and search for that exactly.
-            selectedId = selection;
-            mobMode = !mobMode;
-            page = 0;
-            if (mobMode) {
-                detailPages = DropSearchService.mobDropPages(cm.getPlayer(), selectedId, true);
-            } else {
-                detailPages = DropSearchService.itemDropperPages(cm.getPlayer(), selectedId, true);
-            }
-            status = 4; // loop back to detail display
-            action(1, 0, 0);
-        } else {
-            cm.dispose();
-        }
+        handleDetailSelection(selection);
+    }
+}
+
+function doSearch() {
+    if (mobMode) {
+        results = DropSearchService.findMobs(query);
+    } else {
+        results = DropSearchService.findItems(query);
+    }
+
+    var count = DropSearchService.getResultCount(results);
+
+    if (count == 0) {
+        cm.sendSimple(DropSearchService.mainMenu("No results found for '#b" + DropSearchService.escapeUserText(query) + "#k'."));
+        status = 0;
+        query = "";
+    } else if (count == 1) {
+        // Auto-select the single result
+        showDetail(results[0]);
+    } else {
+        page = 0;
+        showList();
+    }
+}
+
+function showList() {
+    var text;
+    if (mobMode) {
+        text = DropSearchService.mobListPage(query, results, page);
+    } else {
+        text = DropSearchService.itemListPage(query, results, page);
+    }
+    cm.sendSimple(text);
+    status = 2;
+}
+
+function showDetail(id) {
+    if (mobMode) {
+        detailPages = DropSearchService.mobDropPages(cm.getPlayer(), id);
+    } else {
+        detailPages = DropSearchService.itemDropperPages(id);
+    }
+    detailPage = 0;
+    cm.sendSimple(detailPages[detailPage]);
+    status = 3;
+}
+
+function handleListSelection(selection) {
+    if (selection == 10000001) {
+        // Prev page
+        page = Math.max(0, page - 1);
+        showList();
+    } else if (selection == 10000002) {
+        // Next page
+        page++;
+        showList();
+    } else if (selection >= 0 && selection < 10000000) {
+        // Selected a mob or item
+        showDetail(selection);
+    } else {
+        cm.dispose();
+    }
+}
+
+function handleDetailSelection(selection) {
+    if (selection == 10000001) {
+        // Prev page
+        detailPage = Math.max(0, detailPage - 1);
+        cm.sendSimple(detailPages[detailPage]);
+        status = 3;
+    } else if (selection == 10000002) {
+        // Next page
+        detailPage++;
+        cm.sendSimple(detailPages[detailPage]);
+        status = 3;
+    } else if (selection == 10000004) {
+        // Back to main menu
+        query = "";
+        results = null;
+        cm.sendSimple(DropSearchService.mainMenu(""));
+        status = 0;
+    } else {
+        cm.dispose();
     }
 }
