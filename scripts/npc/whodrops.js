@@ -33,7 +33,7 @@ function start() {
 
     // Check if the command had a search term
     var cmdMsg = cm.getPlayer().getLastCommandMessage();
-    if (cmdMsg != null && cmdMsg.trim().length() > 0) {
+    if (cmdMsg != null && cmdMsg.trim().length > 0) {
         query = cmdMsg.trim();
         // Skip to search processing
         doSearch();
@@ -73,7 +73,7 @@ function action(mode, type, selection) {
             return;
         }
         query = cm.getText();
-        if (query == null || query.trim().length() == 0) {
+        if (query == null || query.trim().length == 0) {
             cm.sendSimple(DropSearchService.mainMenu(""));
             status = 0;
             return;
