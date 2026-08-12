@@ -314,6 +314,7 @@ public class Character extends AbstractCharacterObject {
     private MonsterBook monsterbook;
     private DamageSkinInventory damageSkinInv = new DamageSkinInventory();
     private int activeDamageSkin = 0;
+    private int hyperTeleportRockTargetMapId = -1;
     private CashShop cashshop;
     private final Set<NewYearCardRecord> newyears = new LinkedHashSet<>();
     private final SavedLocation[] savedLocations;
@@ -9203,6 +9204,14 @@ public class Character extends AbstractCharacterObject {
 
     public void setLastUsedCashItem(long time) {
         this.lastUsedCashItem = time;
+    }
+
+    public int getHyperTeleportRockTargetMapId() {
+        return hyperTeleportRockTargetMapId;
+    }
+
+    public void setHyperTeleportRockTargetMapId(int mapId) {
+        this.hyperTeleportRockTargetMapId = mapId;
     }
 
     public void setLevel(int level) {

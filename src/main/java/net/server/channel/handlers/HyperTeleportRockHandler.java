@@ -19,8 +19,7 @@ public final class HyperTeleportRockHandler extends AbstractPacketHandler {
         }
 
         int targetMapId = p.readInt();
-        if (!HyperTeleportRockService.tryTeleport(c, targetMapId, true)) {
-            HyperTeleportRockService.enableActions(c);
-        }
+        c.getPlayer().setHyperTeleportRockTargetMapId(targetMapId);
+        scripting.npc.NPCScriptManager.getInstance().start(c, 9010000, "hyperteleportrock", c.getPlayer());
     }
 }

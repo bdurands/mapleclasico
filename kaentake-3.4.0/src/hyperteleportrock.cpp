@@ -86,10 +86,6 @@ bool TryHyperTeleport(void* worldMapDlg, int rx, int ry) {
         return true;
     }
 
-    if (!ConfirmMove(spot.mapId)) {
-        return true;
-    }
-
     if (!SendHyperTeleportRockRequest(spot.mapId)) {
         return true;
     }
