@@ -46,6 +46,7 @@ public class ItemId {
     public static final int WHITE_POTION = 2000002;
     public static final int BLUE_POTION = 2000003;
     public static final int ORANGE_POTION = 2000001;
+    public static final int HYPER_TELEPORT_ROCK = 5590001;
     public static final int MANA_ELIXIR = 2000006;
 
     // HP/MP recovery

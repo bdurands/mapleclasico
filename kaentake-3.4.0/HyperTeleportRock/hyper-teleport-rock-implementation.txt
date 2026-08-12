@@ -1,0 +1,914 @@
+Hyper Teleport Rock Implementation Guide
+========================================
+
+Read this first
+---------------
+This guide is written so a developer can follow it step by step without needing
+to reverse-engineer the previous work.
+
+The goal:
+
+    When a player opens the world map and single-clicks a map spot, the client
+    checks if the player has item 5590001. If yes, it asks for confirmation and
+    sends a packet to the server.
+
+The client packet:
+
+    RecvOpcode.HYPER_TELEPORT_ROCK = 0x105
+    Payload: int targetMapId
+
+Very important:
+
+    The client does NOT directly teleport the player.
+    The client only sends the request.
+    The server must validate and perform the warp.
+
+
+============================================================
+PART A: CLIENT SIDE
+============================================================
+
+
+Step 1: Create a shared world map helper file
+---------------------------------------------
+Create this new file:
+
+    src/worldmap.h
+
+Paste this entire code into the file:
+
+    #pragma once
+
+    #include <climits>
+
+    namespace WorldMap {
+
+    struct Spot {
+        int index = -1;
+        int mapId = 0;
+    };
+
+    namespace detail {
+    constexpr int OFF_SPOTS = 366;
+    constexpr int STRIDE = 17;
+    constexpr int X = 0;
+    constexpr int Y = 1;
+    constexpr int FIELD_ARR = 11;
+    constexpr int ORIGIN_X = 13;
+    constexpr int ORIGIN_Y = 35;
+    constexpr int HIT_RADIUS = 8;
+
+    inline int* GetPtr(const void* base, int idx) {
+        return *reinterpret_cast<int* const*>(reinterpret_cast<const char*>(base) + idx * 4);
+    }
+    } // namespace detail
+
+    inline Spot GetSpot(void* base, int rx, int ry) {
+        Spot out;
+        int* spots = detail::GetPtr(base, detail::OFF_SPOTS);
+        if (!spots) {
+            return out;
+        }
+
+        int count = *(spots - 1);
+        if (count <= 0) {
+            return out;
+        }
+
+        int cx = rx - detail::ORIGIN_X;
+        int cy = ry - detail::ORIGIN_Y;
+        int best = -1;
+        int bestDist = INT_MAX;
+
+        for (int i = 0; i < count; ++i) {
+            int* spot = spots + i * detail::STRIDE;
+            unsigned* fields = *reinterpret_cast<unsigned**>(spot + detail::FIELD_ARR);
+            if (!fields || *(fields - 1) == 0) {
+                continue;
+            }
+
+            int dx = spot[detail::X] - cx;
+            int dy = spot[detail::Y] - cy;
+            int dist = dx * dx + dy * dy;
+
+            if (dist <= detail::HIT_RADIUS * detail::HIT_RADIUS && dist < bestDist) {
+                best = i;
+                bestDist = dist;
+            }
+        }
+
+        if (best < 0) {
+            return out;
+        }
+
+        int* spot = spots + best * detail::STRIDE;
+        unsigned* fields = *reinterpret_cast<unsigned**>(spot + detail::FIELD_ARR);
+
+        out.index = best;
+        out.mapId = (fields && *(fields - 1) > 0) ? static_cast<int>(fields[0]) : 0;
+        return out;
+    }
+
+    } // namespace WorldMap
+
+What this does:
+
+    This file finds which world map point the player clicked.
+    If the player clicked a valid point, it returns the map id.
+    If not, it returns index = -1 and mapId = 0.
+
+
+Step 2: Update the existing world map tooltip file
+--------------------------------------------------
+Open this file:
+
+    src/worldmapinfo.cpp
+
+Near the top of the file, find the include section. Add this line:
+
+    #include "worldmap.h"
+
+Example:
+
+    #include "getwzinfo.h"
+    #include "hook.h"
+    #include "iconprovider.h"
+    #include "worldmap.h"
+
+Now search in the same file for this old local code:
+
+    namespace wm {
+
+Delete the entire local namespace wm block.
+
+The block starts with:
+
+    namespace wm {
+
+The block ends with:
+
+    } // namespace wm
+
+Do not delete anything after that.
+
+Now search for:
+
+    wm::Spot spot = wm::GetSpot
+
+Replace that line with:
+
+    WorldMap::Spot spot = WorldMap::GetSpot(reinterpret_cast<char*>(ecx) - 4, x, y);
+
+Why this is needed:
+
+    The tooltip and Hyper Teleport Rock feature should use the same world map
+    click detection code. This prevents duplicated code and mismatched behavior.
+
+
+Step 3: Create the Hyper Teleport Rock hook file
+------------------------------------------------
+Create this new file:
+
+    src/hyperteleportrock.cpp
+
+Paste this entire code into the file:
+
+    #include "pch.h"
+
+    #include "getmapbyid.h"
+    #include "hook.h"
+    #include "worldmap.h"
+    #include "wvs/packet.h"
+    #include "ztl/tsingleton.h"
+    #include "ztl/ztl.h"
+
+    namespace {
+
+    constexpr unsigned int WM_OnMouseButton = 0x009EE6E5;
+    constexpr unsigned int CUtilDlg_YesNo = 0x00992BFD;
+    constexpr unsigned int CUtilDlg_Notice = 0x009929DD;
+    constexpr unsigned int CWvsContext_GetItemCount = 0x00A2858C;
+    constexpr unsigned int CClientSocket_SendPacket = 0x0049637B;
+    constexpr unsigned int CDialog_SetRet = 0x004B5F05;
+
+    constexpr unsigned short CP_HyperTeleportRock = 0x105;
+    constexpr unsigned int kHyperTeleportRockItemId = 5590001;
+
+    using t_OnMouseButton = void(__thiscall*)(void*, unsigned int, unsigned int, int, int);
+    using t_YesNo = int(__cdecl*)(ZXString<char>, int, int, int, int);
+    using t_Notice = void(__cdecl*)(ZXString<char>, int, int, int, int);
+    using t_GetItemCount = int(__thiscall*)(void*, int);
+    using t_SendPacket = void(__thiscall*)(void*, const COutPacket&);
+    using t_SetRet = void(__thiscall*)(void*, int);
+
+    static auto OnMouseButton_Orig = reinterpret_cast<t_OnMouseButton>(WM_OnMouseButton);
+
+    class CWvsContext : public TSingleton<CWvsContext, 0x00BE7918> {
+    public:
+        int GetItemCount(int itemId) {
+            return reinterpret_cast<t_GetItemCount>(CWvsContext_GetItemCount)(this, itemId);
+        }
+    };
+
+    class CClientSocket : public TSingleton<CClientSocket, 0x00BE7914> {
+    public:
+        void SendPacket(const COutPacket& packet) {
+            reinterpret_cast<t_SendPacket>(CClientSocket_SendPacket)(this, packet);
+        }
+    };
+
+    bool HasHyperTeleportRock() {
+        return CWvsContext::IsInstantiated() &&
+               CWvsContext::GetInstance()->GetItemCount(kHyperTeleportRockItemId) > 0;
+    }
+
+    void ShowNotice(const char* message) {
+        reinterpret_cast<t_Notice>(CUtilDlg_Notice)(ZXString<char>(message), 0, 0, true, false);
+    }
+
+    bool ConfirmMove(int mapId) {
+        std::string fullName = GetMapById(mapId);
+        std::string mapName = fullName.empty() ? std::to_string(mapId) : fullName;
+
+        ZXString<char> text;
+        text.Format("Are you sure you want to move to %s?", mapName.c_str());
+
+        return reinterpret_cast<t_YesNo>(CUtilDlg_YesNo)(text, 0, 0, true, false) == IDYES;
+    }
+
+    bool SendHyperTeleportRockRequest(int targetMapId) {
+        if (!CClientSocket::IsInstantiated()) {
+            return false;
+        }
+
+        COutPacket packet(CP_HyperTeleportRock);
+        packet.Encode4(static_cast<unsigned int>(targetMapId));
+        CClientSocket::GetInstance()->SendPacket(packet);
+        return true;
+    }
+
+    bool TryHyperTeleport(void* worldMapDlg, int rx, int ry) {
+        WorldMap::Spot spot = WorldMap::GetSpot(reinterpret_cast<char*>(worldMapDlg) - 4, rx, ry);
+        if (spot.index < 0 || spot.mapId <= 0) {
+            return false;
+        }
+
+        if (!HasHyperTeleportRock()) {
+            ShowNotice("You need a Hyper Teleport Rock to move there.");
+            return true;
+        }
+
+        if (!ConfirmMove(spot.mapId)) {
+            return true;
+        }
+
+        if (!SendHyperTeleportRockRequest(spot.mapId)) {
+            return true;
+        }
+
+        reinterpret_cast<t_SetRet>(CDialog_SetRet)(reinterpret_cast<char*>(worldMapDlg) - 4, 2);
+        return true;
+    }
+
+    void __fastcall OnMouseButton_Hook(void* ecx, void*, unsigned int msg, unsigned int wParam, int rx, int ry) {
+        if (msg == WM_LBUTTONUP && TryHyperTeleport(ecx, rx, ry)) {
+            return;
+        }
+
+        OnMouseButton_Orig(ecx, msg, wParam, rx, ry);
+    }
+
+    } // namespace
+
+    void AttachHyperTeleportRockMod() {
+        ATTACH_HOOK(OnMouseButton_Orig, OnMouseButton_Hook);
+    }
+
+What this file does:
+
+    1. Hooks CWorldMapDlg::OnMouseButton at address 0x009EE6E5.
+    2. Watches for single left-click release on the world map.
+    3. Checks if the clicked location is a valid world map spot.
+    4. Checks client inventory for item 5590001.
+    5. Shows a Yes/No confirmation dialog.
+    6. Sends packet opcode 0x105 with payload int targetMapId.
+    7. Closes the world map dialog.
+
+
+Step 4: Register the new hook function
+--------------------------------------
+Open this file:
+
+    src/hook.h
+
+Find this group of declarations:
+
+    void AttachBossHpMod();
+    void AttachMapInfoToolTip();
+    void AttachDiscordRPC();
+
+Change it to:
+
+    void AttachBossHpMod();
+    void AttachMapInfoToolTip();
+    void AttachHyperTeleportRockMod();
+    void AttachDiscordRPC();
+
+Now find this function:
+
+    inline void AttachClientHooks() {
+
+Inside that function, find this area:
+
+    AttachBossHpMod();
+    AttachMapInfoToolTip();
+    AttachDiscordRPC();
+
+Change it to:
+
+    AttachBossHpMod();
+    AttachMapInfoToolTip();
+    AttachHyperTeleportRockMod();
+    AttachDiscordRPC();
+
+What this does:
+
+    This makes the client actually install the Hyper Teleport Rock hook when the
+    mod loads. If this step is skipped, the code will compile but nothing will
+    happen in-game.
+
+
+Step 5: Add the new source file to the build
+--------------------------------------------
+Open this file:
+
+    src/CMakeLists.txt
+
+Find the injector source list. It looks like this:
+
+    add_library(injector SHARED
+        injector.cpp
+        system.cpp
+        ...
+        worldmapinfo.cpp
+        bosshp.cpp
+        avatar.cpp
+        ...
+    )
+
+Add this line near worldmapinfo.cpp:
+
+    hyperteleportrock.cpp
+
+Example:
+
+    worldmapinfo.cpp
+    hyperteleportrock.cpp
+    bosshp.cpp
+
+What this does:
+
+    This tells the compiler to include src/hyperteleportrock.cpp in mod.dll.
+    If this step is skipped, you may get an unresolved function or the feature
+    simply will not be built into the DLL.
+
+
+Step 6: Build the client
+------------------------
+From the project root, build Release Win32.
+
+Known working command:
+
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\MSBuild.exe" build\Kaentake.sln /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v142
+
+Expected output:
+
+    build\Release\mod.dll
+
+If the build succeeds, the client side is ready.
+
+
+Step 7: Test the client packet behavior
+---------------------------------------
+In-game test:
+
+    1. Log in.
+    2. Make sure the character has item 5590001.
+    3. Open the world map.
+    4. Single-click a map spot.
+    5. Confirm the Yes/No dialog.
+
+Expected client behavior:
+
+    The client sends opcode 0x105.
+    The packet body contains exactly one int: targetMapId.
+
+Expected packet layout:
+
+    2 bytes: opcode 0x105
+    4 bytes: targetMapId
+
+
+============================================================
+PART B: SERVER SIDE
+============================================================
+
+Server codebases are different, so the exact file names may not match.
+Follow the search instructions below.
+
+
+Step 1: Add the receive opcode
+------------------------------
+Find the server file that contains client-to-server receive opcodes.
+
+Search for one of these:
+
+    RecvOpcode
+    RecvPacketOpcode
+    MapleRecvOpcode
+    ClientOpcode
+    enum RecvOpcode
+    LOGIN_PASSWORD
+    MOVE_PLAYER
+    CHANGE_MAP
+
+Add this opcode:
+
+    HYPER_TELEPORT_ROCK = 0x105
+
+Example Java enum:
+
+    public enum RecvOpcode {
+        ...
+        HYPER_TELEPORT_ROCK(0x105),
+        ...
+    }
+
+Example constants file:
+
+    public static final short HYPER_TELEPORT_ROCK = 0x105;
+
+Important:
+
+    Add this to the receive opcode list, not the send opcode list.
+    Receive opcode means client-to-server.
+    Send opcode means server-to-client.
+
+
+Step 2: Register the packet handler
+-----------------------------------
+Find where the server maps receive opcodes to handler classes or functions.
+
+Search for one of these:
+
+    registerRecv
+    registerHandler
+    handlers.put
+    PacketProcessor
+    MaplePacketCreator
+    RecvOpcode.MOVE_PLAYER
+    RecvOpcode.CHANGE_MAP
+
+Add a handler for:
+
+    RecvOpcode.HYPER_TELEPORT_ROCK
+
+Example style 1:
+
+    handlers.put(RecvOpcode.HYPER_TELEPORT_ROCK, new HyperTeleportRockHandler());
+
+Example style 2:
+
+    register(RecvOpcode.HYPER_TELEPORT_ROCK, HyperTeleportRockHandler::handle);
+
+Example style 3:
+
+    case HYPER_TELEPORT_ROCK:
+        HyperTeleportRockHandler.handle(packet, client);
+        break;
+
+The exact syntax depends on your server.
+
+
+Step 3: Create the server packet handler
+----------------------------------------
+Create a new handler file near the other packet handlers.
+
+Recommended name:
+
+    HyperTeleportRockHandler.java
+
+Or if your server uses another language, use the matching handler naming style.
+
+The handler must read exactly one value from the packet:
+
+    int targetMapId = packet.readInt();
+
+Possible read method names:
+
+    slea.readInt()
+    packet.readInt()
+    reader.readInt()
+    in.readInt()
+
+Do not read item id from the client.
+Do not read character id from the client.
+Do not read source map id from the client.
+
+The only client payload is:
+
+    int targetMapId
+
+
+Step 4: Add basic server handler code
+-------------------------------------
+Use this as the starting point and adapt the class names to your server.
+
+Example Java-style pseudocode:
+
+    public final class HyperTeleportRockHandler extends AbstractMaplePacketHandler {
+
+        private static final int HYPER_TELEPORT_ROCK_ITEM_ID = 5590001;
+
+        @Override
+        public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+            int targetMapId = slea.readInt();
+
+            MapleCharacter chr = c.getPlayer();
+            if (chr == null) {
+                return;
+            }
+
+            if (!chr.haveItem(HYPER_TELEPORT_ROCK_ITEM_ID, 1)) {
+                chr.dropMessage(5, "You need a Hyper Teleport Rock to move there.");
+                return;
+            }
+
+            MapleMap targetMap = c.getChannelServer().getMapFactory().getMap(targetMapId);
+            if (targetMap == null) {
+                chr.dropMessage(5, "That map does not exist.");
+                return;
+            }
+
+            if (!canUseHyperTeleportRockFrom(chr.getMapId())) {
+                chr.dropMessage(5, "You cannot use that here.");
+                return;
+            }
+
+            if (!canHyperTeleportRockTo(targetMapId)) {
+                chr.dropMessage(5, "You cannot move there.");
+                return;
+            }
+
+            chr.changeMap(targetMap, targetMap.getPortal(0));
+        }
+
+        private boolean canUseHyperTeleportRockFrom(int currentMapId) {
+            // Return false for maps where Hyper Teleport Rock should not work.
+            return true;
+        }
+
+        private boolean canHyperTeleportRockTo(int targetMapId) {
+            // Return false for blocked destinations.
+            return true;
+        }
+    }
+
+You must rename these types/methods to your server's actual names if they differ:
+
+    AbstractMaplePacketHandler
+    SeekableLittleEndianAccessor
+    MapleClient
+    MapleCharacter
+    MapleMap
+    haveItem
+    dropMessage
+    getChannelServer
+    getMapFactory
+    getMap
+    changeMap
+
+
+Step 5: Add real validation
+---------------------------
+Do not trust the client.
+
+The client has a local item check, but that only improves user experience.
+A hacked client can still send opcode 0x105 manually.
+
+Server must check all important rules.
+
+Minimum required checks:
+
+    1. Player exists.
+    2. Player is logged in.
+    3. Player has item 5590001.
+    4. targetMapId exists.
+    5. Current map allows Hyper Teleport Rock usage.
+    6. Target map allows Hyper Teleport Rock entry.
+    7. Player is not in a state that should block teleporting.
+
+Recommended state checks:
+
+    - not dead
+    - not trading
+    - not in cash shop
+    - not in a shop
+    - not changing maps already
+    - not inside an event lock
+    - not inside a blocked instance
+
+Recommended blocked destination checks:
+
+    - GM maps
+    - jail maps
+    - event maps
+    - boss maps, unless your server wants to allow them
+    - quest-gated maps without the required quest
+    - party quest maps without the correct party state
+    - expedition maps without the correct expedition state
+    - instance maps without a valid instance
+
+
+Step 6: Decide whether item 5590001 is reusable or consumable
+-------------------------------------------------------------
+If item 5590001 is reusable:
+
+    Only check that the player has it.
+    Do not remove it.
+
+If item 5590001 is consumable:
+
+    Remove 1 item before warping.
+
+Consumable example pseudocode:
+
+    if (!chr.haveItem(5590001, 1)) {
+        chr.dropMessage(5, "You need a Hyper Teleport Rock to move there.");
+        return;
+    }
+
+    if (!MapleInventoryManipulator.removeById(c, InventoryType.CASH, 5590001, 1, false, false)) {
+        chr.dropMessage(5, "You need a Hyper Teleport Rock to move there.");
+        return;
+    }
+
+    chr.changeMap(targetMap, targetMap.getPortal(0));
+
+Important:
+
+    Only consume the item after all validation passes.
+    Do not consume the item if the target map is invalid or blocked.
+
+
+Step 7: Warp the player
+-----------------------
+After all validation passes, warp the player using your server's normal change
+map function.
+
+Common examples:
+
+    chr.changeMap(targetMap, targetMap.getPortal(0));
+
+    chr.changeMap(targetMapId);
+
+    player.changeMap(targetMap);
+
+Use whatever your server already uses for warping players.
+
+
+Step 8: Add logging
+-------------------
+Add a log line when the packet is received.
+
+Log these values:
+
+    - character name
+    - character id
+    - current map id
+    - requested targetMapId
+    - whether player has item 5590001
+    - accepted or rejected
+    - rejection reason
+
+Example:
+
+    log.info("[HyperTeleportRock] chr={} from={} to={} result={}",
+        chr.getName(), chr.getMapId(), targetMapId, "accepted");
+
+This makes it much easier to debug wrong opcodes, wrong packet format, and
+blocked-map reports.
+
+
+============================================================
+PART C: FULL SERVER HANDLER TEMPLATE
+============================================================
+
+Copy this only as a template. You still need to rename classes and methods to
+match your server.
+
+    public final class HyperTeleportRockHandler extends AbstractMaplePacketHandler {
+
+        private static final int HYPER_TELEPORT_ROCK_ITEM_ID = 5590001;
+
+        @Override
+        public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+            int targetMapId = slea.readInt();
+
+            MapleCharacter chr = c.getPlayer();
+            if (chr == null) {
+                return;
+            }
+
+            int currentMapId = chr.getMapId();
+
+            if (!chr.haveItem(HYPER_TELEPORT_ROCK_ITEM_ID, 1)) {
+                chr.dropMessage(5, "You need a Hyper Teleport Rock to move there.");
+                return;
+            }
+
+            if (!canUseHyperTeleportRockFrom(currentMapId)) {
+                chr.dropMessage(5, "You cannot use that here.");
+                return;
+            }
+
+            if (!canHyperTeleportRockTo(targetMapId)) {
+                chr.dropMessage(5, "You cannot move there.");
+                return;
+            }
+
+            MapleMap targetMap = c.getChannelServer().getMapFactory().getMap(targetMapId);
+            if (targetMap == null) {
+                chr.dropMessage(5, "That map does not exist.");
+                return;
+            }
+
+            // If item 5590001 is reusable, leave this block commented.
+            // If item 5590001 is consumable, adapt this to your server and enable it.
+            /*
+            boolean removed = MapleInventoryManipulator.removeById(
+                c,
+                MapleInventoryType.CASH,
+                HYPER_TELEPORT_ROCK_ITEM_ID,
+                1,
+                false,
+                false
+            );
+
+            if (!removed) {
+                chr.dropMessage(5, "You need a Hyper Teleport Rock to move there.");
+                return;
+            }
+            */
+
+            chr.changeMap(targetMap, targetMap.getPortal(0));
+        }
+
+        private boolean canUseHyperTeleportRockFrom(int currentMapId) {
+            // Block jail maps.
+            if (currentMapId >= 900000000 && currentMapId < 910000000) {
+                return false;
+            }
+
+            // Add more source-map restrictions here.
+            return true;
+        }
+
+        private boolean canHyperTeleportRockTo(int targetMapId) {
+            // Block invalid ids.
+            if (targetMapId <= 0) {
+                return false;
+            }
+
+            // Example: block GM maps.
+            if (targetMapId >= 180000000 && targetMapId < 181000000) {
+                return false;
+            }
+
+            // Add more destination-map restrictions here.
+            return true;
+        }
+    }
+
+
+============================================================
+PART D: FINAL TEST CHECKLIST
+============================================================
+
+Test 1: Player does not have item 5590001
+-----------------------------------------
+Steps:
+
+    1. Remove item 5590001 from the character.
+    2. Open world map.
+    3. Click a map spot.
+
+Expected:
+
+    Client shows:
+        You need a Hyper Teleport Rock to move there.
+
+    Server should not receive opcode 0x105 because the current client blocks it.
+
+Security note:
+
+    A hacked client can still send opcode 0x105.
+    Server must reject if item 5590001 is missing.
+
+
+Test 2: Player has item 5590001 and target map is allowed
+---------------------------------------------------------
+Steps:
+
+    1. Give character item 5590001.
+    2. Open world map.
+    3. Click a normal town map.
+    4. Press Yes on the confirmation dialog.
+
+Expected:
+
+    Client sends:
+        opcode 0x105
+        int targetMapId
+
+    Server accepts.
+    Player warps.
+
+
+Test 3: Player has item 5590001 but target map is blocked
+---------------------------------------------------------
+Steps:
+
+    1. Give character item 5590001.
+    2. Try to teleport to a blocked map.
+
+Expected:
+
+    Client sends the packet.
+    Server rejects.
+    Player does not warp.
+    Server logs the rejection reason.
+
+
+Test 4: Invalid packet or invalid map id
+----------------------------------------
+Steps:
+
+    1. Send opcode 0x105 with an invalid targetMapId.
+
+Expected:
+
+    Server rejects.
+    Player does not warp.
+    Server does not crash.
+
+
+Test 5: Confirm packet format
+-----------------------------
+Use packet logging or debug prints.
+
+Expected:
+
+    Opcode:
+        0x105
+
+    Payload:
+        one int targetMapId
+
+There should be no item id in the packet.
+There should be no character id in the packet.
+There should be no source map id in the packet.
+
+
+============================================================
+FINAL VALUES TO KEEP IN SYNC
+============================================================
+
+Item id:
+
+    5590001
+
+Client opcode:
+
+    0x105
+
+Server receive opcode:
+
+    RecvOpcode.HYPER_TELEPORT_ROCK = 0x105
+
+Payload:
+
+    int targetMapId
+
+Client files:
+
+    src/worldmap.h
+    src/worldmapinfo.cpp
+    src/hyperteleportrock.cpp
+    src/hook.h
+    src/CMakeLists.txt
+
+Documentation files:
+
+    docs/hyper-teleport-rock.md
+    docs/hyper-teleport-rock-implementation.txt

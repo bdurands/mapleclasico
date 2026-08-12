@@ -23,6 +23,7 @@ add_library(injector SHARED
     storagebag.cpp
     slotlock.cpp
     hook.cpp
+    hyperteleportrock.cpp
     discord.cpp
     discord_ui.cpp
     cashshopwnd.cpp

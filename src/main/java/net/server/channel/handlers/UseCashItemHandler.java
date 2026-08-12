@@ -60,6 +60,7 @@ import server.ShopFactory;
 import server.TimerManager;
 import server.maps.AbstractMapObject;
 import server.maps.FieldLimit;
+import server.maps.HyperTeleportRockService;
 import server.maps.Kite;
 import server.maps.MapleMap;
 import server.maps.MapleTVEffect;
@@ -565,6 +566,11 @@ public final class UseCashItemHandler extends AbstractPacketHandler {
             c.sendPacket(PacketCreator.enableActions());
             c.sendPacket(PacketCreator.sendHammerData(equip.getVicious()));
             player.forceUpdateItem(equip);
+        } else if (itemType == 559) { // Hyper Teleport Rock
+            int mapId = p.readInt();
+            if (!HyperTeleportRockService.tryTeleport(c, mapId, false)) {
+                c.sendPacket(PacketCreator.enableActions());
+            }
         } else if (itemType == 561) { //VEGA'S SPELL
             if (p.readInt() != 1) {
                 return;

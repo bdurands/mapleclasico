@@ -73,6 +73,7 @@ import net.server.channel.handlers.GeneralChatHandler;
 import net.server.channel.handlers.GiveFameHandler;
 import net.server.channel.handlers.GrenadeEffectHandler;
 import net.server.channel.handlers.GuildOperationHandler;
+import net.server.channel.handlers.HyperTeleportRockHandler;
 import net.server.channel.handlers.HealOvertimeHandler;
 import net.server.channel.handlers.HiredMerchantRequest;
 import net.server.channel.handlers.InnerPortalHandler;
@@ -410,6 +411,7 @@ public final class PacketProcessor {
         registerHandler(RecvOpcode.CHANGE_FAMILY_MESSAGE, new FamilyPreceptsHandler());
         registerHandler(RecvOpcode.FAMILY_SUMMON_RESPONSE, new FamilySummonResponseHandler());
         registerHandler(RecvOpcode.USE_HAMMER, new UseHammerHandler());
+        registerHandler(RecvOpcode.HYPER_TELEPORT_ROCK, new HyperTeleportRockHandler());
         registerHandler(RecvOpcode.SCRIPTED_ITEM, new ScriptedItemHandler());
         registerHandler(RecvOpcode.TOUCHING_REACTOR, new TouchReactorHandler());
         registerHandler(RecvOpcode.BEHOLDER, new BeholderHandler());

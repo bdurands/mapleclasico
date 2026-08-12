@@ -1,0 +1,358 @@
+Hyper Teleport Rock Implementation Notes
+
+Step 1: Add the Hyper Teleport Rock item constant
+- Added ItemId.HYPER_TELEPORT_ROCK = 5590001.
+- This gives server validation one stable reference for checking whether the character owns the required item.
+
+Step 2: Add a dedicated receive opcode
+- Added RecvOpcode.HYPER_TELEPORT_ROCK = 0x105.
+- This is the client-to-server packet the client should send when a player single-clicks a destination on the world map.
+- Expected packet payload:
+  - int targetMapId
+
+Step 3: Register the packet handler
+- Registered HYPER_TELEPORT_ROCK in PacketProcessor.
+- The opcode is handled by HyperTeleportRockHandler.
+
+Step 4: Add the Hyper Teleport Rock packet handler
+- Added HyperTeleportRockHandler.
+- The handler verifies that the packet contains an int targetMapId.
+- It passes the request to HyperTeleportRockService for validation and warping.
+- If validation fails, the handler re-enables client actions.
+
+Step 5: Centralize Hyper Teleport Rock validation
+- Added HyperTeleportRockService.
+- This service owns all server-side Hyper Teleport Rock checks so both packet-based usage and any older cash-item path use the same validation.
+
+Step 6: Validate player state
+- The service checks that:
+  - The character exists.
+  - The client is logged in.
+  - The character is in the game world.
+  - The character is alive.
+  - The character is not changing maps.
+  - The character is not banned.
+  - The character is not in Cash Shop.
+  - The character is not trading.
+  - The character is not in an NPC shop.
+  - The character is not in a player shop.
+  - The character is not in a minigame.
+  - The character is not using a hired merchant.
+  - The character is not inside an event instance.
+
+Step 7: Validate item ownership
+- For the new dedicated packet path, the server requires the character to own a non-expired Hyper Teleport Rock item.
+- Required item: 5590001.
+- This prevents forged packets from teleporting characters who do not actually have the item.
+
+Step 8: Validate current-map restrictions
+- Hyper Teleport Rock cannot be used from Time Temple maps.
+- Hyper Teleport Rock cannot be used from boss expedition maps.
+
+Step 9: Validate target-map existence
+- The service attempts to load the requested targetMapId from the channel map factory.
+- If the map cannot be loaded, the request is rejected.
+
+Step 10: Validate target-map restrictions
+- Hyper Teleport Rock cannot teleport into:
+  - Time Temple maps.
+  - Maps flagged with CANNOTVIPROCK.
+  - Forced-return maps, unless they are Maple Island maps.
+  - Boss expedition maps.
+
+Step 11: Add boss expedition map blocking
+- Added MapId.isBossExpeditionMap(int mapId).
+- This method checks a server-side list of boss expedition maps that Hyper Teleport Rock must not enter or be used from.
+- Covered expedition map groups:
+  - Balrog normal and easy
+  - Papulatus
+  - Zakum
+  - Horntail
+  - Pink Bean
+  - Von Leon
+  - Toad
+  - Showa
+  - Scarlion and Targa
+  - Krexel
+  - Crimsonwood Keep PQ expedition
+
+Step 12: Perform the validated warp
+- After every validation passes, the server sends the player a short Hyper Teleport Rock message.
+- The server then moves the character to the target map using the target map's random player spawn point.
+
+Step 13: Preserve old behavior through shared validation
+- The existing cash-item branch for item type 559 was routed through HyperTeleportRockService as well.
+- This keeps validation consistent even if an older client path still triggers USE_CASH_ITEM.
+
+Step 14: Compile verification
+- Verified the server compiles with:
+  mvn -q -DskipTests compile
+
+
+Server-Side Code Added
+
+1. ItemId constant
+
+File:
+src/main/java/constants/id/ItemId.java
+
+Code:
+```java
+public static final int HYPER_TELEPORT_ROCK = 5590001;
+```
+
+
+2. Receive opcode
+
+File:
+src/main/java/net/opcodes/RecvOpcode.java
+
+Code:
+```java
+HYPER_TELEPORT_ROCK(0x105),
+```
+
+Client packet format:
+```text
+Opcode: 0x105
+Payload:
+  int targetMapId
+```
+
+
+3. PacketProcessor registration
+
+File:
+src/main/java/net/PacketProcessor.java
+
+Import:
+```java
+import net.server.channel.handlers.HyperTeleportRockHandler;
+```
+
+Handler registration:
+```java
+registerHandler(RecvOpcode.HYPER_TELEPORT_ROCK, new HyperTeleportRockHandler());
+```
+
+
+4. HyperTeleportRockHandler
+
+File:
+src/main/java/net/server/channel/handlers/HyperTeleportRockHandler.java
+
+Code:
+```java
+package net.server.channel.handlers;
+
+import client.Client;
+import net.AbstractPacketHandler;
+import net.packet.InPacket;
+import server.maps.HyperTeleportRockService;
+
+public final class HyperTeleportRockHandler extends AbstractPacketHandler {
+    @Override
+    public void handlePacket(InPacket p, Client c) {
+        if (p.available() < Integer.BYTES) {
+            HyperTeleportRockService.enableActions(c);
+            return;
+        }
+
+        int targetMapId = p.readInt();
+        if (!HyperTeleportRockService.tryTeleport(c, targetMapId, true)) {
+            HyperTeleportRockService.enableActions(c);
+        }
+    }
+}
+```
+
+
+5. HyperTeleportRockService
+
+File:
+src/main/java/server/maps/HyperTeleportRockService.java
+
+Code:
+```java
+package server.maps;
+
+import client.Character;
+import client.Client;
+import constants.id.ItemId;
+import constants.id.MapId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import scripting.event.EventInstanceManager;
+import tools.PacketCreator;
+
+public final class HyperTeleportRockService {
+    private static final Logger log = LoggerFactory.getLogger(HyperTeleportRockService.class);
+
+    private HyperTeleportRockService() {
+    }
+
+    public static boolean tryTeleport(Client c, int targetMapId, boolean requireItem) {
+        Character player = c.getPlayer();
+        MapleMap targetMap = getTargetMap(c, targetMapId);
+
+        if (!canTeleport(c, player, targetMap, requireItem)) {
+            return false;
+        }
+
+        String mapName = targetMap.getMapName();
+        if (mapName != null && !mapName.isEmpty()) {
+            player.dropMessage(5, "The Hyper Teleport Rock warps you to " + mapName + ".");
+        } else {
+            player.dropMessage(5, "The Hyper Teleport Rock warps you to the selected map.");
+        }
+        player.forceChangeMap(targetMap, targetMap.getRandomPlayerSpawnpoint());
+        return true;
+    }
+
+    private static MapleMap getTargetMap(Client c, int targetMapId) {
+        try {
+            return c.getChannelServer().getMapFactory().getMap(targetMapId);
+        } catch (RuntimeException e) {
+            log.warn("Rejected Hyper Teleport Rock request to invalid map {} by {}", targetMapId,
+                    c.getPlayer() != null ? c.getPlayer().getName() : "unknown", e);
+            return null;
+        }
+    }
+
+    private static boolean canTeleport(Client c, Character player, MapleMap targetMap, boolean requireItem) {
+        if (player == null || !c.isLoggedIn() || !player.isLoggedinWorld()) {
+            return false;
+        }
+
+        if (player.isChangingMaps() || player.isBanned()) {
+            player.dropMessage(1, "You cannot use Hyper Teleport Rocks right now.");
+            return false;
+        }
+
+        if (!player.isAlive()) {
+            player.dropMessage(1, "You cannot use Hyper Teleport Rocks while dead.");
+            return false;
+        }
+
+        if (player.getCashShop().isOpened() || player.getTrade() != null || player.getShop() != null
+                || player.getPlayerShop() != null || player.getMiniGame() != null || player.getHiredMerchant() != null) {
+            player.dropMessage(1, "You cannot use Hyper Teleport Rocks right now.");
+            return false;
+        }
+
+        EventInstanceManager eim = player.getEventInstance();
+        if (eim != null) {
+            player.dropMessage(1, "Hyper Teleport Rocks cannot be used inside event instances.");
+            return false;
+        }
+
+        if (requireItem && !player.haveItemNotExpired(ItemId.HYPER_TELEPORT_ROCK)) {
+            player.dropMessage(1, "You need a Hyper Teleport Rock to use this.");
+            return false;
+        }
+
+        if (MapId.isTimeTemple(player.getMapId())) {
+            player.dropMessage(1, "You cannot use Hyper Teleport Rocks here.");
+            return false;
+        }
+
+        if (MapId.isBossExpeditionMap(player.getMapId())) {
+            player.dropMessage(1, "Hyper Teleport Rocks cannot be used from boss expedition maps.");
+            return false;
+        }
+
+        if (targetMap == null) {
+            player.dropMessage(1, "You cannot teleport to this map.");
+            return false;
+        }
+
+        int targetMapId = targetMap.getId();
+
+        if (MapId.isBossExpeditionMap(targetMapId)) {
+            player.dropMessage(1, "Hyper Teleport Rocks cannot be used to enter boss expedition maps.");
+            return false;
+        }
+
+        if (MapId.isTimeTemple(targetMapId)) {
+            player.dropMessage(1, "You cannot teleport to this map.");
+            return false;
+        }
+
+        if (FieldLimit.CANNOTVIPROCK.check(targetMap.getFieldLimit())
+                || (targetMap.getForcedReturnId() != MapId.NONE && !MapId.isMapleIsland(targetMapId))) {
+            player.dropMessage(1, "You cannot teleport to this map.");
+            return false;
+        }
+
+        return true;
+    }
+
+    public static void enableActions(Client c) {
+        c.sendPacket(PacketCreator.enableActions());
+    }
+}
+```
+
+Note:
+- The rebirth validation line is intentionally not shown here because this note is focused on Hyper Teleport Rock packet sync and expedition restrictions.
+
+
+6. Boss expedition map block list
+
+File:
+src/main/java/constants/id/MapId.java
+
+Code:
+```java
+private static final Set<Integer> BOSS_EXPEDITION_MAPS = Set.of(
+        // Balrog
+        105100300, 105100301, 105100400, 105100401,
+        // Papulatus
+        220080001,
+        // Zakum
+        280030000,
+        // Horntail
+        240060000, 240060100, 240060200, 240060201,
+        // Pink Bean
+        270050100, 270050200, 270050300,
+        // Von Leon
+        211070100,
+        // Toad
+        800040410,
+        // Showa
+        801040100, 801040101,
+        // Scarlion and Targa
+        551030200,
+        // Krexel
+        541020800,
+        // Crimsonwood Keep PQ expedition
+        610030100, 610030200, 610030300, 610030400, 610030500,
+        610030510, 610030520, 610030521, 610030522, 610030530,
+        610030540, 610030550, 610030600, 610030700, 610030800
+);
+
+public static boolean isBossExpeditionMap(int mapId) {
+    return BOSS_EXPEDITION_MAPS.contains(mapId);
+}
+```
+
+
+7. Old USE_CASH_ITEM route reusing the same validation
+
+File:
+src/main/java/net/server/channel/handlers/UseCashItemHandler.java
+
+Import:
+```java
+import server.maps.HyperTeleportRockService;
+```
+
+Code:
+```java
+} else if (itemType == 559) { // Hyper Teleport Rock
+    int mapId = p.readInt();
+    if (!HyperTeleportRockService.tryTeleport(c, mapId, false)) {
+        c.sendPacket(PacketCreator.enableActions());
+    }
+} else if (itemType == 561) { //VEGA'S SPELL
+```

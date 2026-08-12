@@ -62,6 +62,7 @@ void AttachFaceHairMod();
 void AttachDailyCheckinMod();
 void AttachFixCashItemsMod();
 void AttachBagWindowMod();
+void AttachHyperTeleportRockMod();
 
 inline void AttachClientHooks() {
     AttachClientBypass();
@@ -82,6 +83,7 @@ inline void AttachClientHooks() {
     AttachDailyCheckinMod();
     AttachFixCashItemsMod();
     AttachBagWindowMod();
+    AttachHyperTeleportRockMod();
 }
 
 
