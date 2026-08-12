@@ -234,7 +234,7 @@ public class DropSearchService {
         for (int i = start; i < end; i++) {
             int itemId = itemIds[i];
             if (hasSafeIcon(itemId)) {
-                sb.append("#L").append(itemId).append("##v").append(itemId).append("# #b#z").append(itemId).append("##k#l\r\n");
+                sb.append("#L").append(itemId).append("##i").append(itemId).append(":# #b#z").append(itemId).append("##k#l\r\n");
             } else {
                 String name = getItemName(itemId);
                 sb.append("#L").append(itemId).append("##b").append(escapeUserText(name)).append("#k (").append(itemId).append(")#l\r\n");
@@ -345,7 +345,7 @@ public class DropSearchService {
 
         StringBuilder header = new StringBuilder();
         if (hasSafeIcon(itemId)) {
-            header.append("#v").append(itemId).append("# #b#z").append(itemId).append("##k is dropped by:\r\n\r\n");
+            header.append("#i").append(itemId).append(":# #b#z").append(itemId).append("##k is dropped by:\r\n\r\n");
         } else {
             header.append("#b").append(escapeUserText(itemName)).append("#k is dropped by:\r\n\r\n");
         }
@@ -396,12 +396,12 @@ public class DropSearchService {
         String name = getItemName(entry.itemId);
         String nameInfo;
         if (hasSafeIcon(entry.itemId)) {
-            nameInfo = "#v" + entry.itemId + "# #b#z" + entry.itemId + "##k";
+            nameInfo = "#i" + entry.itemId + ":# #b#z" + entry.itemId + "##k";
         } else {
             nameInfo = "#b" + escapeUserText(name) + "#k";
         }
 
-        return nameInfo + " - 1/" + oneIn + " (" + pctStr + ")\r\n";
+        return "#L" + entry.itemId + "#" + nameInfo + " - 1/" + oneIn + " (" + pctStr + ")#l  #L" + (entry.itemId + 10000000) + "#[Get]#l\r\n";
     }
 
     private static String getItemName(int itemId) {

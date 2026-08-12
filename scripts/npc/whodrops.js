@@ -185,6 +185,15 @@ function handleDetailSelection(selection) {
         results = null;
         cm.sendSimple(DropSearchService.mainMenu(""));
         status = 0;
+    } else if (selection >= 10000000 && selection < 20000000) {
+        var itemIdToGet = selection - 10000000;
+        cm.gainItem(itemIdToGet, 1);
+        cm.getPlayer().dropMessage(5, "You have received item " + itemIdToGet + ".");
+        cm.sendSimple(detailPages[detailPage]);
+        status = 3;
+    } else if (selection >= 0 && selection < 10000000) {
+        mobMode = !mobMode;
+        showDetail(selection);
     } else {
         cm.dispose();
     }
