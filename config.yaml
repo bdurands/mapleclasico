@@ -169,10 +169,10 @@ server:
     WORLDS: 1                           #Initial number of worlds on the server.
     WLDLIST_SIZE: 21                    #Max possible worlds on the server.
     CHANNEL_SIZE: 20                    #Max possible channels per world (which is 20, based on the channel list on login phase).
-    CHANNEL_LOAD: 100                   #Max players per channel (limit actually used to calculate the World server capacity).
+    CHANNEL_LOAD: 50                   #Max players per channel (limit actually used to calculate the World server capacity).
     CHANNEL_LOCKS: 20                   #Total number of structure management locks each channel has.
 
-    RESPAWN_INTERVAL: 10000             #10 seconds, 10000.
+    RESPAWN_INTERVAL: 8000             #10 seconds, 10000.
     PURGING_INTERVAL: 300000            #5 minutes, 300000.
     RANKING_INTERVAL: 3600000           #60 minutes, 3600000.
     COUPON_INTERVAL: 3600000            #60 minutes, 3600000.
@@ -184,7 +184,7 @@ server:
     BYPASS_PIC_EXPIRATION: 20           #Enables PIC bypass, which will remain active for that account by that client machine for N minutes. Set 0 to disable.
     BYPASS_PIN_EXPIRATION: 15           #Enables PIN bypass, which will remain active for that account by that client machine for N minutes. Set 0 to disable.
 
-    AUTOMATIC_REGISTER: true        #Automatically register players when they login with a nonexistent username.
+    AUTOMATIC_REGISTER: false        #Automatically register players when they login with a nonexistent username.
     BCRYPT_MIGRATION: false          #Performs a migration from old SHA-1 and SHA-512 password to bcrypt.
     COLLECTIVE_CHARSLOT: false      #Available character slots are contabilized globally rather than per world server.
     DETERRED_MULTICLIENT: false     #Enables detection of multi-client and suspicious remote IP on the login system.
@@ -220,7 +220,7 @@ server:
     USE_MTS: false
     USE_CPQ: true                       #Renders the CPQ available or not.
     USE_AUTOHIDE_GM: true              #When enabled, GMs are automatically hidden when joining. Thanks to Steven Deblois (steven1152).
-    USE_FIXED_RATIO_HPMP_UPDATE: false   #Enables the HeavenMS-builtin HPMP update based on the current pool to max pool ratio.
+    USE_FIXED_RATIO_HPMP_UPDATE: true   #Enables the HeavenMS-builtin HPMP update based on the current pool to max pool ratio.
     USE_FAMILY_SYSTEM: true
     USE_DUEY: true
     USE_RANDOMIZE_HPMP_GAIN: true       #Enables randomizing on MaxHP/MaxMP gains and INT accounting for the MaxMP gain on level up.
@@ -257,9 +257,9 @@ server:
     USE_BUFF_EVERLASTING: false         #Every applied buff on players holds expiration time so high it'd be considered permanent. Suggestion thanks to Vcoc.
     USE_MULTIPLE_SAME_EQUIP_DROP: true  #Enables multiple drops by mobs of the same equipment, number of possible drops based on the quantities provided at the drop data.
     USE_ENABLE_FULL_RESPAWN: false       #At respawn task, always respawn missing mobs when they're available. Spawn count doesn't depend on how many players are currently there.
-    USE_ENABLE_CHAT_LOG: false          #Write in-game chat to log
-    USE_MAP_OWNERSHIP_SYSTEM: false      #Flag to enable/disable map ownership system
-    USE_FISHING_SYSTEM: false            #Flag to enable/disable custom fishing system
+    USE_ENABLE_CHAT_LOG: true          #Write in-game chat to log
+    USE_MAP_OWNERSHIP_SYSTEM: true      #Flag to enable/disable map ownership system
+    USE_FISHING_SYSTEM: true            #Flag to enable/disable custom fishing system
     USE_NPCS_SCRIPTABLE: true           #Flag to enable/disable serverside predefined script NPCs.
 
     #Events/PQs Configuration
@@ -287,17 +287,17 @@ server:
     BLOCK_GENERATE_CASH_ITEM: false     #Prevents creation of cash items with the item/drop command.
     USE_WHOLE_SERVER_RANKING: false     #Enables a ranking pool made from every character registered on the server for the "ranks" command, instead of separated by worlds.
 
-    EQUIP_EXP_RATE: 1.0                  #Rate for equipment exp gain, grows linearly. Set 1.0 for default (about 100~200 same-level range mobs killed to pass equip from level 1 to 2).
-    PQ_BONUS_EXP_RATE: 0.5               #Rate for the PQ exp reward.
+    EQUIP_EXP_RATE: 1.8                  #Rate for equipment exp gain, grows linearly. Set 1.0 for default (about 100~200 same-level range mobs killed to pass equip from level 1 to 2).
+    PQ_BONUS_EXP_RATE: 0.7               #Rate for the PQ exp reward.
 
     EXP_SPLIT_LEVEL_INTERVAL: 5            #Non-contributing players must be within N level between the mob to receive EXP.
     EXP_SPLIT_LEECH_INTERVAL: 5            #Non-contributing players must be within N level between any contributing party member to receive EXP.
     EXP_SPLIT_MVP_MOD: 0.2
     EXP_SPLIT_COMMON_MOD: 0.8
-    PARTY_BONUS_EXP_RATE: 1.0            #Rate for the party exp bonus reward.
+    PARTY_BONUS_EXP_RATE: 1.3            #Rate for the party exp bonus reward.
 
     #Miscellaneous Configuration
-    TIMEZONE: GMT
+    TIMEZONE: GMT-5
     CHARSET: US-ASCII                          # Is loaded first, so applies to the rest of this config. Defaults to US-ASCII if invalid or not set.
     USE_DISPLAY_NUMBERS_WITH_COMMA: true          #Enforce comma on displayed strings (use this when USE_UNITPRICE_WITH_COMMA is active and you still want to display comma-separated values).
     USE_UNITPRICE_WITH_COMMA: true                #Set this accordingly with the layout of the unitPrices on Item.wz XML's, whether it's using commas or dots to represent fractions.
@@ -378,9 +378,9 @@ server:
     EXPAND_GUILD_MAX_COST: 5000000
 
     #Family Configuration
-    FAMILY_REP_PER_KILL: 2               #Amount of rep gained per monster kill.
+    FAMILY_REP_PER_KILL: 1               #Amount of rep gained per monster kill.
     FAMILY_REP_PER_BOSS_KILL: 10         #Amount of rep gained per boss kill.
-    FAMILY_REP_PER_LEVELUP: 100          #Amount of rep gained upon leveling up.
+    FAMILY_REP_PER_LEVELUP: 80          #Amount of rep gained upon leveling up.
     FAMILY_MAX_GENERATIONS: 1000         #Maximum depth of family tree. (Distance from leader to farthest junior)
 
     #Equipment Configuration
@@ -444,10 +444,10 @@ server:
     EVENT_END_TIMESTAMP: 1428897600000
 
     # GM Security Configuration
-    MINIMUM_GM_LEVEL_TO_TRADE: 4
-    MINIMUM_GM_LEVEL_TO_USE_STORAGE: 4
-    MINIMUM_GM_LEVEL_TO_USE_DUEY: 4
-    MINIMUM_GM_LEVEL_TO_DROP: 4
+    MINIMUM_GM_LEVEL_TO_TRADE: 5
+    MINIMUM_GM_LEVEL_TO_USE_STORAGE: 5
+    MINIMUM_GM_LEVEL_TO_USE_DUEY: 5
+    MINIMUM_GM_LEVEL_TO_DROP: 5
 
     #Any NPC ids that should search for a js override script (useful if they already have wz entries since otherwise they're ignored).
     NPCS_SCRIPTABLE:

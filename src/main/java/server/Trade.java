@@ -449,14 +449,14 @@ public class Trade {
 
     public static void inviteTrade(Character c1, Character c2) {
 
-        if ((c1.isGM() && !c2.isGM()) && c1.gmLevel() < YamlConfig.config.server.MINIMUM_GM_LEVEL_TO_TRADE) {
-            c1.message("You cannot trade with non-GM characters.");
+        if (c1.isGM() && c1.gmLevel() < YamlConfig.config.server.MINIMUM_GM_LEVEL_TO_TRADE) {
+            c1.message("You cannot trade.");
             log.info(String.format("GM %s blocked from trading with %s due to GM level.", c1.getName(), c2.getName()));
             cancelTrade(c1, TradeResult.NO_RESPONSE);
             return;
         }
 
-        if ((!c1.isGM() && c2.isGM()) && c2.gmLevel() < YamlConfig.config.server.MINIMUM_GM_LEVEL_TO_TRADE) {
+        if (c2.isGM() && c2.gmLevel() < YamlConfig.config.server.MINIMUM_GM_LEVEL_TO_TRADE) {
             c1.message("You cannot trade with this GM character.");
             cancelTrade(c1, TradeResult.NO_RESPONSE);
             return;

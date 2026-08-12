@@ -96,6 +96,7 @@ import server.life.MonsterDropEntry;
 import server.life.MonsterInformationProvider;
 import server.maps.MapItem;
 import server.maps.MapObject;
+import server.maps.MapObjectType;
 import server.maps.MapleMap;
 import tools.PacketCreator;
 import tools.Randomizer;
@@ -156,6 +157,21 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
         final MapleMap map = player.getMap();
         if (map.isOwnershipRestricted(player)) {
             return;
+        }
+
+        if (player.isGM() && player.gmLevel() <= 4) {
+            boolean isBossMap = false;
+            for (MapObject mo : map.getMapObjects()) {
+                if (mo.getType() == MapObjectType.MONSTER && ((Monster) mo).isBoss()) {
+                    isBossMap = true;
+                    break;
+                }
+            }
+            if (isBossMap) {
+                player.dropMessage(1, "Los GM de nivel 4 o menor no pueden atacar en mapas de boss.");
+                player.getClient().sendPacket(PacketCreator.enableActions());
+                return;
+            }
         }
 
         Skill theSkill = null;

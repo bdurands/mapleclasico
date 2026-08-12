@@ -233,6 +233,12 @@ public final class PlayerInteractionHandler extends AbstractPacketHandler {
                     chr.getMap().broadcastMessage(PacketCreator.addMatchCardBox(chr, 1, 0));
                     game.sendMatchCard(c, type);
                 } else if (createType == 4 || createType == 5) { // shop
+                    if (chr.isGM() && chr.gmLevel() <= 4) {
+                        chr.dropMessage(1, "Los GM de nivel 4 o menor no pueden abrir tiendas.");
+                        c.sendPacket(PacketCreator.enableActions());
+                        return;
+                    }
+
                     if (!GameConstants.isFreeMarketRoom(chr.getMapId())) {
                         chr.sendPacket(PacketCreator.getMiniRoomError(15));
                         return;
