@@ -7678,12 +7678,6 @@
       <int name="slotMax" value="1"/>
       <int name="tradeBlock" value="1"/>
     </imgdir>
-    <imgdir name="req">
-      <int name="0" value="1012058"/>
-      <int name="1" value="1012059"/>
-      <int name="2" value="1012060"/>
-      <int name="3" value="1012061"/>
-    </imgdir>
   </imgdir>
   <imgdir name="02049102">
     <imgdir name="info">
