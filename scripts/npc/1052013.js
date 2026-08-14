@@ -28,8 +28,12 @@ var status;
 var pqArea;
 
 function start() {
+    cm.sendOk("El Cafe PQ está temporalmente deshabilitado.");
+    cm.dispose();
+    /*
     status = -1;
     action(1, 0, 0);
+    */
 }
 
 function action(mode, type, selection) {

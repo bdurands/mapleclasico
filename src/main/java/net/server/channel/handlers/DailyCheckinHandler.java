@@ -47,7 +47,13 @@ public final class DailyCheckinHandler extends AbstractPacketHandler {
         try {
             if (action == REQ_CLAIM) {
                 int day = p.readByte();
-                if (claimable >= 1 && day == claimable) {
+                
+                // Require 2 hours of accumulated online time
+                if (player.getCheckinTotalTime() < java.util.concurrent.TimeUnit.HOURS.toMillis(2)) {
+                    long minutesLeft = 120 - java.util.concurrent.TimeUnit.MILLISECONDS.toMinutes(player.getCheckinTotalTime());
+                    player.dropMessage(1, "Debes estar conectado por al menos 2 horas en total para reclamar este premio.\nTe faltan " + minutesLeft + " minutos.");
+                    c.sendPacket(PacketCreator.enableActions());
+                } else if (claimable >= 1 && day == claimable) {
                     if (DailyCheckinRewards.grantDay(c, day)) {
                         player.applyCheckinClaim(day);
                         player.saveCharToDB();   // persist the claim + 24h timestamp immediately

@@ -691,6 +691,8 @@ public class MapleMap {
                     if (ItemConstants.getInventoryType(de.itemId) == InventoryType.EQUIP) {
                         if (mob.getId() == 9300003 && de.itemId == 1072369) {
                             idrop = generateSquishyShoesStats(ii);
+                        } else if (mob.getId() == 9300012 && de.itemId == 1022073) {
+                            idrop = generateBrokenGlassesStats(ii);
                         } else {
                             idrop = ii.randomizeStats((Equip) ii.getEquipById(de.itemId));
                         }
@@ -710,27 +712,71 @@ public class MapleMap {
         Equip equip = (Equip) ii.randomizeStats((Equip) ii.getEquipById(1072369));
         
         int chance = Randomizer.nextInt(100);
-        if (chance < 5) { // 5% chance
-            equip.setStr((short) (equip.getStr() + 10));
-            equip.setDex((short) (equip.getDex() + 10));
-            equip.setInt((short) (equip.getInt() + 10));
-            equip.setLuk((short) (equip.getLuk() + 10));
-            equip.setWatk((short) (equip.getWatk() + 5));
-            equip.setMatk((short) (equip.getMatk() + 5));
-        } else if (chance < 20) { // 15% chance
-            equip.setStr((short) (equip.getStr() + 5));
-            equip.setDex((short) (equip.getDex() + 5));
-            equip.setInt((short) (equip.getInt() + 5));
-            equip.setLuk((short) (equip.getLuk() + 5));
-            equip.setWatk((short) (equip.getWatk() + 2));
-            equip.setMatk((short) (equip.getMatk() + 2));
-        } else if (chance < 50) { // 30% chance
-            equip.setStr((short) (equip.getStr() + 2));
-            equip.setDex((short) (equip.getDex() + 2));
-            equip.setInt((short) (equip.getInt() + 2));
-            equip.setLuk((short) (equip.getLuk() + 2));
+        if (chance < 5) { // 5% chance (Maximum)
+            equip.setStr((short) 5);
+            equip.setDex((short) 5);
+            equip.setInt((short) 5);
+            equip.setLuk((short) 5);
+            equip.setWdef((short) 15);
+            equip.setMdef((short) 13);
+            equip.setSpeed((short) 5);
+            equip.setWatk((short) 3);
+            equip.setMatk((short) 3);
+        } else if (chance < 20) { // 15% chance (Medium)
+            equip.setStr((short) 3);
+            equip.setDex((short) 3);
+            equip.setInt((short) 3);
+            equip.setLuk((short) 3);
+            equip.setWdef((short) 12);
+            equip.setMdef((short) 9);
+            equip.setSpeed((short) 4);
+            equip.setWatk((short) 1);
+            equip.setMatk((short) 1);
+        } else if (chance < 50) { // 30% chance (Low)
+            equip.setStr((short) 2);
+            equip.setDex((short) 2);
+            equip.setInt((short) 2);
+            equip.setLuk((short) 2);
+            equip.setWdef((short) 11);
+            equip.setMdef((short) 7);
+            equip.setSpeed((short) 3);
         }
         // remaining 50% chance keeps normal randomized stats
+        return equip;
+    }
+
+    private Equip generateBrokenGlassesStats(ItemInformationProvider ii) {
+        Equip equip = (Equip) ii.randomizeStats((Equip) ii.getEquipById(1022073));
+        
+        int chance = Randomizer.nextInt(100);
+        if (chance < 5) { // 5% chance
+            equip.setStr((short) 3);
+            equip.setDex((short) 3);
+            equip.setInt((short) 3);
+            equip.setLuk((short) 3);
+            equip.setHp((short) 200);
+            equip.setMp((short) 200);
+            equip.setWatk((short) 2);
+            equip.setMatk((short) 2);
+        } else if (chance < 40) { // 35% chance
+            equip.setStr((short) 2);
+            equip.setDex((short) 2);
+            equip.setInt((short) 2);
+            equip.setLuk((short) 2);
+            equip.setHp((short) 100);
+            equip.setMp((short) 100);
+            equip.setWatk((short) 1);
+            equip.setMatk((short) 1);
+        } else { // 60% chance (to make it 100%)
+            equip.setStr((short) 1);
+            equip.setDex((short) 1);
+            equip.setInt((short) 1);
+            equip.setLuk((short) 1);
+            equip.setHp((short) 50);
+            equip.setMp((short) 50);
+            equip.setWatk((short) 1);
+            equip.setMatk((short) 1);
+        }
         return equip;
     }
 

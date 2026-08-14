@@ -22,6 +22,9 @@ var cpqMinAmt = 2;
 var cpqMaxAmt = 6;
 
 function start() {
+    cm.sendOk("El Monster Carnival (CPQ 1 y 2) está temporalmente deshabilitado.");
+    cm.dispose();
+    /*
     status = -1;
 
     const YamlConfig = Java.type('config.YamlConfig');
@@ -32,6 +35,7 @@ function start() {
     }
 
     action(1, 0, 0);
+    */
 }
 
 function action(mode, type, selection) {

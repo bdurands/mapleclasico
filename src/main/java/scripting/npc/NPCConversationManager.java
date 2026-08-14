@@ -274,6 +274,14 @@ public class NPCConversationManager extends AbstractPlayerInteraction {
         return getPlayer().getMeso();
     }
 
+    public int getPqPoints() {
+        return getPlayer().getPqPoints();
+    }
+
+    public void gainPqPoints(int points) {
+        getPlayer().gainPqPoints(points);
+    }
+
     public void gainMeso(int gain) {
         getPlayer().gainMeso(gain);
     }

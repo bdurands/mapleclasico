@@ -9,8 +9,12 @@ var status = 0;
 var rnk = -1;
 
 function start() {
+    cm.sendOk("El Monster Carnival (CPQ 2) está temporalmente deshabilitado.");
+    cm.dispose();
+    /*
     status = -1;
     action(1, 0, 0);
+    */
 }
 
 function action(mode, type, selection) {

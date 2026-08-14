@@ -1095,8 +1095,15 @@ public class EventInstanceManager {
     public final void setEventCleared() {
         eventCleared = true;
 
+        String eventName = em.getName();
+        boolean isPq = eventName.endsWith("PQ") || eventName.equals("GuildQuest") || eventName.equals("RescueGaga");
+
         for (Character chr : getPlayers()) {
             chr.awardQuestPoint(YamlConfig.config.server.QUEST_POINT_PER_EVENT_CLEAR);
+            if (isPq) {
+                chr.gainPqPoints(1);
+                chr.dropMessage(5, "Acabas de ganar 1 PQ Point por completar este Party Quest. (Total: " + chr.getPqPoints() + ")");
+            }
         }
 
         scriptLock.lock();

@@ -218,11 +218,20 @@ public class Character extends AbstractCharacterObject {
     private int checkinDay = 0;        // last day claimed this cycle (0..28)
     private int checkinClaimed = 0;    // 28-bit mask of days claimed this cycle
     private long checkinLastClaim = 0;  // epoch millis of the last claim (0 = never)
+    private long checkinAccumulatedTime = 0; // accumulated online time since last claim (ms)
+    private transient long checkinSessionStartTime = System.currentTimeMillis();
     private static final long CHECKIN_PERIOD_MS = 86_400_000L;   // 24h
+    private int pqPoints = 0;
+
 
     public int getCheckinDay()       { return checkinDay; }
     public int getCheckinClaimed()   { return checkinClaimed; }
     public long getCheckinLastClaim() { return checkinLastClaim; }
+    public long getCheckinTotalTime() { return checkinAccumulatedTime + (System.currentTimeMillis() - checkinSessionStartTime); }
+    public void updateCheckinAccumulatedTime() {
+        checkinAccumulatedTime += (System.currentTimeMillis() - checkinSessionStartTime);
+        checkinSessionStartTime = System.currentTimeMillis();
+    }
 
     public int refreshCheckin() {
         final int cycle = server.DailyCheckinRewards.CYCLE_DAYS;
@@ -242,6 +251,8 @@ public class Character extends AbstractCharacterObject {
         checkinDay = d;
         checkinClaimed |= (1 << (d - 1));
         checkinLastClaim = System.currentTimeMillis();
+        checkinAccumulatedTime = 0;
+        checkinSessionStartTime = System.currentTimeMillis();
     }
 
     public long getCheckinCooldownSeconds() {
@@ -249,6 +260,11 @@ public class Character extends AbstractCharacterObject {
         long remain = (checkinLastClaim + CHECKIN_PERIOD_MS) - System.currentTimeMillis();
         return remain > 0 ? (remain + 999) / 1000 : 0;
     }
+    
+    public int getPqPoints() { return pqPoints; }
+    public void setPqPoints(int points) { this.pqPoints = points; }
+    public void gainPqPoints(int points) { this.pqPoints += points; }
+
     private int ci = 0;
     private FamilyEntry familyEntry;
     private int familyId;
@@ -6993,6 +7009,13 @@ public class Character extends AbstractCharacterObject {
                     ret.checkinDay       = rs.getInt("checkinDay");
                     ret.checkinClaimed   = rs.getInt("checkinClaimed");
                     ret.checkinLastClaim = rs.getLong("checkinLastClaim");
+                    try {
+                        ret.checkinAccumulatedTime = rs.getLong("checkinAccumulatedTime");
+                    } catch (Exception ignore) {}
+                    try {
+                        ret.pqPoints = rs.getInt("pqPoints");
+                    } catch (Exception ignore) {}
+                    ret.checkinSessionStartTime = System.currentTimeMillis();
                     ret.level = rs.getInt("level");
                     ret.fame = rs.getInt("fame");
                     ret.quest_fame = rs.getInt("fquest");
@@ -8765,13 +8788,21 @@ public class Character extends AbstractCharacterObject {
                 }
 
                 try (PreparedStatement psCheckin = con.prepareStatement(
-                        "UPDATE characters SET checkinDay = ?, checkinClaimed = ?, checkinLastClaim = ? WHERE id = ?")) {
+                        "UPDATE characters SET checkinDay = ?, checkinClaimed = ?, checkinLastClaim = ?, checkinAccumulatedTime = ? WHERE id = ?")) {
                     psCheckin.setInt(1, checkinDay);
                     psCheckin.setInt(2, checkinClaimed);
                     psCheckin.setLong(3, checkinLastClaim);
-                    psCheckin.setInt(4, id);
+                    updateCheckinAccumulatedTime();
+                    psCheckin.setLong(4, checkinAccumulatedTime);
+                    psCheckin.setInt(5, id);
                     psCheckin.executeUpdate();
-                }
+                } catch (Exception e) {}
+
+                try (PreparedStatement psPq = con.prepareStatement("UPDATE characters SET pqPoints = ? WHERE id = ?")) {
+                    psPq.setInt(1, pqPoints);
+                    psPq.setInt(2, id);
+                    psPq.executeUpdate();
+                } catch (Exception e) {}
 
                 if (cashshop != null) {
                     cashshop.save(con);
