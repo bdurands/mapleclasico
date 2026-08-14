@@ -1471,7 +1471,7 @@
 5030003	1700	1	5	1	0	2	Cashier: Teddy Bear Clerk
 5030004	5900	1	5	1	0	2	The Robot Stand
 5030005	1700	1	5	1	0	2	The Robot Stand
-5030006	20000	1	5	1	0	2	Mushroom House Elf Eterno
+5030006	20000	1	5	1	10	2	Mushroom House Elf 10 days
 5030008	1700	1	5	1	0	2	Homely Coffeehouse
 5030010	1700	1	5	1	0	2	Granny's Food Stand
 5030012	1700	1	5	1	0	2	Tiki Torch Store
@@ -1808,7 +1808,5 @@
 5220000	8000	11	7	0	0	2	Gachapon Ticket x11
 5910000	100	    1	7	0	0	2	1	Skin Damage
 5920000	100	    1	7	0	0	2	1	Salon save
-5590001	100	    1	7	0	1	2	1	Hyper Rock  1 day
-5590001	200	    1	7	0	3	2	1	Hyper Rock  3 day
 5590001	500	    1	7	0	7	2	1	Hyper Rock  7 day
 

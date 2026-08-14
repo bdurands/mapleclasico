@@ -88,6 +88,15 @@ public abstract class CharacterFactory {
             equipped.addItemFromDB(eq_weapon.copy());
         }
 
+        Inventory useInventory = newCharacter.getInventory(InventoryType.USE);
+        useInventory.addItemFromDB(new Item(2000014, (short) 1, (short) 300));
+        useInventory.addItemFromDB(new Item(2000015, (short) 2, (short) 300));
+
+        Inventory cashInventory = newCharacter.getInventory(InventoryType.CASH);
+        Item storePermit = new Item(5030000, (short) 1, (short) 1);
+        storePermit.setExpiration(System.currentTimeMillis() + (10L * 24 * 60 * 60 * 1000));
+        cashInventory.addItemFromDB(storePermit);
+
         if (!MakeCharInfoValidator.isNewCharacterValid(newCharacter)) {
             log.warn("Owner from account {} tried to packet edit in character creation", c.getAccountName());
             return -2;
