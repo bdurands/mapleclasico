@@ -1121,6 +1121,10 @@ public class ItemInformationProvider {
                         break;
                 }
 
+                if (scrollId == 2049099) {
+                    prop = 100.0f;
+                }
+
                 if (assertGM || rollSuccessChance(prop)) {
                     short flag = nEquip.getFlag();
                     switch (scrollId) {
@@ -1138,6 +1142,16 @@ public class ItemInformationProvider {
                         case ItemId.CLEAN_SLATE_20:
                             if (canUseCleanSlate(nEquip)) {
                                 nEquip.setUpgradeSlots((byte) (nEquip.getUpgradeSlots() + 1));
+                            }
+                            break;
+                        case 2049099: // Ellin Scroll
+                            if (Randomizer.nextInt(100) < 40) {
+                                nEquip.setWatk(getShortMaxIfOverflow(nEquip.getWatk() + 1));
+                                nEquip.setMatk(getShortMaxIfOverflow(nEquip.getMatk() + 1));
+                            }
+                            if (Randomizer.nextInt(100) < 80) {
+                                nEquip.setHp(getShortMaxIfOverflow(nEquip.getHp() + 100));
+                                nEquip.setMp(getShortMaxIfOverflow(nEquip.getMp() + 100));
                             }
                             break;
                         case ItemId.CHAOS_SCROll_60:

@@ -187,6 +187,10 @@ public final class ScrollHandler extends AbstractPacketHandler {
     }
 
     private static boolean canScroll(int scrollid, int itemid) {
+        if (scrollid == 2049099) {
+            return (itemid / 10000) == 111;
+        }
+
         int sid = scrollid / 100;
 
         switch (sid) {
