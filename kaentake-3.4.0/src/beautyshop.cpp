@@ -5,6 +5,8 @@
 #include "wvs/packet.h"
 #include "wvs/util.h"
 #include "wvs/wvsapp.h"
+#include "constants.h"
+#include "coloringprism.h"
 #include "ztl/ztl.h"
 
 #include <windows.h>
@@ -1234,6 +1236,10 @@ void __fastcall CWvsContext_SendConsumeCashItemUseRequest_beauty_hook(
         SendUnlockSlot(nPOS);
         return;
     }
+    if (ColorPrism_IsPrismItem(nItemID)) {
+        ColorPrism_OnUse(nPOS, nItemID);
+        return;
+    }
     CWvsContext_SendConsumeCashItemUseRequest(pThis, edx, nPOS, nItemID, a4, a5);
 }
 
@@ -1245,6 +1251,10 @@ void __fastcall CWvsContext_SendEtcCashItemUseRequest_beauty_hook(void* pThis, v
         SendUnlockSlot(nPOS);
         return;
     }
+    if (ColorPrism_IsPrismItem(nItemID)) {
+        ColorPrism_OnUse(nPOS, nItemID);
+        return;
+    }
     CWvsContext_SendEtcCashItemUseRequest(pThis, edx, nPOS, nItemID);
 }
 
@@ -1253,6 +1263,9 @@ static auto get_consume_cash_item_type =
 
 int32_t __cdecl get_consume_cash_item_type_beauty_hook(int32_t nItemID) {
     if (nItemID == kBeautyShopItemID) {
+        return 1;
+    }
+    if (ColorPrism_IsPrismItem(nItemID)) {
         return 1;
     }
     return get_consume_cash_item_type(nItemID);

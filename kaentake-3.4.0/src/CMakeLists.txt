@@ -27,6 +27,8 @@ add_library(injector SHARED
     discord.cpp
     discord_ui.cpp
     cashshopwnd.cpp
+    coloringprism.cpp
+    weapontint.cpp
 )
 
 target_precompile_headers(injector PRIVATE pch.h)

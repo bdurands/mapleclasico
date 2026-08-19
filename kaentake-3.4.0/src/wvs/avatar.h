@@ -10,12 +10,12 @@ struct AvatarLook : public ZRefCounted {
     int nSkin;
     int nFace;
     int nWeaponStickerID;
-    int anHairEquip[60];
-    int anUnseenEquip[60];
+    int anHairEquip[52];
+    int anUnseenEquip[52];
     int anPetID[3];
 };
 #pragma pack(pop)
-static_assert(sizeof(AvatarLook) == 0x205);
+static_assert(sizeof(AvatarLook) == 0x1C5);
 
 
 struct USERLAYER {

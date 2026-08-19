@@ -433,8 +433,6 @@ public final class PacketProcessor {
         registerHandler(RecvOpcode.USE_CATCH_ITEM, new UseCatchItemHandler());
         registerHandler(RecvOpcode.DAMAGE_SKIN_APPLY, new DamageSkinApplyHandler());
         registerHandler(RecvOpcode.DAMAGE_SKIN_PURCHASE, new DamageSkinPurchaseHandler());
-        registerHandler(RecvOpcode.FIELD_DAMAGE_MOB, new FieldDamageMobHandler());
-        registerHandler(RecvOpcode.MOB_DAMAGE_MOB_FRIENDLY, new MobDamageMobFriendlyHandler());
         registerHandler(RecvOpcode.PARTY_SEARCH_REGISTER, new PartySearchRegisterHandler());
         registerHandler(RecvOpcode.PARTY_SEARCH_START, new PartySearchStartHandler());
         registerHandler(RecvOpcode.PARTY_SEARCH_UPDATE, new PartySearchUpdateHandler());
@@ -459,6 +457,7 @@ public final class PacketProcessor {
         registerHandler(RecvOpcode.BEAUTY_ACTION, new BeautyHandler());
         registerHandler(RecvOpcode.DAILY_CHECKIN, new net.server.channel.handlers.DailyCheckinHandler());
         registerHandler(RecvOpcode.BAG_WINDOW, new net.server.channel.handlers.BagWindowHandler());
+        registerHandler(RecvOpcode.WEAPON_TINT_ACTION, new net.server.channel.handlers.WeaponTintHandler());
         registerHandler(RecvOpcode.CASHSHOP_WINDOW_ACTION, new CashShopWindowHandler());
     }
 }

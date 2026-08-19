@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="coloring-prism-equip-tints" author="colorprism">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="inventoryequipment" columnName="tinthue"/></not>
+        </preConditions>
+        <addColumn tableName="inventoryequipment">
+            <column name="tinthue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintfxhue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintfxchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintfxbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="coloring-prism-look-tints" author="colorprism">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="characters" columnName="hairtinthue"/></not>
+        </preConditions>
+        <addColumn tableName="characters">
+            <column name="hairtinthue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hairtintchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hairtintbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="facetinthue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="facetintchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="facetintbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="skintinthue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="skintintchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="skintintbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="coloring-prism-cash-effect-tints" author="colorprism">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="inventoryitems" columnName="efftinthue"/></not>
+        </preConditions>
+        <addColumn tableName="inventoryitems">
+            <column name="efftinthue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="efftintchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="efftintbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="coloring-prism-skill-tints" author="colorprism">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="skilltints"/></not>
+        </preConditions>
+        <createTable tableName="skilltints">
+            <column name="characterid" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="skillid" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tinthue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="skilltints"
+                       columnNames="characterid, skillid"
+                       constraintName="pk_skilltints"/>
+
+        <addForeignKeyConstraint baseTableName="skilltints"
+                                 baseColumnNames="characterid"
+                                 constraintName="fk_skilltints_character"
+                                 referencedTableName="characters"
+                                 referencedColumnNames="id"
+                                 onUpdate="CASCADE"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+</databaseChangeLog>

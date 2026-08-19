@@ -24,6 +24,8 @@ package client;
 
 import client.autoban.AutobanManager;
 import client.creator.CharacterFactoryRecipe;
+import java.util.Map;
+import java.util.HashMap;
 import client.inventory.Equip;
 import client.inventory.Inventory;
 import client.inventory.InventoryProof;
@@ -204,6 +206,16 @@ public class Character extends AbstractCharacterObject {
     private int accountid, id, level;
     private int rank, rankMove, jobRank, jobRankMove;
     private int gender, hair, face;
+    private short hairTintHue = 0;
+    private byte hairTintChroma = 0;
+    private byte hairTintBright = 0;
+    private short faceTintHue = 0;
+    private byte faceTintChroma = 0;
+    private byte faceTintBright = 0;
+    private short skinTintHue = 0;
+    private byte skinTintChroma = 0;
+    private byte skinTintBright = 0;
+    private Map<Integer, int[]> skillTints = new HashMap<>();
     private int fame, quest_fame;
     private int initialSpawnPoint;
     private int mapid;
@@ -7049,6 +7061,15 @@ public class Character extends AbstractCharacterObject {
                     ret.matchcardties = rs.getInt("matchcardties");
                     ret.hair = rs.getInt("hair");
                     ret.face = rs.getInt("face");
+                    ret.hairTintHue = rs.getShort("hairtinthue");
+                    ret.hairTintChroma = rs.getByte("hairtintchroma");
+                    ret.hairTintBright = rs.getByte("hairtintbright");
+                    ret.faceTintHue = rs.getShort("facetinthue");
+                    ret.faceTintChroma = rs.getByte("facetintchroma");
+                    ret.faceTintBright = rs.getByte("facetintbright");
+                    ret.skinTintHue = rs.getShort("skintinthue");
+                    ret.skinTintChroma = rs.getByte("skintintchroma");
+                    ret.skinTintBright = rs.getByte("skintintbright");
                     ret.accountid = rs.getInt("accountid");
                     ret.mapid = rs.getInt("map");
                     ret.jailExpiration = rs.getLong("jailexpire");
@@ -7350,6 +7371,17 @@ public class Character extends AbstractCharacterObject {
                             if (pSkill != null) { // edit reported by Shavit (=＾● ⋏ ●＾=), thanks Zein for noticing an NPE here
                                 ret.skills.put(pSkill, new SkillEntry(rs.getByte("skilllevel"), rs.getInt("masterlevel"), rs.getLong("expiration")));
                             }
+                        }
+                    }
+                }
+
+                // Skill Tints
+                try (PreparedStatement ps = con.prepareStatement("SELECT skillid, tinthue, tintchroma, tintbright FROM skilltints WHERE characterid = ?")) {
+                    ps.setInt(1, charid);
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            ret.skillTints.put(rs.getInt("skillid"), new int[] {rs.getShort("tinthue"), rs.getByte("tintchroma"), rs.getByte("tintbright")});
                         }
                     }
                 }
@@ -8420,7 +8452,7 @@ public class Character extends AbstractCharacterObject {
             con.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
 
             try {
-                try (PreparedStatement ps = con.prepareStatement("UPDATE characters SET level = ?, fame = ?, str = ?, dex = ?, luk = ?, `int` = ?, exp = ?, gachaexp = ?, hp = ?, mp = ?, maxhp = ?, maxmp = ?, sp = ?, ap = ?, gm = ?, skincolor = ?, gender = ?, job = ?, hair = ?, face = ?, map = ?, meso = ?, hpMpUsed = ?, spawnpoint = ?, party = ?, buddyCapacity = ?, messengerid = ?, messengerposition = ?, mountlevel = ?, mountexp = ?, mounttiredness= ?, equipslots = ?, useslots = ?, setupslots = ?, etcslots = ?,  monsterbookcover = ?, vanquisherStage = ?, dojoPoints = ?, lastDojoStage = ?, finishedDojoTutorial = ?, vanquisherKills = ?, matchcardwins = ?, matchcardlosses = ?, matchcardties = ?, omokwins = ?, omoklosses = ?, omokties = ?, dataString = ?, fquest = ?, jailexpire = ?, partnerId = ?, marriageItemId = ?, lastExpGainTime = ?, ariantPoints = ?, partySearch = ?, activeDamageSkin = ? WHERE id = ?", Statement.RETURN_GENERATED_KEYS)) {
+                try (PreparedStatement ps = con.prepareStatement("UPDATE characters SET level = ?, fame = ?, str = ?, dex = ?, luk = ?, `int` = ?, exp = ?, gachaexp = ?, hp = ?, mp = ?, maxhp = ?, maxmp = ?, sp = ?, ap = ?, gm = ?, skincolor = ?, gender = ?, job = ?, hair = ?, face = ?, map = ?, meso = ?, hpMpUsed = ?, spawnpoint = ?, party = ?, buddyCapacity = ?, messengerid = ?, messengerposition = ?, mountlevel = ?, mountexp = ?, mounttiredness= ?, equipslots = ?, useslots = ?, setupslots = ?, etcslots = ?,  monsterbookcover = ?, vanquisherStage = ?, dojoPoints = ?, lastDojoStage = ?, finishedDojoTutorial = ?, vanquisherKills = ?, matchcardwins = ?, matchcardlosses = ?, matchcardties = ?, omokwins = ?, omoklosses = ?, omokties = ?, dataString = ?, fquest = ?, jailexpire = ?, partnerId = ?, marriageItemId = ?, lastExpGainTime = ?, ariantPoints = ?, partySearch = ?, activeDamageSkin = ?, hairtinthue = ?, hairtintchroma = ?, hairtintbright = ?, facetinthue = ?, facetintchroma = ?, facetintbright = ?, skintinthue = ?, skintintchroma = ?, skintintbright = ? WHERE id = ?", Statement.RETURN_GENERATED_KEYS)) {
                     ps.setInt(1, level);    // thanks CanIGetaPR for noticing an unnecessary "level" limitation when persisting DB data
                     ps.setInt(2, fame);
 
@@ -8535,7 +8567,16 @@ public class Character extends AbstractCharacterObject {
                     ps.setInt(54, ariantPoints);
                     ps.setBoolean(55, canRecvPartySearchInvite);
                     ps.setInt(56, activeDamageSkin);
-                    ps.setInt(57, id);
+                    ps.setInt(57, hairTintHue);
+                    ps.setInt(58, hairTintChroma);
+                    ps.setInt(59, hairTintBright);
+                    ps.setInt(60, faceTintHue);
+                    ps.setInt(61, faceTintChroma);
+                    ps.setInt(62, faceTintBright);
+                    ps.setInt(63, skinTintHue);
+                    ps.setInt(64, skinTintChroma);
+                    ps.setInt(65, skinTintBright);
+                    ps.setInt(66, id);
 
                     int updateRows = ps.executeUpdate();
                     if (updateRows < 1) {
@@ -8643,6 +8684,22 @@ public class Character extends AbstractCharacterObject {
                         psSkill.addBatch();
                     }
                     psSkill.executeBatch();
+                }
+
+                // Skill Tints
+                deleteWhereCharacterId(con, "DELETE FROM skilltints WHERE characterid = ?");
+                if (!skillTints.isEmpty()) {
+                    try (PreparedStatement psSkillTint = con.prepareStatement("INSERT INTO skilltints (characterid, skillid, tinthue, tintchroma, tintbright) VALUES (?, ?, ?, ?, ?)")) {
+                        psSkillTint.setInt(1, id);
+                        for (Entry<Integer, int[]> entry : skillTints.entrySet()) {
+                            psSkillTint.setInt(2, entry.getKey());
+                            psSkillTint.setInt(3, entry.getValue()[0]);
+                            psSkillTint.setInt(4, entry.getValue()[1]);
+                            psSkillTint.setInt(5, entry.getValue()[2]);
+                            psSkillTint.addBatch();
+                        }
+                        psSkillTint.executeBatch();
+                    }
                 }
 
                 // Saved locations
@@ -11141,4 +11198,51 @@ public class Character extends AbstractCharacterObject {
             default: return constants.inventory.ItemConstants.isOreBagAllowed(itemId);
         }
     }
+
+    public short getHairTintHue() { return hairTintHue; }
+    public byte getHairTintChroma() { return hairTintChroma; }
+    public byte getHairTintBright() { return hairTintBright; }
+
+    public void setHairTint(int hue, int chroma, int bright) {
+        this.hairTintHue = Item.normalizeTintHue(hue);
+        this.hairTintChroma = (byte) chroma;
+        this.hairTintBright = (byte) bright;
+    }
+
+    public boolean isHairTinted() { return hairTintHue != 0 || hairTintChroma != 0 || hairTintBright != 0; }
+    public void clearHairTint() { hairTintHue = 0; hairTintChroma = 0; hairTintBright = 0; }
+
+    public short getFaceTintHue() { return faceTintHue; }
+    public byte getFaceTintChroma() { return faceTintChroma; }
+    public byte getFaceTintBright() { return faceTintBright; }
+
+    public void setFaceTint(int hue, int chroma, int bright) {
+        this.faceTintHue = Item.normalizeTintHue(hue);
+        this.faceTintChroma = (byte) chroma;
+        this.faceTintBright = (byte) bright;
+    }
+
+    public boolean isFaceTinted() { return faceTintHue != 0 || faceTintChroma != 0 || faceTintBright != 0; }
+    public void clearFaceTint() { faceTintHue = 0; faceTintChroma = 0; faceTintBright = 0; }
+
+    public short getSkinTintHue() { return skinTintHue; }
+    public byte getSkinTintChroma() { return skinTintChroma; }
+    public byte getSkinTintBright() { return skinTintBright; }
+
+    public void setSkinTint(int hue, int chroma, int bright) {
+        this.skinTintHue = Item.normalizeTintHue(hue);
+        this.skinTintChroma = (byte) chroma;
+        this.skinTintBright = (byte) bright;
+    }
+
+    public boolean isSkinTinted() { return skinTintHue != 0 || skinTintChroma != 0 || skinTintBright != 0; }
+    public void clearSkinTint() { skinTintHue = 0; skinTintChroma = 0; skinTintBright = 0; }
+
+    public Map<Integer, int[]> getSkillTints() { return Collections.unmodifiableMap(skillTints); }
+    public void setSkillTint(int skillId, int hue, int chroma, int bright) {
+        skillTints.put(skillId, new int[] {Item.normalizeTintHue(hue), chroma, bright});
+    }
+    public boolean isSkillTinted(int skillId) { return skillTints.containsKey(skillId); }
+    public void clearSkillTint(int skillId) { skillTints.remove(skillId); }
+    public void forceSetSkillTints(Map<Integer, int[]> tints) { this.skillTints = tints; }
 }

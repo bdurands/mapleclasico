@@ -209,6 +209,7 @@ public enum RecvOpcode {
     DAMAGE_SKIN_PURCHASE(0x111),
     BEAUTY_ACTION(0x174),
     BAG_WINDOW(0x3724),
+    WEAPON_TINT_ACTION(0x372E),
     CASHSHOP_WINDOW_ACTION(0x3730);
 
     private int code = -2;

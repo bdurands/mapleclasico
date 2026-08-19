@@ -363,6 +363,7 @@ public enum SendOpcode {
     BAG_WINDOW(0x3725),
     DISCORD_UPDATE(0x3726),
     OPEN_DISCORD_UI(0x3727),
+    WEAPON_TINT_SYNC(0x372F),
     CASHSHOP_WINDOW_SYNC(0x3731);
 
     private int code = -2;

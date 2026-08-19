@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Coloring Prism (item 5782000): the whole schema, in four changesets.
+
+     EIGHTEEN COLUMNS AND NOTHING ELSE. No new tables, no foreign keys.
+
+     EQUIPS: six columns on `inventoryequipment`. A tint is an absolute hue rotation in
+     degrees (0..359) plus a saturation and a value delta in percent (-100..100), so the
+     hue is SMALLINT and the two deltas are TINYINT. The first three are the item's own
+     colour and the `tintfx` three are its effect sprites, which are separate art and get
+     a separate colour: a green glow on a red blade. Only 4.45% of equips have effect layers
+     at all (923 of the 20,760 imgs in the reachable Character categories), and 870 of those
+     923 are cash weapons, so the second three are zero for almost every row. They are still
+     columns rather than a side table because an equip's tint has to travel with the equip
+     row: the prism dyes a specific weapon, and
+     the colour must follow it when the player unequips it, stores it, or dyes a second one.
+
+     LOOKS: nine columns on `characters`. Hair, eyes and skin are not inventory rows, so the equip
+     columns cannot hold them, but the live look already lives on `characters` (hair, face,
+     skincolor), so the tint sits next to the thing it tints. Both read paths are `SELECT *`
+     and need no query edit, character creation names only its own columns so the DB
+     defaults cover new characters with no code, and the values vanish with the character
+     row without an FK cascade to audit.
+
+     ALL EIGHTEEN DEFAULT TO 0, AND ALL ZERO IS THE IDENTITY TRANSFORM. "Never dyed" and
+     "dyed back to original" are deliberately the same state, here, on the wire and in the
+     DLL, which is why no "is dyed" flag exists anywhere: `Equip#isTinted` is just "any of
+     the three is non-zero".
+
+     NO `afterColumn`. The columns append wherever the table happens to end, because
+     position is not meaningful to any read path here and pinning it would tie this file to
+     one server's column order. Make sure the equipment INSERT names its columns explicitly
+     rather than relying on positional VALUES; if it does, appending can never break saves.
+
+     THE COLUMN NAMES ARE PERMANENT once this has run anywhere. Liquibase records a checksum
+     per changeset, so a column named wrong here cannot be fixed by editing this file: it
+     needs a follow-up changeset to rename, on every database that already ran it. Rename
+     now or not at all.
+
+     The last changeset only stocks a shop and is safe to delete. Liquibase loads its
+     changelog off the CLASSPATH on most servers, so this file may do nothing until the
+     application has been rebuilt and restarted. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- The item's own colour, then its effect sprites' colour. -->
+    <changeSet id="coloring-prism-equip-tints" author="colorprism">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="inventoryequipment" columnName="tinthue"/></not>
+        </preConditions>
+        <addColumn tableName="inventoryequipment">
+            <column name="tinthue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintfxhue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintfxchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintfxbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- Hair, eye, then skin colour. Fed by the window's Hair, Eyes and Skin tabs. -->
+    <changeSet id="coloring-prism-look-tints" author="colorprism">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="characters" columnName="hairtinthue"/></not>
+        </preConditions>
+        <addColumn tableName="characters">
+            <column name="hairtinthue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hairtintchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hairtintbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="facetinthue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="facetintchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="facetintbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="skintinthue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="skintintchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="skintintbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- Cash effect items (5010000..5019999). They live in the Cash tab of the item
+         inventory, so they have an `inventoryitems` row and no `inventoryequipment` row,
+         and the equip columns above cannot hold their tint.
+
+         THREE, NOT SIX. An equip carries two tints because its body art and its effect
+         art are separate. A cash effect IS the effect: no body half to keep apart.
+
+         `inventoryitems` is the hot table, holding every item every character owns. Three
+         narrow NOT NULL columns with a literal default are the cheapest shape available,
+         but this is the widest blast radius in the feature. A side table was the
+         alternative, rejected for the same reason the equip tints are columns: the tint
+         travels with the item row, and joining on every inventory load to serve a column
+         that is zero for almost every row is the worse trade.
+
+         NAMED `efftint*`, NOT `tint*`. ItemFactory joins these two tables with
+         `SELECT * FROM inventoryitems LEFT JOIN inventoryequipment USING(inventoryitemid)`,
+         and one site wraps that in a second `SELECT *`. Two columns of the same name in one
+         result set is a hard "Duplicate column name" from MySQL on the LOGIN path. Do not
+         reuse the equip names here.
+
+         `INSERT_ITEM_SQL` has to name its columns, exactly like the equipment insert, or
+         appending these three breaks every inventory save with a count mismatch. -->
+    <changeSet id="coloring-prism-cash-effect-tints" author="colorprism">
+        <preConditions onFail="MARK_RAN">
+            <not><columnExists tableName="inventoryitems" columnName="efftinthue"/></not>
+        </preConditions>
+        <addColumn tableName="inventoryitems">
+            <column name="efftinthue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="efftintchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="efftintbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- SKILL tints. The one prism target with nowhere else to live: hair, eyes and skin are
+         columns on `characters`, an equip carries its two colours on its own inventoryequipment
+         row and a cash effect on its inventoryitems row, but a skill has no inventory row at
+         all and a character may dye any number of them.
+
+         A ROW MEANS "this character dyed this skill". No row is the vanilla colour, and so is a
+         row of three zeroes, because all zero IS the identity transform everywhere in this
+         feature and there has never been an "is dyed" flag. Character.saveCharToDB deletes and
+         reinserts the whole set, so a zero row is never actually written; the equivalence just
+         means a stale one is harmless.
+
+         The hue is SIGNED and both signs are meaningful: positive rotates by that many degrees,
+         negative is an absolute target encoded as minus (degrees plus one). That is why this
+         column cannot be made unsigned to buy range. -->
+    <changeSet id="coloring-prism-skill-tints" author="colorprism">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="skilltints"/></not>
+        </preConditions>
+        <createTable tableName="skilltints">
+            <column name="characterid" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="skillid" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tinthue" type="SMALLINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintchroma" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tintbright" type="TINYINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="skilltints"
+                       columnNames="characterid, skillid"
+                       constraintName="pk_skilltints"/>
+
+        <!-- CASCADE so a deleted character takes its colours with it. Without it the table
+             outlives its owners and those ids are eventually reused by a new character, who
+             would inherit somebody else's palette. -->
+        <addForeignKeyConstraint baseTableName="skilltints"
+                                 baseColumnNames="characterid"
+                                 constraintName="fk_skilltints_character"
+                                 referencedTableName="characters"
+                                 referencedColumnNames="id"
+                                 onUpdate="CASCADE"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- OPTIONAL. Puts the prism in a shop so it can be obtained for testing. Shop 1337 is
+         the source project's `@gmshop`; retarget the shopid and position, or delete this
+         changeset and hand the item out some other way. Nothing else depends on it.
+
+         `FROM DUAL` is explicit because MySQL only accepts a WHERE clause on a SELECT that
+         has a FROM, and shopitems has no unique key on (shopid, itemid), which rules out
+         INSERT ... ON DUPLICATE KEY UPDATE. The NOT EXISTS guard makes this re-runnable.
+         Shop contents are usually cached at boot, so a restart is needed. -->
+    <changeSet id="coloring-prism-gmshop" author="colorprism">
+        <sql>
+            INSERT INTO shopitems (shopid, itemid, price, pitch, position)
+            SELECT 1337, 5782000, 1, 0, 87
+            FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM shopitems WHERE shopid = 1337 AND itemid = 5782000);
+        </sql>
+    </changeSet>
+</databaseChangeLog>

@@ -76,6 +76,7 @@ public class Item implements Comparable<Item> {
         ret.owner = owner;
         ret.expiration = expiration;
         ret.itemLog = new LinkedList<>(itemLog);
+        ret.setEffTint(effTintHue, effTintChroma, effTintBright);
         return ret;
     }
 
@@ -194,5 +195,41 @@ public class Item implements Comparable<Item> {
 
     public boolean isUntradeable() {
         return ((this.getFlag() & ItemConstants.UNTRADEABLE) == ItemConstants.UNTRADEABLE) || (ItemInformationProvider.getInstance().isDropRestricted(this.getItemId()) && !KarmaManipulator.hasKarmaFlag(this));
+    }
+
+    private short effTintHue = 0;
+    private byte effTintChroma = 0;
+    private byte effTintBright = 0;
+
+    public short getEffTintHue() { return effTintHue; }
+    public byte getEffTintChroma() { return effTintChroma; }
+    public byte getEffTintBright() { return effTintBright; }
+
+    public void setEffTintHue(short hue) { this.effTintHue = normalizeTintHue(hue); }
+    public void setEffTintChroma(byte chroma) { this.effTintChroma = chroma; }
+    public void setEffTintBright(byte bright) { this.effTintBright = bright; }
+
+    public void setEffTint(int hue, int chroma, int bright) {
+        this.effTintHue = normalizeTintHue(hue);
+        this.effTintChroma = (byte) chroma;
+        this.effTintBright = (byte) bright;
+    }
+
+    public boolean isEffTinted() {
+        return effTintHue != 0 || effTintChroma != 0 || effTintBright != 0;
+    }
+
+    public void clearEffTint() {
+        effTintHue = 0;
+        effTintChroma = 0;
+        effTintBright = 0;
+    }
+
+    public static short normalizeTintHue(int hue) {
+        if (hue >= 0) {
+            return (short) (hue % 360);
+        } else {
+            return (short) (-((-hue) % 360));
+        }
     }
 }

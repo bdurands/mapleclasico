@@ -140,6 +140,8 @@ public class ItemId {
     public static final int BROWN_POLLARD = 1052107;
 
     // Three snails
+    public static final int DAILY_CHECKIN_ITEM = 4032001;
+    public static final int COLORING_PRISM = 5782000;
     public static final int SNAIL_SHELL = 4000019;
     public static final int BLUE_SNAIL_SHELL = 4000000;
     public static final int RED_SNAIL_SHELL = 4000016;

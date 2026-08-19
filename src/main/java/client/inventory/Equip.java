@@ -118,6 +118,8 @@ public class Equip extends Item {
         ret.setQuantity(getQuantity());
         ret.setExpiration(getExpiration());
         ret.setGiftFrom(getGiftFrom());
+        ret.setTint(getTintHue(), getTintChroma(), getTintBright());
+        ret.setFxTint(getTintFxHue(), getTintFxChroma(), getTintFxBright());
         return ret;
     }
 
@@ -736,6 +738,62 @@ public class Equip extends Item {
 
     public void wear(boolean yes) {
         wear = yes;
+    }
+
+    private short tintHue = 0;
+    private byte tintChroma = 0;
+    private byte tintBright = 0;
+
+    private short tintFxHue = 0;
+    private byte tintFxChroma = 0;
+    private byte tintFxBright = 0;
+
+    public short getTintHue() { return tintHue; }
+    public byte getTintChroma() { return tintChroma; }
+    public byte getTintBright() { return tintBright; }
+
+    public void setTintHue(short hue) { this.tintHue = normalizeTintHue(hue); }
+    public void setTintChroma(byte chroma) { this.tintChroma = chroma; }
+    public void setTintBright(byte bright) { this.tintBright = bright; }
+
+    public void setTint(int hue, int chroma, int bright) {
+        this.tintHue = normalizeTintHue(hue);
+        this.tintChroma = (byte) chroma;
+        this.tintBright = (byte) bright;
+    }
+
+    public boolean isTinted() {
+        return tintHue != 0 || tintChroma != 0 || tintBright != 0;
+    }
+
+    public void clearTint() {
+        tintHue = 0;
+        tintChroma = 0;
+        tintBright = 0;
+    }
+
+    public short getTintFxHue() { return tintFxHue; }
+    public byte getTintFxChroma() { return tintFxChroma; }
+    public byte getTintFxBright() { return tintFxBright; }
+
+    public void setTintFxHue(short hue) { this.tintFxHue = normalizeTintHue(hue); }
+    public void setTintFxChroma(byte chroma) { this.tintFxChroma = chroma; }
+    public void setTintFxBright(byte bright) { this.tintFxBright = bright; }
+
+    public void setFxTint(int hue, int chroma, int bright) {
+        this.tintFxHue = normalizeTintHue(hue);
+        this.tintFxChroma = (byte) chroma;
+        this.tintFxBright = (byte) bright;
+    }
+
+    public boolean isFxTinted() {
+        return tintFxHue != 0 || tintFxChroma != 0 || tintFxBright != 0;
+    }
+
+    public void clearFxTint() {
+        tintFxHue = 0;
+        tintFxChroma = 0;
+        tintFxBright = 0;
     }
 
     public byte getItemLevel() {

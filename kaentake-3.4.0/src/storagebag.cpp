@@ -41,6 +41,7 @@
 #include "wvs/wndman.h"
 #include "wvs/ctrlwnd.h"     // CCtrlButton (+ nested CREATEPARAM) for the inventory-window button
 #include "ztl/ztl.h"         // ZRef / ZRefCounted / ZAllocEx
+#include "coloringprism.h"
 
 #include <windows.h>
 #include <cstdio>
@@ -1443,6 +1444,11 @@ int __fastcall CDraggableItem_OnDropped_bag_hook(void* pThis, void* /*edx*/, voi
             return CDraggableItem_OnDropped(pThis, pFrom, pTo, rx, ry);
         }
         void* ourHandler = reinterpret_cast<char*>(w) + 4;
+        if (srcHandler != ourHandler) {
+            if (ColorPrism_HandleItemDrop(pTo, srcA, srcB)) {
+                return 1;
+            }
+        }
         // (A) drag STARTED in the bag (we tagged +0x24). srcB = source bag slot.
         if (srcHandler == ourHandler) {
             if (pTo == ourHandler || pTo == static_cast<void*>(w)) {
