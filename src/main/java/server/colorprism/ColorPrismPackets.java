@@ -30,13 +30,13 @@ public final class ColorPrismPackets {
     public static final byte ACTION_REQUEST_SNAPSHOT = 0;
     public static final byte ACTION_APPLY = 1;
     public static final byte ACTION_RESTORE = 2;
-    /** Hair / Face. Separate actions because they carry no inventory address to re-verify. */
-    public static final byte ACTION_APPLY_LOOK = 3;
-    public static final byte ACTION_RESTORE_LOOK = 4;
-
     /** Skills tab. Named by SKILL ID rather than by inventory address: a skill has neither. */
-    public static final byte ACTION_APPLY_SKILL = 5;
-    public static final byte ACTION_RESTORE_SKILL = 6;
+    public static final byte ACTION_APPLY_SKILL = 3;
+    public static final byte ACTION_RESTORE_SKILL = 4;
+
+    /** Hair / Face. Separate actions because they carry no inventory address to re-verify. */
+    public static final byte ACTION_APPLY_LOOK = 5;
+    public static final byte ACTION_RESTORE_LOOK = 6;
 
     /** Server -&gt; client subtypes. Must match {@code weapontint.cpp}. */
     private static final byte RESP_SNAPSHOT = 1;
