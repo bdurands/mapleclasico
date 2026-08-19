@@ -7475,10 +7475,10 @@ public class Character extends AbstractCharacterObject {
 
                 // Storage Bag (ore/scroll/chair/mount) - one bag per kind, per CHARACTER (items keyed by
                 // characterid in inventoryitems, exactly like the normal inventory; no shared account cache).
-                ret.orestorage    = server.OreStorage.loadOreStorage(ret.id);
-                ret.scrollstorage = server.OreStorage.loadScrollStorage(ret.id);
-                ret.chairstorage  = server.OreStorage.loadChairStorage(ret.id);
-                ret.mountstorage  = server.OreStorage.loadMountStorage(ret.id);
+                ret.orestorage    = server.OreStorage.loadOreStorage(ret);
+                ret.scrollstorage = server.OreStorage.loadScrollStorage(ret);
+                ret.chairstorage  = server.OreStorage.loadChairStorage(ret);
+                ret.mountstorage  = server.OreStorage.loadMountStorage(ret);
                 int startHp = ret.hp, startMp = ret.mp;
                 ret.reapplyLocalStats();
                 ret.changeHpMp(startHp, startMp, true);

@@ -64,73 +64,64 @@ public class OreStorage {
         }
     }
 
-    private final int kind;   // 0=ore, 1=scroll, 2=chair, 3=cash
+    private final int kind;
+    private final client.Character chr;
     private final ItemFactory factory;
-    private final int id;
     private int currentNpcid;
     private int meso;
-    private int slots;   // widened from byte: bag capacity can exceed 127 (up to 200)
     private final Map<InventoryType, List<Item>> typeItems = new HashMap<>();
     private List<Item> items = new LinkedList<>();
     private final Lock lock = new ReentrantLock(true);
 
-    private OreStorage(int kind, int characterId, int slots) {
+    private OreStorage(int kind, client.Character chr) {
         this.kind = kind;
         this.factory = factoryFor(kind);
-        this.id = characterId;   // bag items are keyed by characterid (ItemFactory account=false)
-        this.slots = slots;
+        this.chr = chr;
         this.meso = 0;
     }
 
     // Per-CHARACTER bags — no metadata table. Items load straight from `inventoryitems` (type 10-13,
     // keyed by characterid); a new character simply starts with empty bags. Slots are fixed (BAG_SLOTS).
-    public static OreStorage loadOreStorage(int characterId)    { return loadFromDB(0, characterId); }
-    public static OreStorage loadScrollStorage(int characterId) { return loadFromDB(1, characterId); }
-    public static OreStorage loadChairStorage(int characterId)  { return loadFromDB(2, characterId); }
-    public static OreStorage loadMountStorage(int characterId)  { return loadFromDB(3, characterId); }
+    // Per-CHARACTER bags — no metadata table. Items load straight from `inventoryitems` (type 10-13,
+    // keyed by characterid); a new character simply starts with empty bags. Slots are dynamic via quests.
+    public static OreStorage loadOreStorage(client.Character chr)    { return loadFromDB(0, chr); }
+    public static OreStorage loadScrollStorage(client.Character chr) { return loadFromDB(1, chr); }
+    public static OreStorage loadChairStorage(client.Character chr)  { return loadFromDB(2, chr); }
+    public static OreStorage loadMountStorage(client.Character chr)  { return loadFromDB(3, chr); }
 
-    private static OreStorage loadFromDB(int kind, int characterId) {
-        OreStorage ret = new OreStorage(kind, characterId, BAG_SLOTS);
+    private static OreStorage loadFromDB(int kind, client.Character chr) {
+        OreStorage ret = new OreStorage(kind, chr);
         try {
             // Slot model: place each item at its SAVED position (item.position); if it's out of range or
             // already taken (legacy rows from the old compacted model), fall back to the first free slot
             // -> clean migration + preserves the layout for rows saved by the new model.
-            for (Pair<Item, InventoryType> item : ret.factory.loadItems(characterId, false)) {
+            for (Pair<Item, InventoryType> item : ret.factory.loadItems(chr.getId(), false)) {
                 ret.placeOnLoad(item.getLeft());
             }
         } catch (SQLException ex) {
-            log.error("SQL error loading {} bag for characterId {}", KIND_NAME[kind], characterId, ex);
+            log.error("SQL error loading {} bag for characterId {}", KIND_NAME[kind], chr.getId(), ex);
             throw new RuntimeException(ex);
         }
         return ret;
     }
 
     public int getSlots() {
-        return slots;
+        if (chr == null) return BAG_SLOTS;
+        int maxSlots = 5; // Base capacity 5
+        if (chr.getQuestStatus(80001) == 2) maxSlots += 30;
+        if (chr.getQuestStatus(80002) == 2) maxSlots += 30;
+        if (chr.getQuestStatus(80003) == 2) maxSlots += 30;
+        if (chr.getQuestStatus(80004) == 2) maxSlots += 30;
+        if (chr.getQuestStatus(80005) == 2) maxSlots += 30;
+        if (chr.getQuestStatus(80006) == 2) maxSlots += 30;
+        if (chr.getQuestStatus(80007) == 2) maxSlots += 15;
+        return Math.min(maxSlots, BAG_SLOTS);
     }
 
-    public boolean canGainSlots(int slots) {
-        slots += this.slots;
-        return slots <= 200;
-    }
-
-    public boolean gainSlots(int slots) {
-        lock.lock();
-        try {
-            if (canGainSlots(slots)) {
-                slots += this.slots;
-                this.slots = slots;
-                return true;
-            }
-
-            return false;
-        } finally {
-            lock.unlock();
-        }
-    }
+    // removed gainSlots methods since capacity is dynamic via quests
 
     public void saveToDB(Connection con) throws SQLException {
-        // No metadata table to update (slots are fixed): just persist the items to `inventoryitems`,
+        // No metadata table to update (slots are dynamic): just persist the items to `inventoryitems`,
         // keyed by characterid via ItemFactory (account=false), each item's slot held in `position`.
         // No catch: EVERY SQLException must propagate to the caller's save transaction so it rolls back
         // (swallowing a failure after the DELETE-all in saveItems would commit a wiped bag).
@@ -138,7 +129,7 @@ public class OreStorage {
         for (Item item : getItems()) {
             itemsWithType.add(new Pair<>(item, item.getInventoryType()));
         }
-        factory.saveItems(itemsWithType, id, con);
+        factory.saveItems(itemsWithType, chr.getId(), con);
     }
 
     public Item getItem(byte slot) {
@@ -169,14 +160,15 @@ public class OreStorage {
 
     // First free slot 0..slots-1 not occupied by any item, or -1 if the bag is full. Caller holds lock.
     private int firstFreeSlot() {
-        boolean[] used = new boolean[slots];
+        int currentSlots = getSlots();
+        boolean[] used = new boolean[currentSlots];
         for (Item it : items) {
             int p = it.getPosition();
-            if (p >= 0 && p < slots) {
+            if (p >= 0 && p < currentSlots) {
                 used[p] = true;
             }
         }
-        for (int i = 0; i < slots; i++) {
+        for (int i = 0; i < currentSlots; i++) {
             if (!used[i]) {
                 return i;
             }
@@ -207,8 +199,9 @@ public class OreStorage {
     // Load-time placement: keep the saved position if it's valid + free, else first free (migrates
     // legacy rows that carried a stale position from the old compacted model). No lock: single-threaded.
     private void placeOnLoad(Item item) {
+        int currentSlots = getSlots();
         int p = item.getPosition();
-        if (p < 0 || p >= slots || itemAtSlot(p) != null) {
+        if (p < 0 || p >= currentSlots || itemAtSlot(p) != null) {
             p = firstFreeSlot();
             if (p < 0) {
                 return;   // bag already full (shouldn't happen) -> drop overflow rather than collide
@@ -247,7 +240,7 @@ public class OreStorage {
             if (item == null) {
                 return false;
             }
-            if (slot < 0 || slot >= slots) {
+            if (slot < 0 || slot >= getSlots()) {
                 return storeMerge(item, c);   // invalid target -> normal merge/first-free
             }
             ItemInformationProvider ii = ItemInformationProvider.getInstance();
@@ -289,7 +282,8 @@ public class OreStorage {
             if (src == dst) {
                 return true;
             }
-            if (src < 0 || src >= slots || dst < 0 || dst >= slots) {
+            int currentSlots = getSlots();
+            if (src < 0 || src >= currentSlots || dst < 0 || dst >= currentSlots) {
                 return false;
             }
             Item source = itemAtSlot(src);
@@ -479,7 +473,7 @@ public class OreStorage {
             currentNpcid = npcId;
             // Native trunk-UI path (dead for the bag window, which replies via bagWindowSnapshot);
             // the native getStorage packet takes a byte slot count, so narrow for compilation.
-            c.sendPacket(PacketCreator.getStorage(npcId, (byte) slots, storageItems, meso));
+            c.sendPacket(PacketCreator.getStorage(npcId, (byte) getSlots(), storageItems, meso));
         } finally {
             lock.unlock();
         }
@@ -488,7 +482,7 @@ public class OreStorage {
     public void sendStored(Client c, InventoryType type) {
         lock.lock();
         try {
-            c.sendPacket(PacketCreator.storeStorage((byte) slots, type, typeItems.get(type)));
+            c.sendPacket(PacketCreator.storeStorage((byte) getSlots(), type, typeItems.get(type)));
         } finally {
             lock.unlock();
         }
@@ -497,7 +491,7 @@ public class OreStorage {
     public void sendTakenOut(Client c, InventoryType type) {
         lock.lock();
         try {
-            c.sendPacket(PacketCreator.takeOutStorage((byte) slots, type, typeItems.get(type)));
+            c.sendPacket(PacketCreator.takeOutStorage((byte) getSlots(), type, typeItems.get(type)));
         } finally {
             lock.unlock();
         }
@@ -514,7 +508,7 @@ public class OreStorage {
                 typeItems.put(type, new ArrayList<>(items));
             }
 
-            c.sendPacket(PacketCreator.arrangeStorage((byte) slots, items));
+            c.sendPacket(PacketCreator.arrangeStorage((byte) getSlots(), items));
         } finally {
             lock.unlock();
         }
@@ -535,14 +529,16 @@ public class OreStorage {
             // the current items rather than committing a wipe that the next character save would persist.
             if (merged.isEmpty() && !items.isEmpty()) {
                 log.error("[OreStorage] mergeStacks emptied a non-empty {} bag (characterId {}, {} items) - aborting reorg to avoid item loss",
-                        KIND_NAME[kind], id, items.size());
+                        KIND_NAME[kind], chr != null ? chr.getId() : -1, items.size());
                 return;
             }
             items = merged;
             // "organize" button: after consolidating, COMPACT positions to 0..N-1 (this is the one
             // action that deliberately re-packs; normal deposit/withdraw/move keep fixed slots + gaps).
             short pos = 0;
+            int max = getSlots();
             for (Item it : items) {
+                if (pos >= max) break;
                 it.setPosition(pos++);
             }
             for (InventoryType type : InventoryType.values()) {
@@ -565,7 +561,7 @@ public class OreStorage {
     }
 
     public void sendMeso(Client c) {
-        c.sendPacket(PacketCreator.mesoStorage((byte) slots, meso));
+        c.sendPacket(PacketCreator.mesoStorage((byte) getSlots(), meso));
     }
 
     public int getStoreFee() {
@@ -579,7 +575,7 @@ public class OreStorage {
     public boolean isFull() {
         lock.lock();
         try {
-            return items.size() >= slots;
+            return items.size() >= getSlots();
         } finally {
             lock.unlock();
         }

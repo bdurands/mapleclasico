@@ -58,9 +58,9 @@ public final class BagWindowHandler extends AbstractPacketHandler {
             return;
         }
 
-        // Check if the player has purchased this bag kind (Quest IDs 30000 to 30003)
-        if (player.getQuestStatus(30000 + bagKind) != 2) {
-            player.dropMessage(1, "Debes comprar esta bolsa con el admin.");
+        // Check if the player is at least level 30 to open the bag
+        if (player.getLevel() < 30) {
+            player.dropMessage(1, "Debes ser nivel 30 o superior para usar las bolsas extra.");
             c.sendPacket(PacketCreator.bagWindowError());
             return;
         }
