@@ -37,6 +37,15 @@
 #include "pch.h"
 #include "hook.h"
 #include "debug.h"
+
+#ifndef LogMessage
+#define LogMessage(fmt, ...) DEBUG_MESSAGE(fmt, __VA_ARGS__)
+#endif
+
+#ifndef LOG_ONCE
+#define LOG_ONCE(fmt, ...) do { static bool _once = false; if (!_once) { _once = true; DEBUG_MESSAGE(fmt, __VA_ARGS__); } } while(0)
+#endif
+
 #include "coloringprism.h"
 #include "weapontint.h"
 

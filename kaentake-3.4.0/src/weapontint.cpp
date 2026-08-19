@@ -56,6 +56,19 @@
 #include "debug.h"
 #include "weapontint.h"
 
+#ifndef LogMessage
+#define LogMessage(fmt, ...) DEBUG_MESSAGE(fmt, __VA_ARGS__)
+#endif
+
+#ifndef LOG_ONCE
+#define LOG_ONCE(fmt, ...) do { static bool _once = false; if (!_once) { _once = true; DEBUG_MESSAGE(fmt, __VA_ARGS__); } } while(0)
+#endif
+
+#ifndef LOG_ONCE_PER_ID
+#include <unordered_set>
+#define LOG_ONCE_PER_ID(id, fmt, ...) do { static std::unordered_set<int> _seen; if (_seen.insert(id).second) { DEBUG_MESSAGE(fmt, __VA_ARGS__); } } while(0)
+#endif
+
 #include "wvs/avatar.h"
 #include "wvs/packet.h"
 #include "wvs/util.h"
@@ -162,7 +175,7 @@ constexpr uint8_t kResp_RemoteTable = 3;   // everyone in the map, keyed by name
 // =====================================================
 // g_mtx guards the two fields WeaponTint_HandleSync writes; that runs on the
 // RECEIVE thread while every reader is on the main thread.
-constexpr int kAvatarEquipSlots = AVATAR_EQUIP_SLOTS;
+constexpr int kAvatarEquipSlots = 52;
 
 // itemId -> the tint stored on that item. One entry per DYED item; anything absent
 // is vanilla.

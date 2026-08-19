@@ -11,6 +11,54 @@ protected:
     unsigned short m_uRawSeq;
     unsigned short m_uDataLen;
     size_t m_uOffset;
+
+public:
+    size_t GetOffset() const { return m_uOffset; }
+    void SetOffset(size_t off) { m_uOffset = off; }
+    bool CanRead(size_t n) const { return m_uOffset + n <= m_uLength; }
+    const unsigned char* CurrentPublic() const { return &m_aRecvBuff[m_uOffset]; }
+
+    unsigned char Decode1() {
+        if (!CanRead(1)) return 0;
+        unsigned char v = m_aRecvBuff[m_uOffset];
+        m_uOffset += 1;
+        return v;
+    }
+    unsigned short Decode2() {
+        if (!CanRead(2)) return 0;
+        unsigned short v = *reinterpret_cast<unsigned short*>(&m_aRecvBuff[m_uOffset]);
+        m_uOffset += 2;
+        return v;
+    }
+    unsigned int Decode4() {
+        if (!CanRead(4)) return 0;
+        unsigned int v = *reinterpret_cast<unsigned int*>(&m_aRecvBuff[m_uOffset]);
+        m_uOffset += 4;
+        return v;
+    }
+    void DecodeBuffer(void* buf, size_t size) {
+        if (!CanRead(size)) return;
+        memcpy(buf, &m_aRecvBuff[m_uOffset], size);
+        m_uOffset += size;
+    }
+    template<typename T>
+    T Decode() {
+        if constexpr (sizeof(T) == 1) {
+            return static_cast<T>(Decode1());
+        } else if constexpr (sizeof(T) == 2) {
+            return static_cast<T>(Decode2());
+        } else if constexpr (sizeof(T) == 4) {
+            return static_cast<T>(Decode4());
+        }
+        return T();
+    }
+    std::string DecodeStr() {
+        unsigned short len = Decode2();
+        if (!CanRead(len)) return "";
+        std::string s(reinterpret_cast<char*>(&m_aRecvBuff[m_uOffset]), len);
+        m_uOffset += len;
+        return s;
+    }
 };
 
 static_assert(sizeof(CInPacket) == 0x18);
