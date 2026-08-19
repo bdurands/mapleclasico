@@ -50,15 +50,44 @@ public final class DailyCheckinRewards {
     private static final Reward[] DAYS;
     static {
         DAYS = new Reward[CYCLE_DAYS];
-        for (int d = 0; d < CYCLE_DAYS; d++) {
-            // Recompensa de prueba para los 28 días: 100,000 mesos + 10 pociones
-            DAYS[d] = new Reward(PLACEHOLDER_ICON, 100000, new Grant[]{ new Grant(PLACEHOLDER_ICON, 10) });
-        }
-        // ---- Example of a richer day (uncomment + adapt) ----
-        // DAYS[6]  = new Reward(2340000, 0, new Grant[]{ new Grant(2340000, 5) });          // Day 7: White Scroll x5
-        // DAYS[13] = new Reward(5050000, 0, new Grant[]{ new Grant(5050000, 1, 7) });        // Day 14: AP Reset (7-day)
-        // DAYS[20] = new Reward(2000005, 1_000_000, new Grant[]{ new Grant(2000005, 100) }); // Day 21: 100 Power Elixir + 1M mesos
-        // DAYS[24] = new Reward(2000000, 0, NONE, 2, 8);                                      // Day 25: +8 Use slots
+        
+        // TODO: Por favor, cambia '2340000' por el ID real de tu "Ellin Scroll" en los días 21 y 28.
+
+        // Bloque 1 (Dias 1 - 7)
+        DAYS[0] = new Reward(2000005, 0, new Grant[]{ new Grant(2000005, 50) });          // Power Elixir x50
+        DAYS[1] = new Reward(2000000, 0, NONE, 1, 4);                                     // 4 espacios equip
+        DAYS[2] = new Reward(5041000, 0, new Grant[]{ new Grant(5041000, 1, 3) });        // Vip teleport rock x1 temporal por 3 dias
+        DAYS[3] = new Reward(5000003, 0, new Grant[]{ new Grant(5000003, 1, 7) });        // Pet temporal por 1 semana
+        DAYS[4] = new Reward(5130000, 0, new Grant[]{ new Grant(5130000, 1) });           // Safety charm x1
+        DAYS[5] = new Reward(2022179, 0, new Grant[]{ new Grant(2022179, 1) });           // Onyx apple x1
+        DAYS[6] = new Reward(5510000, 0, new Grant[]{ new Grant(5510000, 1) });           // Wheel of Destiny x1
+
+        // Bloque 2 (Dias 8 - 14)
+        DAYS[7] = new Reward(2000005, 0, new Grant[]{ new Grant(2000005, 80) });          // Power Elixir x80
+        DAYS[8] = new Reward(2000000, 0, NONE, 2, 4);                                     // 4 espacios use
+        DAYS[9] = new Reward(5041000, 0, new Grant[]{ new Grant(5041000, 1, 3) });        // Vip teleport rock x1 temporal por 3 dias
+        DAYS[10] = new Reward(4037000, 0, new Grant[]{ new Grant(4037000, 3) });          // Ellin coin x3
+        DAYS[11] = new Reward(5130000, 0, new Grant[]{ new Grant(5130000, 2) });          // Safety charm x2
+        DAYS[12] = new Reward(2022306, 0, new Grant[]{ new Grant(2022306, 2) });          // Primal Brew x2
+        DAYS[13] = new Reward(2022307, 0, new Grant[]{ new Grant(2022307, 2) });          // Spirit Herbs x2
+
+        // Bloque 3 (Dias 15 - 21)
+        DAYS[14] = new Reward(2000005, 0, new Grant[]{ new Grant(2000005, 100) });        // Power Elixir x100
+        DAYS[15] = new Reward(2000000, 0, NONE, 3, 4);                                    // 4 espacios setup
+        DAYS[16] = new Reward(5041000, 0, new Grant[]{ new Grant(5041000, 1, 3) });       // Vip teleport rock x1 temporal por 3 dias
+        DAYS[17] = new Reward(4037000, 0, new Grant[]{ new Grant(4037000, 4) });          // Ellin coin x4
+        DAYS[18] = new Reward(5130000, 0, new Grant[]{ new Grant(5130000, 2) });          // Safety charm x2
+        DAYS[19] = new Reward(2022179, 0, new Grant[]{ new Grant(2022179, 2) });          // Onyx apple x2
+        DAYS[20] = new Reward(2049099, 0, new Grant[]{ new Grant(2049099, 1) });            // Ellin scroll x1
+
+        // Bloque 4 (Dias 22 - 28)
+        DAYS[21] = new Reward(2000005, 0, new Grant[]{ new Grant(2000005, 200) });        // Power Elixir x200
+        DAYS[22] = new Reward(2000000, 0, NONE, 4, 4);                                    // 4 espacios etc
+        DAYS[23] = new Reward(5041000, 0, new Grant[]{ new Grant(5041000, 1, 3) });       // Vip teleport rock x1 temporal por 3 dias
+        DAYS[24] = new Reward(5510000, 0, new Grant[]{ new Grant(5510000, 1) });          // Wheel of Destiny x1
+        DAYS[25] = new Reward(4037000, 0, new Grant[]{ new Grant(4037000, 4) });          // Ellin Coin x4
+        DAYS[26] = new Reward(2022179, 0, new Grant[]{ new Grant(2022179, 5) });          // Onyx apple x5
+        DAYS[27] = new Reward(2049099, 0, new Grant[]{ new Grant(2049099, 2) });        // Ellin Scroll x2
     }
 
     private DailyCheckinRewards() {
