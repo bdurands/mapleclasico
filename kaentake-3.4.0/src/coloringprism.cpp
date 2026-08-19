@@ -191,8 +191,13 @@ void* SehItemAt(int invType, int invPos) {
     __try {
         void* ctx = *reinterpret_cast<void**>(kAddr_CWvsContext);
         if (!ctx) return nullptr;
-        auto* cd = *reinterpret_cast<unsigned char**>(
-                       static_cast<unsigned char*>(ctx) + kCtxCharacterData);
+        
+        void* result[2] = {nullptr, nullptr};
+        reinterpret_cast<void*(__thiscall*)(void*, void*)>(0x00425D0B)(ctx, result);
+        auto* cd = static_cast<unsigned char*>(result[0]);
+        if (cd) {
+            reinterpret_cast<void(__thiscall*)(void*)>(0x00428C15)(result);
+        }
         if (!cd) return nullptr;
 
         if (invPos < 0) {                       // worn
@@ -1373,8 +1378,14 @@ void* SehCharacterData() {
     void* charData = nullptr;
     __try {
         void* ctx = *reinterpret_cast<void**>(kAddr_CWvsContext);
-        if (ctx) charData = *reinterpret_cast<void**>(
-                     reinterpret_cast<char*>(ctx) + kOff_CharacterDataInCtx);
+        if (ctx) {
+            void* result[2] = {nullptr, nullptr};
+            reinterpret_cast<void*(__thiscall*)(void*, void*)>(0x00425D0B)(ctx, result);
+            charData = result[0];
+            if (charData) {
+                reinterpret_cast<void(__thiscall*)(void*)>(0x00428C15)(result);
+            }
+        }
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         charData = nullptr;
     }
