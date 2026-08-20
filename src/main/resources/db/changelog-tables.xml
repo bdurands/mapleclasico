@@ -113,4 +113,8 @@
         <sqlFile path="db/tables/027-beauty-unlock.sql"/>
     </changeSet>
 
+    <changeSet id="28" author="Ponk">
+        <sqlFile path="db/tables/028-weekly-runs.sql"/>
+    </changeSet>
+
 </databaseChangeLog>

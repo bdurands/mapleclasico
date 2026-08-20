@@ -92,81 +92,54 @@ public class ExpeditionBossLog {
     }
 
     public static void resetBossLogTable() {
-        /*
-        Boss logs resets 12am, weekly thursday 12AM - thanks Smitty Werbenjagermanjensen (superadlez) - https://www.reddit.com/r/Maplestory/comments/61tiup/about_reset_time/
-        */
-
-        Calendar thursday = Calendar.getInstance();
-        thursday.set(Calendar.DAY_OF_WEEK, Calendar.THURSDAY);
-        thursday.set(Calendar.HOUR, 0);
-        thursday.set(Calendar.MINUTE, 0);
-        thursday.set(Calendar.SECOND, 0);
+        Calendar monday = Calendar.getInstance();
+        monday.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        monday.set(Calendar.HOUR_OF_DAY, 0);
+        monday.set(Calendar.MINUTE, 0);
+        monday.set(Calendar.SECOND, 0);
 
         Calendar now = Calendar.getInstance();
-
         long weekLength = DAYS.toMillis(7);
         long halfDayLength = HOURS.toMillis(12);
 
-        long deltaTime = now.getTime().getTime() - thursday.getTime().getTime();    // 2x time: get Date into millis
-        deltaTime += halfDayLength;
-        deltaTime %= weekLength;
-        deltaTime -= halfDayLength;
+        long deltaMonday = now.getTime().getTime() - monday.getTime().getTime();
+        deltaMonday += halfDayLength;
+        deltaMonday %= weekLength;
+        deltaMonday -= halfDayLength;
 
-        if (deltaTime < halfDayLength) {
-            ExpeditionBossLog.resetBossLogTable(true, thursday);
-        }
-
-        now.set(Calendar.HOUR, 0);
-        now.set(Calendar.MINUTE, 0);
-        now.set(Calendar.SECOND, 0);
-
-        ExpeditionBossLog.resetBossLogTable(false, now);
-    }
-
-    private static void resetBossLogTable(boolean week, Calendar c) {
-        List<Pair<Timestamp, BossLogEntry>> resetTimestamps = BossLogEntry.getBossLogResetTimestamps(c, week);
-
-        try (Connection con = DatabaseConnection.getConnection()) {
-            for (Pair<Timestamp, BossLogEntry> p : resetTimestamps) {
-                try (PreparedStatement ps = con.prepareStatement("DELETE FROM " + getBossLogTable(week) + " WHERE attempttime <= ? AND bosstype LIKE ?")) {
-                    ps.setTimestamp(1, p.getLeft());
-                    ps.setString(2, p.getRight().name());
-                    ps.executeUpdate();
-                }
+        if (deltaMonday < halfDayLength) {
+            try (Connection con = DatabaseConnection.getConnection();
+                 PreparedStatement ps = con.prepareStatement("DELETE FROM character_weekly_runs WHERE last_update <= ?")) {
+                ps.setTimestamp(1, new Timestamp(monday.getTime().getTime()));
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
-    }
-
-    private static String getBossLogTable(boolean week) {
-        return week ? "bosslog_weekly" : "bosslog_daily";
     }
 
     private static int countPlayerEntries(int cid, BossLogEntry boss) {
         int ret_count = 0;
         try (Connection con = DatabaseConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM " + getBossLogTable(boss.week) + " WHERE characterid = ? AND bosstype LIKE ?")) {
+             PreparedStatement ps = con.prepareStatement("SELECT run_count FROM character_weekly_runs WHERE characterid = ? AND run_name = ?")) {
             ps.setInt(1, cid);
             ps.setString(2, boss.name());
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     ret_count = rs.getInt(1);
-                } else {
-                    ret_count = -1;
                 }
             }
             return ret_count;
         } catch (SQLException e) {
             e.printStackTrace();
-            return -1;
+            return 0;
         }
     }
 
     private static void insertPlayerEntry(int cid, BossLogEntry boss) {
         try (Connection con = DatabaseConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement("INSERT INTO " + getBossLogTable(boss.week) + " (characterid, bosstype) VALUES (?,?)")) {
+             PreparedStatement ps = con.prepareStatement("INSERT INTO character_weekly_runs (characterid, run_name, run_count) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE run_count = run_count + 1")) {
             ps.setInt(1, cid);
             ps.setString(2, boss.name());
             ps.executeUpdate();
@@ -189,7 +162,7 @@ public class ExpeditionBossLog {
             return false;
         }
 
-        if (countPlayerEntries(cid, boss) >= boss.entries) {
+        if (countPlayerEntries(cid, boss) >= 10) {
             return false;
         }
 

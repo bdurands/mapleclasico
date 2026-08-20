@@ -275,8 +275,55 @@ public class Character extends AbstractCharacterObject {
     }
     
     public int getPqPoints() { return pqPoints; }
-    public void setPqPoints(int points) { this.pqPoints = points; }
-    public void gainPqPoints(int points) { this.pqPoints += points; }
+
+    public int getWeeklyRuns(String runName) {
+        int count = 0;
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement("SELECT run_count FROM character_weekly_runs WHERE characterid = ? AND run_name = ?")) {
+            ps.setInt(1, this.id);
+            ps.setString(2, runName);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    count = rs.getInt("run_count");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
+
+    public void addWeeklyRun(String runName) {
+        try (Connection con = DatabaseConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement("INSERT INTO character_weekly_runs (characterid, run_name, run_count) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE run_count = run_count + 1")) {
+            ps.setInt(1, this.id);
+            ps.setString(2, runName);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public void setPqPoints(int points) { 
+        this.pqPoints = points; 
+        try (Connection con = DatabaseConnection.getConnection(); PreparedStatement ps = con.prepareStatement("UPDATE characters SET pqPoints = ? WHERE id = ?")) {
+            ps.setInt(1, this.pqPoints);
+            ps.setInt(2, this.id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void gainPqPoints(int points) { 
+        this.pqPoints += points; 
+        try (Connection con = DatabaseConnection.getConnection(); PreparedStatement ps = con.prepareStatement("UPDATE characters SET pqPoints = ? WHERE id = ?")) {
+            ps.setInt(1, this.pqPoints);
+            ps.setInt(2, this.id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
     private int ci = 0;
     private FamilyEntry familyEntry;

@@ -248,6 +248,7 @@ public class EventInstanceManager {
             }
 
             chars.put(chr.getId(), chr);
+            chr.addWeeklyRun(this.name);
             chr.setEventInstance(this);
         } finally {
             writeLock.unlock();

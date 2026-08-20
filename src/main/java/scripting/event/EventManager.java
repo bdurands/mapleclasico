@@ -727,7 +727,12 @@ public class EventManager {
             Object o = iv.invokeFunction("getEligibleParty", party.getPartyMembersOnline());
 
             if (o instanceof PartyCharacter[] partyChrs) {
-                final List<PartyCharacter> eligibleParty = new ArrayList<>(Arrays.asList(partyChrs));
+                final List<PartyCharacter> eligibleParty = new ArrayList<>();
+                for (PartyCharacter pc : partyChrs) {
+                    if (pc.getPlayer() != null && pc.getPlayer().getWeeklyRuns(this.name) < 10) {
+                        eligibleParty.add(pc);
+                    }
+                }
                 party.setEligibleMembers(eligibleParty);
                 return eligibleParty;
             }
