@@ -137,6 +137,7 @@ import client.command.commands.gm3.PosCommand;
 import client.command.commands.gm3.QuestCompleteCommand;
 import client.command.commands.gm3.QuestResetCommand;
 import client.command.commands.gm3.QuestStartCommand;
+import client.command.commands.gm3.ReloadCooldownsCommand;
 import client.command.commands.gm3.ReloadDropsCommand;
 import client.command.commands.gm3.ReloadEventsCommand;
 import client.command.commands.gm3.ReloadMapCommand;
@@ -446,6 +447,7 @@ public class CommandsExecutor {
         addCommand("reloadportals", 3, ReloadPortalsCommand.class);
         addCommand("reloadmap", 3, ReloadMapCommand.class);
         addCommand("reloadshops", 3, ReloadShopsCommand.class);
+        addCommand("reloadcooldowns", 3, ReloadCooldownsCommand.class);
         addCommand("hpmp", 3, HpMpCommand.class);
         addCommand("maxhpmp", 3, MaxHpMpCommand.class);
         addCommand("music", 3, MusicCommand.class);

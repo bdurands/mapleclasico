@@ -1931,6 +1931,10 @@ public class StatEffect {
     }
 
     public int getCooldown() {
+        if (skill && SkillCooldownOverrides.hasAny()) {
+            int over = SkillCooldownOverrides.getOverride(sourceid);
+            if (over >= 0) return over;
+        }
         return cooldown;
     }
 
