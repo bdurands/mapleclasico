@@ -2981,6 +2981,7 @@ public class Character extends AbstractCharacterObject {
 
     public void equipChanged() {
         getMap().broadcastUpdateCharLookMessage(this, this);
+        server.colorprism.ColorPrismPackets.broadcastMapTable(getMap());
         equipchanged = true;
         updateLocalStats();
         if (getMessenger() != null) {

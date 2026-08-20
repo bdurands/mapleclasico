@@ -2398,6 +2398,7 @@ public class MapleMap {
             }
         }
         
+        server.colorprism.ColorPrismPackets.broadcastMapTable(this);
         if (this.getHPDec() > 0) {
             getWorldServer().addPlayerHpDecrease(chr);
         } else {
