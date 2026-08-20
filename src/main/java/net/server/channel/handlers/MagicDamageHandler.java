@@ -75,6 +75,7 @@ public final class MagicDamageHandler extends AbstractDealDamageHandler {
         StatEffect effect_ = skill.getEffect(chr.getSkillLevel(skill));
         if (effect_.getCooldown() > 0) {
             if (chr.skillIsCooling(attack.skill)) {
+                c.sendPacket(PacketCreator.enableActions());
                 return;
             } else {
                 c.sendPacket(PacketCreator.skillCooldown(attack.skill, effect_.getCooldown()));

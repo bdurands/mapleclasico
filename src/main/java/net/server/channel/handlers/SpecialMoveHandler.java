@@ -82,6 +82,7 @@ public final class SpecialMoveHandler extends AbstractPacketHandler {
         StatEffect effect = skill.getEffect(skillLevel);
         if (effect.getCooldown() > 0) {
             if (chr.skillIsCooling(skillid)) {
+                c.sendPacket(PacketCreator.enableActions());
                 return;
             } else if (skillid != Corsair.BATTLE_SHIP) {
                 int cooldownTime = effect.getCooldown();

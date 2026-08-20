@@ -177,9 +177,10 @@ public final class CloseRangeDamageHandler extends AbstractDealDamageHandler {
             Skill skill = SkillFactory.getSkill(attack.skill);
             StatEffect effect_ = skill.getEffect(chr.getSkillLevel(skill));
             if (effect_.getCooldown() > 0) {
-                if (chr.skillIsCooling(attack.skill)) {
-                    return;
-                } else {
+            if (chr.skillIsCooling(attack.skill)) {
+                c.sendPacket(PacketCreator.enableActions());
+                return;
+            } else {
                     c.sendPacket(PacketCreator.skillCooldown(attack.skill, effect_.getCooldown()));
                     chr.addCooldown(attack.skill, currentServerTime(), SECONDS.toMillis(effect_.getCooldown()));
                 }
