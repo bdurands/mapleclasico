@@ -423,24 +423,24 @@ void AttachClientBypass() {
     Patch1(0x009E7E77 + 2, 0xFF);
 
     // IME
-    PatchNop(0x009E85FC, 2); 
+    PatchNop(0x009E85FC, 0x009E85FC + 2); 
 
     // OnGroupMessage
-    PatchNop(0x00531EE8, 9); 
-    PatchNop(0x00531EFF, 3);
+    PatchNop(0x00531EE8, 0x00531EE8 + 9); 
+    PatchNop(0x00531EFF, 0x00531EFF + 3);
 
     // OnKey
-    PatchNop(0x008D54A6, 9); 
-    PatchNop(0x008D54BD, 3);
+    PatchNop(0x008D54A6, 0x008D54A6 + 9); 
+    PatchNop(0x008D54BD, 0x008D54BD + 3);
 
     // OnChat
-    PatchNop(0x00937225, 9); 
-    PatchNop(0x00937249, 3);
+    PatchNop(0x00937225, 0x00937225 + 9); 
+    PatchNop(0x00937249, 0x00937249 + 3);
 
     // Allow Character Name
-    PatchNop(0x007A015D, 2); 
+    PatchNop(0x007A015D, 0x007A015D + 2); 
 
     // Allow Paste
-    PatchNop(0x004CAE7D, 2); 
+    PatchNop(0x004CAE7D, 0x004CAE7D + 2); 
     Patch1(0x004CAE8F, 0xEB); 
 }
