@@ -63,6 +63,8 @@ void AttachDailyCheckinMod();
 void AttachFixCashItemsMod();
 void AttachBagWindowMod();
 void AttachHyperTeleportRockMod();
+void AttachWeaponTintMod();
+void AttachColoringPrismMod();
 
 inline void AttachClientHooks() {
     AttachClientBypass();
@@ -84,6 +86,8 @@ inline void AttachClientHooks() {
     AttachFixCashItemsMod();
     AttachBagWindowMod();
     AttachHyperTeleportRockMod();
+    AttachWeaponTintMod();
+    AttachColoringPrismMod();
 }
 
 

@@ -3280,4 +3280,23 @@ void AttachWeaponTintMod() {
     ATTACH_HOOK(ShowSkillEffect_Orig, ShowSkillEffect_Hook);
     ATTACH_HOOK(CashEffectShow_Orig, CashEffectShow_Hook);
     ATTACH_HOOK(CashEffectApply_Orig, CashEffectApply_Hook);
+    
+    // Add missing ProcessPacket hook to receive server sync packets
+    static constexpr uintptr_t kAddr_ClientSocket_ProcessPacket = 0x004965F1;
+    typedef void(__fastcall* t_ProcessPacket)(void*, void*, CInPacket*);
+    static auto CClientSocket_ProcessPacket = reinterpret_cast<t_ProcessPacket>(kAddr_ClientSocket_ProcessPacket);
+    
+    struct LocalHook {
+        static void __fastcall CClientSocket_ProcessPacket_tint_hook(void* pThis, void* edx, CInPacket* pPacket) {
+            if (pPacket && pPacket->CanRead(2)) {
+                if (*reinterpret_cast<const unsigned short*>(pPacket->CurrentPublic()) == kWeaponTintActionOpcode) {
+                    WeaponTint_HandleSync(pPacket);
+                    return;
+                }
+            }
+            CClientSocket_ProcessPacket(pThis, edx, pPacket);
+        }
+    };
+    
+    ATTACH_HOOK(CClientSocket_ProcessPacket, LocalHook::CClientSocket_ProcessPacket_tint_hook);
 }

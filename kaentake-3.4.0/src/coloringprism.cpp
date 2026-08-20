@@ -191,16 +191,14 @@ void* SehItemAt(int invType, int invPos) {
     __try {
         void* ctx = *reinterpret_cast<void**>(kAddr_CWvsContext);
         if (!ctx) return nullptr;
-        
-        void* result[2] = {nullptr, nullptr};
-        reinterpret_cast<void*(__thiscall*)(void*, void*)>(0x00425D0B)(ctx, result);
-        auto* cd = static_cast<unsigned char*>(result[0]);
-        if (cd) {
-            reinterpret_cast<void(__thiscall*)(void*)>(0x00428C15)(result);
-        }
+        auto* cd = *reinterpret_cast<unsigned char**>(
+                       static_cast<unsigned char*>(ctx) + kCtxCharacterData);
         if (!cd) return nullptr;
 
         if (invPos < 0) {                       // worn
+            // The v83 client passes invType=1 for equipped items too, but addresses them
+            // with negative invPos. Allow invType=1 as well as invType=-1.
+            if (invType != -1 && invType != 1) return nullptr;
             int i = -invPos;
             const unsigned char* base = cd + kCdWornBase;
             if (i > kCashSlotOffset) { i -= kCashSlotOffset; base = cd + kCdWornCashBase; }
@@ -1378,14 +1376,8 @@ void* SehCharacterData() {
     void* charData = nullptr;
     __try {
         void* ctx = *reinterpret_cast<void**>(kAddr_CWvsContext);
-        if (ctx) {
-            void* result[2] = {nullptr, nullptr};
-            reinterpret_cast<void*(__thiscall*)(void*, void*)>(0x00425D0B)(ctx, result);
-            charData = result[0];
-            if (charData) {
-                reinterpret_cast<void(__thiscall*)(void*)>(0x00428C15)(result);
-            }
-        }
+        if (ctx) charData = *reinterpret_cast<void**>(
+                     reinterpret_cast<char*>(ctx) + kOff_CharacterDataInCtx);
     } __except (EXCEPTION_EXECUTE_HANDLER) {
         charData = nullptr;
     }
