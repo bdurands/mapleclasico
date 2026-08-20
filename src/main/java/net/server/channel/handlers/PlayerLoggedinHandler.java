@@ -58,6 +58,7 @@ import net.server.world.World;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripting.event.EventInstanceManager;
+import server.colorprism.ColorPrismPackets;
 import server.life.MobSkill;
 import service.NoteService;
 import tools.DatabaseConnection;
@@ -242,7 +243,7 @@ public final class PlayerLoggedinHandler extends AbstractPacketHandler {
             }
 
             c.sendPacket(PacketCreator.getCharInfo(player));
-            c.sendPacket(server.colorprism.ColorPrismPackets.snapshot(player));
+            c.sendPacket(ColorPrismPackets.snapshot(player));
             if (!player.isHidden()) {
                 if (player.isGM() && YamlConfig.config.server.USE_AUTOHIDE_GM) {
                     player.toggleHide(true);

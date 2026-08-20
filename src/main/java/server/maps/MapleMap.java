@@ -98,6 +98,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
+import server.colorprism.ColorPrismPackets;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -2398,7 +2399,7 @@ public class MapleMap {
             }
         }
         
-        server.colorprism.ColorPrismPackets.broadcastMapTable(this);
+        ColorPrismPackets.broadcastMapTable(this);
         if (this.getHPDec() > 0) {
             getWorldServer().addPlayerHpDecrease(chr);
         } else {

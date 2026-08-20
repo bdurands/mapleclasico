@@ -190,6 +190,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import server.colorprism.ColorPrismPackets;
 
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -2981,7 +2982,7 @@ public class Character extends AbstractCharacterObject {
 
     public void equipChanged() {
         getMap().broadcastUpdateCharLookMessage(this, this);
-        server.colorprism.ColorPrismPackets.broadcastMapTable(getMap());
+        ColorPrismPackets.broadcastMapTable(getMap());
         equipchanged = true;
         updateLocalStats();
         if (getMessenger() != null) {
