@@ -3922,14 +3922,6 @@ public class Character extends AbstractCharacterObject {
                             summons.remove(summonId);
                             if (summon.isPuppet()) {
                                 map.removePlayerPuppet(this);
-                            } else if (summon.getSkill() == constants.skills.Outlaw.OCTOPUS) { // Remove the second octopus too
-                                Summon summon2 = summons.get(summonId + 1000000);
-                                if (summon2 != null) {
-                                    getMap().broadcastMessage(PacketCreator.removeSummon(summon2, true), summon2.getPosition());
-                                    getMap().removeMapObject(summon2);
-                                    removeVisibleMapObject(summon2);
-                                    summons.remove(summonId + 1000000);
-                                }
                             } else if (summon.getSkill() == DarkKnight.BEHOLDER) {
                                 if (beholderHealingSchedule != null) {
                                     beholderHealingSchedule.cancel(false);

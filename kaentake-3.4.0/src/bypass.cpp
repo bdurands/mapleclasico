@@ -401,4 +401,46 @@ void AttachClientBypass() {
     PatchRetZero(0x00422C7E); // ShowAdBalloon
     PatchRetZero(0x009F191B); // SendHSLog
     Patch1(0x00797074, 0xEB); // ZExceptionHandler::UnhandledExceptionFilter - fix process hang
+
+    // Typable PIN
+    PatchNop(0x004CA8BA, 0x004CA8BA + 2);
+
+    // Repeat same thing more than 3x (ChatSpam) & Infinite ChatBox
+    Patch1(0x004905EB, 0xEB);
+    Patch1(0x004CAA09, 0xEB);
+    Patch1(0x004CAA84, 0xEB);
+    
+    // Remove "Repeating the same line over and over\r\ncan negatively affect other users." check allow spam text
+    Patch1(0x00490607, 0xEB);
+    Patch1(0x00490609, 0x27);
+    
+    // Remove "Too much chatting can disrupt\r\nother players' ability to play the game." check allow spam text
+    Patch1(0x00490651, 0xEB);
+    Patch1(0x00490652, 0x1D);
+
+    // Allow Special Characters (including ñ)
+    // TranslateMessage
+    Patch1(0x009E7E77 + 2, 0xFF);
+
+    // IME
+    PatchNop(0x009E85FC, 2); 
+
+    // OnGroupMessage
+    PatchNop(0x00531EE8, 9); 
+    PatchNop(0x00531EFF, 3);
+
+    // OnKey
+    PatchNop(0x008D54A6, 9); 
+    PatchNop(0x008D54BD, 3);
+
+    // OnChat
+    PatchNop(0x00937225, 9); 
+    PatchNop(0x00937249, 3);
+
+    // Allow Character Name
+    PatchNop(0x007A015D, 2); 
+
+    // Allow Paste
+    PatchNop(0x004CAE7D, 2); 
+    Patch1(0x004CAE8F, 0xEB); 
 }

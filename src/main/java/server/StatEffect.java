@@ -1056,14 +1056,6 @@ public class StatEffect {
             if (isBeholder()) {
                 tosummon.addHP(1);
             }
-
-            if (sourceid == constants.skills.Outlaw.OCTOPUS) { // 5211001
-                Point pos2 = new Point(pos.x - 45, pos.y);
-                final Summon tosummon2 = new Summon(applyfrom, sourceid, pos2, summonMovementType);
-                applyfrom.getMap().spawnSummon(tosummon2);
-                applyfrom.addSummon(sourceid + 1000000, tosummon2); // Fake ID to track it separately
-                tosummon2.addHP(x);
-            }
         }
         if (isMagicDoor() && !FieldLimit.DOOR.check(applyto.getMap().getFieldLimit())) { // Magic Door
             int y = applyto.getFh();
