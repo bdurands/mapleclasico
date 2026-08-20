@@ -152,6 +152,7 @@ namespace EllinMS_Launcher
             // ── Phase 2: Download missing / changed files ─────────────────────
             if (toDownload.Count == 0)
             {
+                SaveCache();
                 SetStatus("¡Todos los archivos están actualizados!", 100);
                 lblFileCount.Text = "";
             }
@@ -159,6 +160,7 @@ namespace EllinMS_Launcher
             {
                 lblFileCount.Text = string.Format("0 / {0} archivos", toDownload.Count);
                 bool ok = await DownloadFiles(toDownload, _cts.Token);
+                SaveCache();
                 if (!ok)
                 {
                     SetBusy(false);
@@ -185,6 +187,7 @@ namespace EllinMS_Launcher
                 validFiles.Add(Path.Combine(GameDir, "ijji15.dll"));
                 validFiles.Add(Path.Combine(GameDir, "ijl15.dll"));
                 validFiles.Add(Path.Combine(GameDir, "kaentake.dll"));
+                validFiles.Add(Path.Combine(GameDir, "gr2G_DX8"));
 
                 string[] allFiles;
                 try { allFiles = Directory.GetFiles(GameDir, "*.*", SearchOption.AllDirectories); }
@@ -236,6 +239,94 @@ namespace EllinMS_Launcher
             LaunchGame();
         }
 
+        // ── Cache System ─────────────────────────────────────────────────────
+
+        private struct CacheEntry
+        {
+            public long Size;
+            public long Ticks;
+            public string Hash;
+        }
+
+        private static System.Collections.Concurrent.ConcurrentDictionary<string, CacheEntry> _fileCache = 
+            new System.Collections.Concurrent.ConcurrentDictionary<string, CacheEntry>(StringComparer.OrdinalIgnoreCase);
+        
+        private static string CachePath => Path.Combine(GameDir, "gr2G_DX8");
+        private const string CACHE_SALT = "E1L2L3I4N5M6S7_S3CR3T_K3Y";
+
+        private void LoadCache()
+        {
+            _fileCache.Clear();
+            if (File.Exists(CachePath))
+            {
+                try
+                {
+                    var lines = File.ReadAllLines(CachePath);
+                    if (lines.Length == 0) return;
+
+                    string lastLine = lines[lines.Length - 1];
+                    if (!lastLine.StartsWith("CHECKSUM|")) return;
+
+                    string fileChecksum = lastLine.Substring(9);
+                    var dataLines = new string[lines.Length - 1];
+                    Array.Copy(lines, dataLines, lines.Length - 1);
+                    
+                    string allData = string.Join("\n", dataLines) + CACHE_SALT;
+                    using (var md5 = System.Security.Cryptography.MD5.Create())
+                    {
+                        string computed = BitConverter.ToString(md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(allData))).Replace("-", "").ToLowerInvariant();
+                        if (computed != fileChecksum) return; // Tampered! Cache invalidated.
+                    }
+
+                    foreach (var line in dataLines)
+                    {
+                        var parts = line.Split('|');
+                        if (parts.Length == 4)
+                        {
+                            if (long.TryParse(parts[1], out long size) && long.TryParse(parts[2], out long ticks))
+                            {
+                                _fileCache[parts[0]] = new CacheEntry { Size = size, Ticks = ticks, Hash = parts[3] };
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private void SaveCache()
+        {
+            try
+            {
+                var lines = new List<string>(_fileCache.Count + 1);
+                foreach (var kvp in _fileCache)
+                {
+                    lines.Add(string.Format("{0}|{1}|{2}|{3}", kvp.Key, kvp.Value.Size, kvp.Value.Ticks, kvp.Value.Hash));
+                }
+                
+                string allData = string.Join("\n", lines) + CACHE_SALT;
+                using (var md5 = System.Security.Cryptography.MD5.Create())
+                {
+                    string checksum = BitConverter.ToString(md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(allData))).Replace("-", "").ToLowerInvariant();
+                    lines.Add("CHECKSUM|" + checksum);
+                }
+
+                File.WriteAllLines(CachePath, lines);
+                
+                // Hide the file to confuse players
+                try
+                {
+                    var attributes = File.GetAttributes(CachePath);
+                    if ((attributes & FileAttributes.Hidden) != FileAttributes.Hidden)
+                    {
+                        File.SetAttributes(CachePath, attributes | FileAttributes.Hidden);
+                    }
+                }
+                catch { }
+            }
+            catch { }
+        }
+
         // ── Update check (runs on background thread) ─────────────────────────
 
         private struct FileEntry
@@ -248,6 +339,8 @@ namespace EllinMS_Launcher
 
         private Tuple<List<FileEntry>, HashSet<string>> CheckUpdates(IProgress<(string status, string count)> progress, CancellationToken ct)
         {
+            LoadCache();
+
             // ── Step 1: Fetch manifest ─────────────────────────────────────
             progress.Report(("Conectando al servidor de actualizaciones...", ""));
 
@@ -321,7 +414,25 @@ namespace EllinMS_Launcher
                     }
                     else
                     {
-                        needsDownload = ComputeMd5(localPath) != entry.Hash;
+                        long ticks = info.LastWriteTimeUtc.Ticks;
+                        
+                        // Intelligent Cache Check
+                        if (_fileCache.TryGetValue(entry.Name, out var cached) && cached.Size == info.Length && cached.Ticks == ticks)
+                        {
+                            needsDownload = cached.Hash != entry.Hash;
+                        }
+                        else
+                        {
+                            // Cache miss or changed file - recalculate MD5
+                            string computedHash = ComputeMd5(localPath);
+                            needsDownload = computedHash != entry.Hash;
+                            
+                            // Update cache with the newly calculated hash for next time
+                            if (!needsDownload)
+                            {
+                                _fileCache[entry.Name] = new CacheEntry { Size = info.Length, Ticks = ticks, Hash = computedHash };
+                            }
+                        }
                     }
                 }
 
@@ -340,92 +451,111 @@ namespace EllinMS_Launcher
                 }
             });
 
+            SaveCache();
+
             return new Tuple<List<FileEntry>, HashSet<string>>(new List<FileEntry>(toDownload), validFiles);
         }
 
         // ── Async download with HttpClient, speed tracking, auto-retry ───────
 
-        private async Task<bool> DownloadFiles(List<FileEntry> files, CancellationToken ct)
+        private async Task<bool> DownloadFiles(IEnumerable<FileEntry> fileList, CancellationToken ct)
         {
+            var files = new List<FileEntry>(fileList);
             var dir = GameDir;
             int done = 0;
+            bool anyFailed = false;
+
+            var semaphore = new System.Threading.SemaphoreSlim(10); // 10 parallel downloads max
+            var downloadTasks = new List<Task>();
 
             foreach (var f in files)
             {
-                if (ct.IsCancellationRequested)
+                if (ct.IsCancellationRequested) return false;
+
+                downloadTasks.Add(Task.Run(async () =>
                 {
-                    SetStatus("Descarga cancelada.", 0);
-                    return false;
-                }
-
-                SetStatus(string.Format("Descargando: {0}", f.Name), 0);
-                lblFileCount.Text = string.Format("{0} / {1} archivos", done, files.Count);
-
-                var localPath = Path.Combine(dir, f.Name.Replace('/', '\\'));
-                var localDir  = Path.GetDirectoryName(localPath);
-                if (!string.IsNullOrEmpty(localDir) && !Directory.Exists(localDir))
-                    Directory.CreateDirectory(localDir);
-
-                // Delete corrupted partial file
-                if (File.Exists(localPath))
-                {
-                    try { File.Delete(localPath); } catch { }
-                }
-
-                bool success = false;
-                int attempt = 0;
-
-                while (!success && attempt < MAX_RETRIES)
-                {
-                    attempt++;
+                    await semaphore.WaitAsync(ct);
                     try
                     {
-                        await DownloadFileWithProgress(f, localPath, ct);
-                        success = true;
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        SetStatus("Descarga cancelada.", 0);
-                        lblSpeed.Text = "";
-                        return false;
-                    }
-                    catch (Exception ex)
-                    {
-                        if (attempt < MAX_RETRIES)
-                        {
-                            // Auto-retry with exponential backoff
-                            int waitMs = 1000 * attempt;
-                            SetStatus(string.Format("Error descargando {0}. Reintentando en {1}s... ({2}/{3})",
-                                f.Name, waitMs / 1000, attempt, MAX_RETRIES), 0);
-                            lblSpeed.Text = "";
-                            await Task.Delay(waitMs, ct);
-                        }
-                        else
-                        {
-                            var result = MessageBox.Show(
-                                string.Format("Error al descargar:\n{0}\n\nError: {1}\n\n¿Reintentar?", f.Name, ex.Message),
-                                "EllinMS", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                        if (ct.IsCancellationRequested || anyFailed) return;
 
-                            if (result == MessageBoxResult.No)
+                        var localPath = Path.Combine(dir, f.Name.Replace('/', '\\'));
+                        var localDir = Path.GetDirectoryName(localPath);
+                        if (!string.IsNullOrEmpty(localDir) && !Directory.Exists(localDir))
+                            Directory.CreateDirectory(localDir);
+
+                        if (File.Exists(localPath))
+                        {
+                            try { File.Delete(localPath); } catch { }
+                        }
+
+                        bool success = false;
+                        int attempt = 0;
+
+                        while (!success && attempt < MAX_RETRIES)
+                        {
+                            attempt++;
+                            try
                             {
-                                SetStatus("Descarga cancelada.", 0);
-                                lblSpeed.Text = "";
-                                return false;
+                                await DownloadFileWithProgress(f, localPath, ct);
+                                success = true;
                             }
-                            // Reset attempts for manual retry
-                            attempt = 0;
+                            catch (OperationCanceledException)
+                            {
+                                return;
+                            }
+                            catch (Exception)
+                            {
+                                if (attempt >= MAX_RETRIES)
+                                {
+                                    anyFailed = true;
+                                    return;
+                                }
+                                await Task.Delay(1000 * attempt, ct);
+                            }
+                        }
+
+                        if (success)
+                        {
+                            try
+                            {
+                                var fi = new FileInfo(localPath);
+                                _fileCache[f.Name] = new CacheEntry { Size = fi.Length, Ticks = fi.LastWriteTimeUtc.Ticks, Hash = f.Hash };
+                            }
+                            catch { }
+
+                            int d = Interlocked.Increment(ref done);
+                            Dispatcher.InvokeAsync(() =>
+                            {
+                                if (!ct.IsCancellationRequested)
+                                    lblFileCount.Text = string.Format("{0} / {1} archivos", d, files.Count);
+                            });
                         }
                     }
-                }
-
-                if (success)
-                {
-                    done++;
-                    pbProgress.Value = 0;
-                    lblSpeed.Text = "";
-                }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                }));
             }
 
+            try
+            {
+                await Task.WhenAll(downloadTasks);
+            }
+            catch (OperationCanceledException)
+            {
+                SetStatus("Descarga cancelada.", 0);
+                return false;
+            }
+
+            if (anyFailed)
+            {
+                MessageBox.Show("Hubo un error descargando algunos archivos. Por favor, reintenta.", "EllinMS", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+
+            SaveCache();
             lblFileCount.Text = string.Format("{0} / {0} archivos", files.Count);
             return true;
         }

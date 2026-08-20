@@ -1,0 +1,144 @@
+diff --git a/EllinMS-Launcher/MainWindow.xaml.cs b/EllinMS-Launcher/MainWindow.xaml.cs
+index a46a3a4..7f3b5d2 100644
+--- a/EllinMS-Launcher/MainWindow.xaml.cs
++++ b/EllinMS-Launcher/MainWindow.xaml.cs
+@@ -152,6 +152,7 @@
+             // -- Phase 2: Download missing / changed files ---------------------
+             if (toDownload.Count == 0)
+             {
++                SaveCache();
+                 SetStatus("¡Todos los archivos están actualizados!", 100);
+                 lblFileCount.Text = "";
+             }
+@@ -158,6 +159,7 @@
+             {
+                 lblFileCount.Text = string.Format("0 / {0} archivos", toDownload.Count);
+                 bool ok = await DownloadFiles(toDownload, _cts.Token);
++                SaveCache();
+                 if (!ok)
+                 {
+                     SetBusy(false);
+@@ -236,6 +238,62 @@
+ 
+         // -- Update check (runs on background thread) -------------------------
+ 
++        // -- Cache System -----------------------------------------------------
++
++        private struct CacheEntry
++        {
++            public long Size;
++            public long Ticks;
++            public string Hash;
++        }
++
++        private static System.Collections.Concurrent.ConcurrentDictionary<string, CacheEntry> _fileCache = 
++            new System.Collections.Concurrent.ConcurrentDictionary<string, CacheEntry>(StringComparer.OrdinalIgnoreCase);
++        
++        private static string CachePath => Path.Combine(GameDir, "launcher_cache.dat");
++
++        private void LoadCache()
++        {
++            _fileCache.Clear();
++            if (File.Exists(CachePath))
++            {
++                try
++                {
++                    var lines = File.ReadAllLines(CachePath);
++                    foreach (var line in lines)
++                    {
++                        var parts = line.Split('|');
++                        if (parts.Length == 4)
++                        {
++                            if (long.TryParse(parts[1], out long size) && long.TryParse(parts[2], out long ticks))
++                            {
++                                _fileCache[parts[0]] = new CacheEntry { Size = size, Ticks = ticks, Hash = parts[3] };
++                            }
++                        }
++                    }
++                }
++                catch { }
++            }
++        }
++
++        private void SaveCache()
++        {
++            try
++            {
++                var lines = new List<string>(_fileCache.Count);
++                foreach (var kvp in _fileCache)
++                {
++                    lines.Add(string.Format("{0}|{1}|{2}|{3}", kvp.Key, kvp.Value.Size, kvp.Value.Ticks, kvp.Value.Hash));
++                }
++                File.WriteAllLines(CachePath, lines);
++            }
++            catch (Exception ex)
++            {
++                Dispatcher.InvokeAsync(() => System.Windows.MessageBox.Show("Error guardando caché: " + ex.Message));
++            }
++        }
++
++
+         private struct FileEntry
+         {
+             public string Name;   // relative path, forward slashes
+@@ -245,6 +303,8 @@
+ 
+         private Tuple<List<FileEntry>, HashSet<string>> CheckUpdates(IProgress<(string status, string count)> progress, CancellationToken ct)
+         {
++            LoadCache();
++
+             // -- Step 1: Fetch manifest -------------------------------------
+             progress.Report(("Conectando al servidor de actualizaciones...", ""));
+ 
+@@ -317,7 +377,25 @@
+                     }
+                     else
+                     {
+-                        needsDownload = ComputeMd5(localPath) != entry.Hash;
++                        long ticks = info.LastWriteTimeUtc.Ticks;
++                        
++                        // Intelligent Cache Check
++                        if (_fileCache.TryGetValue(entry.Name, out var cached) && cached.Size == info.Length && cached.Ticks == ticks)
++                        {
++                            needsDownload = cached.Hash != entry.Hash;
++                        }
++                        else
++                        {
++                            // Cache miss or changed file - recalculate MD5
++                            string computedHash = ComputeMd5(localPath);
++                            needsDownload = computedHash != entry.Hash;
++                            
++                            // Update cache with the newly calculated hash for next time
++                            if (!needsDownload)
++                            {
++                                _fileCache[entry.Name] = new CacheEntry { Size = info.Length, Ticks = ticks, Hash = computedHash };
++                            }
++                        }
+                     }
+                 }
+ 
+@@ -335,6 +413,9 @@
+                 }
+             });
+ 
++            // Save cache right after checking
++            SaveCache();
++
+             return new Tuple<List<FileEntry>, HashSet<string>>(new List<FileEntry>(toDownload), validFiles);
+         }
+ 
+@@ -420,6 +501,14 @@
+ 
+                             if (success)
+                             {
++                                // Update cache immediately after download
++                                try
++                                {
++                                    var fi = new FileInfo(localPath);
++                                    _fileCache[f.Name] = new CacheEntry { Size = fi.Length, Ticks = fi.LastWriteTimeUtc.Ticks, Hash = f.Hash };
++                                }
++                                catch { }
++
+                                 int d = Interlocked.Increment(ref done);
+                                 Dispatcher.InvokeAsync(() => 
+                                 {
