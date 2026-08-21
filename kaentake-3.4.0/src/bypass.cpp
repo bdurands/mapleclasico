@@ -225,7 +225,6 @@ extern void WeaponTint_Tick();
 
 void CWvsApp::CallUpdate_hook(int tCurTime) {
     CashShopWnd_Tick();
-    WeaponTint_Tick();
     if (m_bFirstUpdate) {
         m_tUpdateTime = tCurTime;
         m_bFirstUpdate = 0;
@@ -234,6 +233,7 @@ void CWvsApp::CallUpdate_hook(int tCurTime) {
         auto pStage = get_stage();
         if (pStage) {
             pStage->Update();
+            WeaponTint_Tick();
         }
         // CWndMan::s_Update();
         reinterpret_cast<void(__cdecl*)()>(0x009E47C3)();
