@@ -35,8 +35,9 @@ def main():
             # Calcular hash
             file_hash = calculate_md5(filepath)
             
-            # URL final (reemplazando espacios por %20 si es necesario)
-            url = BASE_URL + rel_path.replace(" ", "%20")
+            # URL final (codificando caracteres especiales y espacios)
+            import urllib.parse
+            url = BASE_URL + urllib.parse.quote(rel_path.replace("\\", "/"))
             
             file_elem = ET.SubElement(root, "file")
             

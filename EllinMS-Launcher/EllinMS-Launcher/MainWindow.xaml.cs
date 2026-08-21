@@ -158,6 +158,7 @@ namespace EllinMS_Launcher
             }
             else
             {
+                SetStatus("Descargando archivos...", 0);
                 lblFileCount.Text = string.Format("0 / {0} archivos", toDownload.Count);
                 bool ok = await DownloadFiles(toDownload, _cts.Token);
                 SaveCache();
@@ -464,6 +465,51 @@ namespace EllinMS_Launcher
             var dir = GameDir;
             int done = 0;
             bool anyFailed = false;
+            Exception firstException = null;
+
+            long totalBytesToDownload = 0;
+            foreach (var f in files) totalBytesToDownload += f.Size;
+            long globalDownloaded = 0;
+            long downloadedSinceLastUpdate = 0;
+            var sw = Stopwatch.StartNew();
+            long lastSpeedUpdate = 0;
+            object uiLock = new object();
+
+            Action<int> onBytesDownloaded = (bytes) =>
+            {
+                long totalDown = Interlocked.Add(ref globalDownloaded, bytes);
+                long sinceLast = Interlocked.Add(ref downloadedSinceLastUpdate, bytes);
+
+                long elapsed = sw.ElapsedMilliseconds;
+                if (elapsed - lastSpeedUpdate >= 250 || totalDown == totalBytesToDownload)
+                {
+                    lock (uiLock)
+                    {
+                        if (elapsed - lastSpeedUpdate >= 250 || totalDown == totalBytesToDownload)
+                        {
+                            double seconds = (elapsed - lastSpeedUpdate) / 1000.0;
+                            double speedMBps = seconds > 0 ? (sinceLast / 1048576.0) / seconds : 0;
+                            lastSpeedUpdate = elapsed;
+                            Interlocked.Exchange(ref downloadedSinceLastUpdate, 0);
+
+                            int percent = totalBytesToDownload > 0 ? (int)(totalDown * 100 / totalBytesToDownload) : 0;
+
+                            Dispatcher.InvokeAsync(() =>
+                            {
+                                if (!ct.IsCancellationRequested)
+                                {
+                                    pbProgress.Value = percent;
+                                    if (totalBytesToDownload > 0)
+                                        lblSpeed.Text = string.Format("{0:0.00} MB / {1:0.00} MB  •  {2:0.00} MB/s",
+                                            totalDown / 1048576.0,
+                                            totalBytesToDownload / 1048576.0,
+                                            speedMBps);
+                                }
+                            });
+                        }
+                    }
+                }
+            };
 
             var semaphore = new System.Threading.SemaphoreSlim(10); // 10 parallel downloads max
             var downloadTasks = new List<Task>();
@@ -482,7 +528,9 @@ namespace EllinMS_Launcher
                         var localPath = Path.Combine(dir, f.Name.Replace('/', '\\'));
                         var localDir = Path.GetDirectoryName(localPath);
                         if (!string.IsNullOrEmpty(localDir) && !Directory.Exists(localDir))
-                            Directory.CreateDirectory(localDir);
+                        {
+                            lock (uiLock) { if (!Directory.Exists(localDir)) Directory.CreateDirectory(localDir); }
+                        }
 
                         if (File.Exists(localPath))
                         {
@@ -491,24 +539,32 @@ namespace EllinMS_Launcher
 
                         bool success = false;
                         int attempt = 0;
+                        long fileDownloaded = 0;
 
                         while (!success && attempt < MAX_RETRIES)
                         {
                             attempt++;
+                            fileDownloaded = 0;
                             try
                             {
-                                await DownloadFileWithProgress(f, localPath, ct);
+                                await DownloadFileWithProgress(f, localPath, (bytes) => {
+                                    fileDownloaded += bytes;
+                                    onBytesDownloaded(bytes);
+                                }, ct);
                                 success = true;
                             }
                             catch (OperationCanceledException)
                             {
-                                return;
+                                Interlocked.Add(ref globalDownloaded, -fileDownloaded);
+                                if (ct.IsCancellationRequested) return;
                             }
-                            catch (Exception)
+                            catch (Exception ex)
                             {
+                                Interlocked.Add(ref globalDownloaded, -fileDownloaded);
                                 if (attempt >= MAX_RETRIES)
                                 {
                                     anyFailed = true;
+                                    firstException = firstException ?? ex;
                                     return;
                                 }
                                 await Task.Delay(1000 * attempt, ct);
@@ -551,7 +607,8 @@ namespace EllinMS_Launcher
 
             if (anyFailed)
             {
-                MessageBox.Show("Hubo un error descargando algunos archivos. Por favor, reintenta.", "EllinMS", MessageBoxButton.OK, MessageBoxImage.Error);
+                string errMsg = firstException != null ? firstException.Message : "Error desconocido.";
+                MessageBox.Show($"Hubo un error descargando algunos archivos.\nError: {errMsg}\nPor favor, reintenta.", "EllinMS", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
 
@@ -563,47 +620,22 @@ namespace EllinMS_Launcher
         /// <summary>
         /// Downloads a single file using HttpClient with real-time speed and progress tracking.
         /// </summary>
-        private async Task DownloadFileWithProgress(FileEntry f, string localPath, CancellationToken ct)
+        private async Task DownloadFileWithProgress(FileEntry f, string localPath, Action<int> onBytesDownloaded, CancellationToken ct)
         {
             using (var response = await _httpClient.GetAsync(f.Url, HttpCompletionOption.ResponseHeadersRead, ct))
             {
                 response.EnsureSuccessStatusCode();
-                long totalBytes = response.Content.Headers.ContentLength ?? f.Size;
 
                 using (var contentStream = await response.Content.ReadAsStreamAsync())
                 using (var fileStream = new FileStream(localPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, true))
                 {
                     var buffer = new byte[81920];
-                    long downloaded = 0;
                     int bytesRead;
-                    var sw = Stopwatch.StartNew();
-                    long lastSpeedUpdate = 0;
 
                     while ((bytesRead = await contentStream.ReadAsync(buffer, 0, buffer.Length, ct)) > 0)
                     {
                         await fileStream.WriteAsync(buffer, 0, bytesRead, ct);
-                        downloaded += bytesRead;
-
-                        // Update progress on UI thread (throttled to ~10 updates/sec)
-                        long elapsed = sw.ElapsedMilliseconds;
-                        if (elapsed - lastSpeedUpdate >= 100 || downloaded == totalBytes)
-                        {
-                            lastSpeedUpdate = elapsed;
-                            double seconds = elapsed / 1000.0;
-                            double speedMBps = seconds > 0 ? (downloaded / 1048576.0) / seconds : 0;
-                            int percent = totalBytes > 0 ? (int)(downloaded * 100 / totalBytes) : 0;
-
-                            // Marshal to UI thread
-                            Dispatcher.Invoke(() =>
-                            {
-                                pbProgress.Value = percent;
-                                if (totalBytes > 0)
-                                    lblSpeed.Text = string.Format("{0:0.00} MB / {1:0.00} MB  •  {2:0.00} MB/s",
-                                        downloaded / 1048576.0,
-                                        totalBytes / 1048576.0,
-                                        speedMBps);
-                            });
-                        }
+                        onBytesDownloaded(bytesRead);
                     }
                 }
             }

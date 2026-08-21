@@ -94,14 +94,16 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ProgressBar">
-                        <Grid x:Name="Root">
-                            <Border Background="{TemplateBinding Background}" CornerRadius="3"/>
+                        <Grid x:Name="Root" Margin="0,-15" ClipToBounds="True">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="3" Height="6" VerticalAlignment="Center"/>
                             <!-- Indeterminate animation -->
                             <Border x:Name="IndeterminateBar"
                                     Background="{TemplateBinding Foreground}"
                                     CornerRadius="3"
                                     Opacity="0"
                                     Width="120"
+                                    Height="6"
+                                    VerticalAlignment="Center"
                                     HorizontalAlignment="Left">
                                 <Border.Effect>
                                     <DropShadowEffect Color="#FF2ECC40" BlurRadius="8" ShadowDepth="0" Opacity="0.9"/>
@@ -111,10 +113,12 @@
                                 </Border.RenderTransform>
                             </Border>
                             <!-- Determinate fill -->
-                            <Border x:Name="PART_Track" CornerRadius="3"/>
+                            <Border x:Name="PART_Track" CornerRadius="3" Height="6" VerticalAlignment="Center"/>
                             <Border x:Name="PART_Indicator"
                                     Background="{TemplateBinding Foreground}"
                                     CornerRadius="3"
+                                    Height="6"
+                                    VerticalAlignment="Center"
                                     HorizontalAlignment="Left">
                                 <Border.Effect>
                                     <DropShadowEffect Color="#FF2ECC40" BlurRadius="8" ShadowDepth="0" Opacity="0.9"/>
