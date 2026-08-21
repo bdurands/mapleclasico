@@ -1097,7 +1097,18 @@ public class EventInstanceManager {
         eventCleared = true;
 
         String eventName = em.getName();
-        boolean isPq = eventName.endsWith("PQ") || eventName.equals("GuildQuest") || eventName.equals("RescueGaga");
+        boolean isPq = eventName.contains("PQ") 
+                    || eventName.equals("GuildQuest") 
+                    || eventName.equals("RescueGaga")
+                    || eventName.equals("ZakumBattle")
+                    || eventName.equals("HorntailBattle")
+                    || eventName.equals("PinkBeanBattle")
+                    || eventName.equals("ScargaBattle")
+                    || eventName.equals("PapulatusBattle")
+                    || eventName.equals("BalrogBattle")
+                    || eventName.equals("BalrogBattle_Easy")
+                    || eventName.equals("LatanicaBattle")
+                    || eventName.equals("ShowaBattle");
 
         for (Character chr : getPlayers()) {
             chr.awardQuestPoint(YamlConfig.config.server.QUEST_POINT_PER_EVENT_CLEAR);
