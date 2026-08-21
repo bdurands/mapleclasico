@@ -221,9 +221,11 @@ void CWvsApp::SetUp_hook() {
 }
 
 extern void CashShopWnd_Tick();
+extern void WeaponTint_Tick();
 
 void CWvsApp::CallUpdate_hook(int tCurTime) {
     CashShopWnd_Tick();
+    WeaponTint_Tick();
     if (m_bFirstUpdate) {
         m_tUpdateTime = tCurTime;
         m_bFirstUpdate = 0;

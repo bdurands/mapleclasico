@@ -25,10 +25,18 @@ whole step.
 > server at boot rather than running either copy. If your fork removed that `includeAll`,
 > then add the one line instead: `<include file="db/extensions/coloring-prism.xml"/>`.
 
-That adds eighteen columns and nothing else: six on `inventoryequipment`, nine on
-`characters`, three on `inventoryitems`. The last changeset only puts the item in shop
-`1337` (GM shop) so you can buy one for testing; retarget the shopid or delete that changeset if
-you don't want it added.
+That adds eighteen columns and one table: six columns on `inventoryequipment`, nine on
+`characters`, three on `inventoryitems`, and a new `skilltints` table.
+
+**Why skills need a table when nothing else does.** Every other target has somewhere to put a
+colour already: a character has exactly one hair, one set of eyes and one skin, so those are
+columns on `characters`, and an equip or a cash effect carries its colours on its own inventory
+row. A skill has no inventory row at all and a character may dye any number of them, so
+`skilltints` is keyed `(characterid, skillid)` with a foreign key to `characters` that cascades
+on delete. Absence of a row is the vanilla colour.
+
+The last changeset only puts the item in shop `1337` (GM shop) so you can buy one for testing;
+retarget the shopid or delete that changeset if you don't want it added.
 
 Liquibase runs off the classpath, so rebuild the jar before restarting.
 
@@ -38,9 +46,12 @@ Liquibase runs off the classpath, so rebuild the jar before restarting.
 SHOW COLUMNS FROM inventoryequipment LIKE 'tint%';
 SHOW COLUMNS FROM characters LIKE '%tint%';
 SHOW COLUMNS FROM inventoryitems LIKE 'efftint%';
+SHOW COLUMNS FROM skilltints;
 ```
 
-Six rows, then nine, then three.
+Six rows, then nine, then three, then five. If the last one errors with "table doesn't exist"
+the changeset did not run: its precondition is `<not><tableExists .../>>` with
+`onFail="MARK_RAN"`, so a half-applied changelog marks it done rather than failing loudly.
 
 The third set is called `efftint*` rather than `tint*` on purpose. `ItemFactory` joins
 `inventoryitems` and `inventoryequipment` with `SELECT * ... USING(inventoryitemid)`, and
@@ -57,14 +68,21 @@ the nodes to merge**, so open both in a WZ editor and copy the children across.
 
 | fragment | merge into | what it is |
 |---|---|---|
-| `wz/client/UI/ColorPrism.img` | `UI.wz/UIWindow.img`, as a new `ColorPrism` node | the window art |
+| `wz/client/UI/UIWindow/ColorPrism.img` | `UI.wz/UIWindow.img`, as a new `ColorPrism` node | the window art |
 | `wz/client/String/Cash.img` | `String.wz/Cash.img` | the item's name and description |
 | `wz/client/Item/Cash/0578.img` | `Item.wz/Cash/0578.img` | the item's icons and `cash` flag |
 
-`ColorPrism.img` contains `backgrnd` (the 301x406 backdrop), the three 176x8 slider
-gradients `trackTone` / `trackChroma` / `trackBright`, and `backgrndLook`, an optional
-second backdrop without the drop well that the Hair, Eyes and Skin tabs use if it is
-present.
+`ColorPrism.img` contains eleven canvases:
+
+- `backgrnd`, the 301x406 backdrop.
+- `trackTone` / `trackChroma` / `trackBright`, the three 176x8 slider gradients.
+- `backgrndLook`, an optional second backdrop without the drop well, used by the Hair, Eyes
+  and Skin tabs when it is present. The window falls back to `backgrnd` when it is not.
+- `LayerBt/item/{normal,on,off}` and `LayerBt/glow/{normal,on,off}`, the six 14x14 badges that
+  sit under the preview on the Items tab and choose whether the sliders dye the item or the
+  effects it plays. **Merge these or that tab has no selector**: the window resolves them by
+  path and simply draws nothing if they are absent, which looks like a dead tab rather than a
+  missing import.
 
 The backdrop **bakes the window title and the three `HUE` / `CHROMA` / `VALUE` row
 labels**. Everything else the window shows is drawn at runtime: the banner copy, the tab
@@ -72,14 +90,30 @@ labels, the item icon, the gradients, the thumbs, the numbers and the buttons. I
 redraw or localize the backdrop, those two pieces of text are yours to carry over.
 
 Everything else the window draws is stock v83 and needs no import: `Basic.img/BtOK2`,
-`BtCancel2`, `Tab2`, `Slider/thumb*`, and `UIWindow.img/Bag/BtClose`.
+`BtCancel2`, `Tab2`, `Slider/thumb*`, and `BtClose`.
 
-**The server needs its own copy of the item data.** If your server reads WZ from XML,
-merge `wz/server/String.wz/Cash.img.xml` and `wz/server/Item.wz/Cash/0578.img.xml` into
-the matching files. The server reads the name and the `cash` flag from its own copy, so if
-`05782000` is missing there the item does not exist as far as the server is concerned: it
-cannot be put in a shop or spawned by a command, and it will not land in the **Cash** tab,
-which is the inventory the handler looks in for the prism it is about to consume.
+**`Item.wz/Cash/0578.img` is a NEW FILE, on both sides.** Stock v83 has no `0578` img at all:
+the client's `Item.wz/Cash` and the server's copy both stop short of it. So that one row of the
+table above is not a merge, it is a file you drop in whole, and both shipped fragments are
+complete root-level imgs for exactly that. The other two fragments are genuine merges, because
+`String.wz/Cash.img` does exist in stock.
+
+The filename matters and is not arbitrary. The server resolves an item by taking the first four
+digits of its id and appending `.img`, so `05782000` is only ever looked for in `0578.img`.
+Pasting the entry into a neighbouring img such as `0561.img` leaves it unreachable: no info node,
+no name, no `slotMax`. Nothing needs registering beyond the file itself, since the directory is
+enumerated.
+
+**The server needs its own copy.** If your server reads WZ from XML, add
+`wz/server/Item.wz/Cash/0578.img.xml` and merge `wz/server/String.wz/Cash.img.xml`. Without
+`05782000` there the item does not exist as far as the server is concerned: it cannot be put in a
+shop or spawned by a command, and every dye is refused because the handler cannot find a prism to
+consume.
+
+> **The `cash` flag does not decide which tab the item lands in.** Cosmic picks the inventory
+> from the leading digit of the id alone (`ItemConstants.getInventoryType`: `itemId / 1000000`,
+> so `5` is CASH), with no WZ lookup at all. The flag matters for trade and drop rules, not for
+> placement. An item that lands in the wrong tab has the wrong ID, not the wrong flag.
 
 ---
 
@@ -97,7 +131,7 @@ helper in 3.6, then one call to that helper in 3.8.
 | `net/opcodes/RecvOpcode.java` | one enum entry | 3.3 |
 | `net/opcodes/SendOpcode.java` | one enum entry | 3.3 |
 | `net/PacketProcessor.java` | one `registerHandler` line | 3.4 |
-| `client/inventory/Equip.java` | six fields, ten methods, six lines in `copy()` | 3.5 |
+| `client/inventory/Equip.java` | six fields, twelve methods, `normalizeTintHue`, six lines in `copy()` | 3.5 |
 | `client/Character.java` | nine fields, accessors, DB load and save, `syncWeaponTint()` | 3.6 |
 | `client/inventory/ItemFactory.java` | six columns on the equip INSERT and read, three on the item INSERT and read | 3.7 |
 | `client/inventory/Item.java` | three fields, accessors, three lines in `copy()` | 3.9 |
@@ -130,6 +164,10 @@ In `constants/id/ItemId.java`:
 ```java
 public static final int COLORING_PRISM = 5782000;
 ```
+
+One item does everything, including putting a colour back: zero all three sliders and press OK.
+An identity tint is a RESTORE rather than an apply, which is what lets the server refuse without
+consuming anything when the target was never dyed.
 
 ### 3.3 Opcodes
 
@@ -183,7 +221,8 @@ private byte tintFxChroma = 0;
 private byte tintFxBright = 0;
 ```
 
-Ten methods. All zero is the identity transform and therefore also means "never dyed",
+Twelve methods, plus the `normalizeTintHue` helper below. All zero is the identity
+transform and therefore also means "never dyed",
 which is why there is no separate flag:
 
 ```java
@@ -639,7 +678,7 @@ Both files include `pch.h`, `hook.h`, `debug.h`, and the WZ and ZTL wrapper head
 `wvs/wndman.h`, `ztl/ztl.h`).
 
 **This section is verified, not guessed.** Both files were compiled against a clean
-checkout of iw2d/kaentake **v3.4.1**, the errors collected, the three fixes below
+checkout of iw2d/kaentake **v3.4.1**, the errors collected, the four fixes below
 applied, and both then compile clean. If you are on that base, this is the complete
 list; nothing else is missing.
 
@@ -657,8 +696,8 @@ all wrong.
 
 #### 4.2a `debug.h`: the logging macros
 
-v3.4.1 has `DebugMessage` and `ErrorMessage` but not these. Nine `LOG_ONCE`, two
-`LOG_ONCE_PER_ID` and one `LogMessage` call site depend on them:
+v3.4.1 has `DebugMessage` and `ErrorMessage` but not these. Eighteen `LOG_ONCE` (nine in
+each file), two `LOG_ONCE_PER_ID` and five `LogMessage` call sites depend on them:
 
 ```cpp
 void LogMessage(const char* sFormat, ...);   // append a line to a log file
@@ -797,12 +836,29 @@ static_assert(sizeof(AvatarLook) == 0x1C5);
 Change `CAvatar::CustomData::aItemEffectLayer[60]` to `[AVATAR_EQUIP_SLOTS]` in the same
 file so the two cannot drift apart again.
 
+**Then move every loop that walks those arrays, in the same pass.** Shrinking an array does
+not shrink the code that iterates it, and stock kaentake iterates this one with a hard-coded
+bound: `src/itemeff.cpp`, in `UpdateItemEff`, is `for (auto i = 0; i < 60; ++i)`, and inside it
+writes `pAvatar->m_pCustomData->aItemEffectLayer[i]`. `CustomData` is heap-allocated separately
+from the avatar and `ITEMEFFECTLAYER` is 0x18 bytes, so once the array is 52 long, indices
+52..59 write 192 bytes past the end of that allocation on **every avatar update**.
+`AttachItemEffectMod()` is in the same attach list 4.3 has you extending, so it is always live.
+
+Grep for a literal `60` anywhere near `anHairEquip`, `anUnseenEquip` or `aItemEffectLayer` and
+replace each with `AVATAR_EQUIP_SLOTS`. On a stock v3.4.1 base that is exactly one site, the
+loop above. Skip it and the guide has made your build worse than leaving 4.2c alone.
+
 > **Do not just `#define AVATAR_EQUIP_SLOTS 60` to clear the error.** It compiles, and
 > then every loop over `anHairEquip` runs eight iterations into `anUnseenEquip[0..7]`,
-> so equips hidden underneath cash items get treated as worn. Nothing crashes and
-> nothing reads out of bounds, because the overrun lands inside the same struct, so it
-> presents as a cosmetic oddity rather than as a bug. If your DLL already renders item
-> effects, it has this bug today.
+> so equips hidden underneath cash items get treated as worn. For those two arrays
+> nothing crashes and nothing reads out of bounds, because the overrun lands inside the
+> same struct, so it presents as a cosmetic oddity rather than as a bug. If your DLL
+> already renders item effects, it has this bug today.
+>
+> **That reasoning stops at `AvatarLook`.** `aItemEffectLayer` is not in it; it is in
+> `CustomData`, which is its own heap allocation, so an unmoved loop there runs off the
+> end of the block rather than into a neighbouring field. That one is memory corruption,
+> and it surfaces as an unrelated crash later.
 
 Everything at or before `anHairEquip` is at the correct offset under either declaration,
 so the window's `kAL_*` constants and `nWeaponStickerID` are unaffected either way.
@@ -824,20 +880,29 @@ A one-line fix to a file you already have, not a change to anything this bundle 
 Wherever you install your hooks:
 
 ```cpp
-AttachWeaponTintMod();      // weapontint.cpp: four Detours, listed below
-AttachColoringPrismMod();   // coloringprism.cpp: no hooks at all
+AttachWeaponTintMod();      // weapontint.cpp: five Detours, listed below
+AttachColoringPrismMod();   // coloringprism.cpp: one Detour, the skill drop
 ```
 
-`AttachWeaponTintMod()` claims **four** addresses, and the one-owner rule in 4.6 and 4.7
-applies to every one of them. If your DLL already Detours any of these, dispatch from
-whatever hooked it first instead of adding a second Detour:
+The two together claim **six** addresses, and the one-owner rule in 4.6 and 4.7 applies to every
+one of them. If your DLL already Detours any of these, dispatch from whatever hooked it first
+instead of adding a second Detour:
 
 | address | what it is | what it dyes |
 |---|---|---|
 | `0x00453AD1` | `CAvatar::PrepareActionLayer` | the body: equips, hair, skin, effect art |
 | `0x00453696` | `CAvatar`'s face layer builder | the Eyes tab (see 4.3a) |
+| `0x00933990` | `CUser::ShowSkillEffect` | the Skills tab, for local AND remote casts |
 | `0x0093BEB9` | cash effect show | cash effect items (see 4.8) |
 | `0x0093C218` | cash effect apply | cash effect items (see 4.8) |
+| `0x004FAA22` | `CDraggableSkill::OnDropped` | dropping a skill onto the well (coloringprism.cpp) |
+
+`0x00933990` takes **five** stack args (`__thiscall`, `ret 0x14`). Declaring four corrupts the
+stack on every cast; read the epilogue rather than inferring arity from a call site.
+
+**One further address is deliberately NOT hooked**, and you may want it: see
+`WeaponTint_NoteBulletFlight` in `weapontint.h` and the multi-projectile note at the end of this
+document. Without it a volley is dyed only at its start.
 
 ### 4.3a The face builder, `0x00453696`
 
@@ -868,14 +933,57 @@ until something else happens to rebuild its layers.
 
 ### 4.5 Route the inbound opcode
 
-In your packet dispatcher, for opcode `0x372F`:
+Everything the server sends arrives on one opcode, `0x372F`, and it all goes to one function:
 
 ```cpp
 WeaponTint_HandleSync(iPacket);
 ```
 
-The handler reads the opcode from the packet's **current** offset, not from zero, so
-pass the packet without rewinding it.
+**A stock v3.4.1 checkout has nowhere to put that call.** It has no receive-side routing at all:
+`AttachClientHooks()` installs eleven mods and not one of them is inbound, and
+`wvs/msghandler.h`'s `virtual void OnPacket(int, CInPacket&) {}` is an unused stub. So unlike
+every other step in section 4, this is a file you CREATE rather than a site you edit.
+
+Detour the client's own router:
+
+```cpp
+// void __thiscall CClientSocket::ProcessPacket(CClientSocket*, CInPacket*)
+auto oriProcessPacket = reinterpret_cast<void(__thiscall*)(void*, CInPacket*)>(0x004965F1);
+
+void __fastcall ProcessPacket_Hook(void* pThis, void* /*edx*/, CInPacket* iPacket) {
+    // PEEK, do not consume. The opcode sits at the packet's CURRENT offset, which is not
+    // guaranteed to be 0 at this entry, and the original still has to see it.
+    if (iPacket && iPacket->CanRead(2)) {
+        const size_t entry = iPacket->GetOffset();
+        const unsigned short nType = iPacket->Decode<unsigned short>();
+        iPacket->SetOffset(entry);                 // rewind: never assume absolute 0
+        if (nType == 0x372F) {
+            WeaponTint_HandleSync(iPacket);
+            return;                                // ours: consume, no native handler exists
+        }
+    }
+    oriProcessPacket(pThis, iPacket);
+}
+```
+
+`CanRead`, `GetOffset`, `SetOffset` and `Decode<T>` are the members from 4.2b, so this needs
+nothing beyond what you have already added.
+
+**The handler expects the offset still AT the opcode** and skips it relative to its own entry
+offset, which is why the peek above rewinds. If your dispatcher has already consumed the opcode
+by the time it decides where to route, rewind by two before calling.
+
+This is the **seventh and last** address the feature needs. The six in 4.3 are ones the bundle
+claims for itself; this one is yours, because only you know where your dispatcher lives. (The
+two other addresses this document names, the bullet-flight hook in 4.3 and `0x0093B6A7`, are
+neither claimed nor required.) The one-owner
+rule still applies: if something of yours already Detours `0x004965F1`, add the branch to it
+rather than a second Detour.
+
+> **Getting this wrong is quiet.** Nothing crashes and nothing logs. Dyeing appears to work,
+> because the window applies its own colour optimistically when you press OK. What never happens
+> is anything server-driven: colours are gone after a relog, other players' colours never appear,
+> and the periodic refresh does nothing. Smoke-test steps 6, 7 and 18 are the ones that catch it.
 
 ### 4.6 Dispatch the double-click
 
@@ -961,9 +1069,47 @@ drop addressed to it (`pTo == window` or `window + 4`, since `CWnd` inherits
 over its 32x32 well. Filtering out null `pTo` before the call removes that fallback and
 makes the well feel intermittent.
 
+### 4.7a Dispatch the SKILL drop
+
+The Skills tab takes its target the same way, from a drag out of the skill window.
+
+**Unlike every other hook in this bundle, `coloringprism.cpp` installs this one itself.** It
+Detours `CDraggableSkill::OnDropped` at `0x004FAA22` (vtable `0x00B39810`, slot 1) inside
+`AttachColoringPrismMod()`, so if nothing else in your DLL owns that address you need do nothing
+here at all.
+
+If something of yours DOES own it, the one-owner rule applies as everywhere else: delete the
+`ATTACH_HOOK` line for it in `coloringprism.cpp` and call the entry point from your own hook
+instead.
+
+```cpp
+bool ColorPrism_HandleSkillDrop(void* pTo, int skillId);
+```
+
+The hook has the same argument shape as the item version:
+
+```cpp
+int __thiscall CDraggableSkill::OnDropped(void* pThis, void* pFrom, void* pTo, int rx, int ry)
+```
+
+and the skill id is **not** a parameter. It sits on the draggable itself at `+0x18`, which is
+the field the client's own code pushes into a `CSkillInfo` lookup at `0x007616F6`:
+
+```cpp
+int skillId = *(int*)((char*)pThis + 0x18);     // inside its own __try leaf, as in 4.7
+
+if (ColorPrism_HandleSkillDrop(pTo, skillId)) {
+    return 1;        // consumed: the skill must not also be assigned to a quickslot
+}
+```
+
+`pTo` follows exactly the rule in 4.7: it may legitimately be null, must be passed through
+regardless, and the window accepts either a drop addressed to it or one whose cursor is over the
+well.
+
 ### 4.8 Cash effect items: two more Detours
 
-The last two of the four addresses in 4.3, both for the `5010000..5019999` group:
+The fourth and fifth of the six addresses in 4.3, both for the `5010000..5019999` group:
 
 ```cpp
 0x0093BEB9   __thiscall(CUser*, int nItemID)
@@ -983,32 +1129,76 @@ A third function, `0x0093B6A7`, also reaches this art, and is deliberately **not
 it calls both of the above and additionally serves the `Effect/ItemEff.img` path, so
 hooking it too would swap the same subtree twice.
 
-### 4.9 Optional: item-effect layers
+### 4.9 Item-effect layers
 
-If your DLL renders cape auras or similar from `Effect/ItemEff.img` as their own
-`IWzGr2DLayer`, that art is outside `CAvatar::PrepareActionLayer` and the main hook
-cannot see it. Wrap your layer build to dye it with the same Effects tab:
+**On a stock v3.4.1 base this section applies to you.** That checkout already renders cape
+auras and the like from `Effect/ItemEff.img` as their own `IWzGr2DLayer`: `UpdateItemEff` in
+`src/itemeff.cpp`, reached through `AttachItemEffectMod()`, which is in the same attach list
+4.3 has you extending. That art is built outside `CAvatar::PrepareActionLayer`, so the main
+hook never sees it and a dyed cape keeps a vanilla aura while everything else on the character
+recolours. Two edits, both in `src/itemeff.cpp`.
+
+**One: bracket the layer build.** In `UpdateItemEff`, the call to wrap is the
+`pUser->LoadLayer(...)` that consumes the `Effect/ItemEff.img/<id>/effect/<action>` UOL:
 
 ```cpp
 WeaponTint_BeginItemEffSwap(pAvatar, nItemID);
-const bool ok = pUser->LoadLayer(sUOL, bFlip, layer, nullptr);
+const bool bLoaded = pUser->LoadLayer(sUOL, bFlip, pItemEffectLayer->l, nullptr);
 WeaponTint_EndItemEffSwap();
 ```
 
-Always call `End` if you called `Begin`, even when it returned false. The pair is not
-reentrant.
+The swap has to be open across `LoadLayer` itself, because that is where the layer reads the
+canvases out of the WZ tree and takes its own references to them. Always call `End` if you
+called `Begin`, even when it returned false. The pair is not reentrant.
 
-One catch if you do this: such layers usually cache on item, action and facing, and a
-recolour changes none of the three. Invalidate that cache when a tint changes, or the
-new colour will not appear until the player turns around.
+**Two: invalidate the cache when a tint changes**, or the new colour will not appear until the
+player next turns around. `UpdateItemEff` rebuilds a slot only if the item, the action or the
+facing changed, and a recolour changes none of the three: only the colour of canvases the
+layer already holds. Add:
+
+```cpp
+// Force the next UpdateItemEff to rebuild every slot on this avatar.
+// SEH leaf: the avatar pointer arrives from a table that can outlive the CUser, so a
+// stale entry must fail quietly rather than fault mid-frame.
+void ItemEff_Invalidate(void* pAvatarRaw) {
+    auto* pAvatar = reinterpret_cast<CAvatar*>(pAvatarRaw);
+    if (!pAvatar) return;
+    __try {
+        auto* pCustom = pAvatar->m_pCustomData;
+        if (!pCustom) return;
+        for (auto i = 0; i < AVATAR_EQUIP_SLOTS; ++i) {
+            // -1 rather than 0: an empty slot really is 0, and would still match.
+            pCustom->aItemEffectLayer[i].nItemID = -1;
+            pCustom->aItemEffectLayer[i].nAction = -1;
+        }
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+    }
+}
+```
+
+Declare it in a header `weapontint.cpp` can see, then call it from the two places a tint
+changes. **The bundled `weapontint.cpp` does not call it**, and cannot, since the function is
+yours, so both calls are edits you make. Each goes immediately after one of the two
+`BuildFaceLayer_Hook(pAvatar, nullptr, -1);` calls in that file, and there are exactly two:
+
+- in `WeaponTint_RefreshLocalAvatar()`, for your own character;
+- in `WeaponTint_Tick()`, in the remote-avatar refresh that runs when a new tint table
+  arrives, for everyone else.
+  This one matters more than it looks: that path reloads through `CAvatar::SetMoveAction`
+  rather than `CUser::SetMoveAction`, so `itemeff.cpp`'s own hook does not fire for it at all.
+
+If you do not render item effects, skip the whole section. `WeaponTint_BeginItemEffSwap` and
+`WeaponTint_EndItemEffSwap` simply go uncalled, which is exactly what the bundle ships.
 
 ---
 
 ## 5. Smoke test
 
 1. Buy a Coloring Prism. It should have a name and an icon, and it should land in the
-   **Cash** tab. If the name is "null" or blank, step 2 did not reach `String.wz`; if it
-   lands in Etc, the `cash` flag from step 2 is missing.
+   **Cash** tab. If the name is "null" or blank, the `String.wz` half of step 2 did not
+   land; if the purchase is refused outright, the `Item.wz/Cash/0578.img` half did not.
+   It cannot end up in the wrong tab: the inventory comes from the leading digit of the
+   id alone, so a prism in Etc means you retargeted the item, not that a flag is wrong.
 2. Double-click it. The window opens with your character walking in the preview; arrow
    keys move it, jump and attack work off your own key bindings. **If nothing happens at
    all, the gate in 4.6 is missing** -- that is the single most common failure.
@@ -1017,17 +1207,52 @@ new colour will not appear until the player turns around.
 5. Press OK. The prism is consumed and the item keeps its colour in the field.
 6. Relog. The colour is still there. If it is not, step 3.7 is incomplete.
 7. Have a second character stand next to you. They should see the colour too.
+8. **Put it back.** Drop the same item on the well, zero all three sliders, press OK. The
+   colour reverts and a second prism is consumed. Press OK again on the now-undyed item and it
+   should be REFUSED without consuming anything: an identity tint is sent as a restore, and the
+   server declines when there is nothing to undo. If it burns a prism for a no-op, the restore
+   branch is falling through to the apply path.
 
 Then walk the tabs that use a different code path, because each one fails on its own:
 
-8. **Hair**, then **Skin**. Both need no drop. If these do nothing while Equip works,
+9. **Hair**, then **Skin**. Both need no drop. If these do nothing while Items works,
    check the nine `characters` columns in 3.6.
-9. **Eyes**. This one is built by a separate hook; if it alone does nothing, see 4.3a.
-10. **Effects**, on a cash weapon with a visible glow. Only about 4.45% of equips have
-    effect art, so pick the target deliberately.
-11. A **cash effect item** (`5010000..5019999`), equipped, dropped on the well. This uses
+10. **Eyes**. This one is built by a separate hook; if it alone does nothing, see 4.3a.
+11. **The flame badge**, on a cash weapon with a visible glow. Only about 4.45% of equips
+    have effect art, so pick the target deliberately: on anything else the badge is
+    correctly greyed and refuses the click. If it is greyed on a weapon you know glows,
+    the `LayerBt` canvases from step 2 are merged but the walk is not finding the art; if
+    both badges are missing entirely, those canvases were not merged at all.
+12. A **cash effect item** (`5010000..5019999`), equipped, dropped on the well. This uses
     the `Item.java` columns from 3.9 and the two Detours from 4.8, and it is the only test
-    that covers either.
+    that covers either. Its **sword** badge should be greyed: a cash effect is effect art
+    with no sprite, so there is no item layer to dye.
+13. **A cape with an aura**, or any equip that draws from `Effect/ItemEff.img`, dyed and then
+    watched IN THE FIELD rather than in the preview. The aura should be the new colour, and it
+    should be the new colour without your having to turn around first. If the preview dyes it
+    but the field does not, the bracket from 4.9 is missing; if the field dyes it only after
+    you turn, `ItemEff_Invalidate` is. Skip this step if your DLL does not render item effects
+    at all.
+
+Then the Skills tab, which is a separate feature end to end and shares almost nothing with
+the steps above:
+
+14. Open the **Skills** tab and drag a skill in from your skill window. Its icon appears on
+    the well. If the drop is refused, the Detour in 4.7a did not install, or something else
+    in your DLL owns `0x004FAA22`.
+15. Press your attack key. The skill's effect plays in the preview, in the pose the skill
+    itself names, and the sliders recolour it live.
+16. Press OK, then cast the skill in the field. It comes out dyed. If the preview was
+    coloured but the cast is not, the hook on `0x00933990` is missing from 4.3 -- or it is
+    installed with the wrong arity, which corrupts the stack rather than failing quietly.
+17. Relog and cast again. Still dyed. If not, the `skilltints` table from step 1 or the
+    `Character.java` map from 3.6 is missing; the two fail identically.
+18. Have the second character cast the same dyed skill. **You** should see their colour, not
+    yours and not vanilla. This is the only step that covers the map-table rows, and it
+    fails silently if `skillTintsOf` was left out of `ColorPrismPackets`.
+19. A **multi-projectile** skill, if the class has one. Every shot in the volley should be
+    dyed, not just the first two. If only the first are, see the multi-projectile note in
+    section 6: the bundle deliberately ships that hook uncalled.
 
 ---
 
@@ -1064,9 +1289,18 @@ just `default` / `backDefault`.
 
 **Dyeing works until the item is moved.** `Equip.copy()` is not copying the six fields.
 
-**Every dye is refused with "You don't have a Coloring Prism."** The handler looks for the
-prism in the **Cash** inventory. If the server-side `Item.wz` entry from step 2 is missing
-its `cash` flag, the item lands in Etc or Use instead and the search never finds it.
+**Every dye is refused with "You don't have a Coloring Prism."** The handler searches the
+**Cash** inventory for `ItemId.COLORING_PRISM` and finds nothing. In order of likelihood:
+
+- `05782000` is not resolvable in the SERVER's `Item.wz/Cash/0578.img`. That img is a new file
+  rather than a merge (step 2), and an item is only ever looked up in the img named by the first
+  four digits of its id, so an entry pasted into a neighbouring img is unreachable.
+- `ItemId.COLORING_PRISM` does not match the id the window sends.
+- You retargeted the item outside `5xxxxxx`, which moves it out of the Cash inventory entirely.
+- There genuinely is no prism in the Cash tab.
+
+It is **not** the `cash` flag. That governs trade and drop rules; which tab an item lands in
+comes from the leading digit of its id and involves no WZ lookup at all.
 
 **Hair, Eyes and Skin tabs do nothing, Equip and Effects are fine.** The nine `characters`
 columns are not being loaded or saved. Check step 3.6.

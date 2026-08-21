@@ -242,19 +242,10 @@ void* SehItemAt(int invType, int invPos) {
 // The WZ info node is still required. It is what proves the id names a real item at all,
 // and an id with no info node has no art for the swap to walk either.
 bool IsDyeableEquip(int itemId) {
-    if (itemId / 1000000 != 1) return false;
-    auto* pInfo = CItemInfo::GetInstance();
-    if (!pInfo) return false;
-    try {
-        IWzPropertyPtr p = pInfo->GetItemInfo(itemId);   // == the item's `info` node
-        if (!p) {
-            LOG_ONCE("coloringprism: no WZ info node for item %d", itemId);
-            return false;
-        }
-        return true;
-    } catch (...) {
-        return false;
-    }
+    // Weapons and equips are in the 1xxxxxx range.
+    // In v83, CItemInfo::GetItemInfo does not cleanly handle all cash weapons/equips,
+    // which caused weapons to be rejected when dragged to the UI.
+    return (itemId / 1000000 == 1);
 }
 
 // =====================================================

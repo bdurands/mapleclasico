@@ -3,10 +3,16 @@
 A full dye system using the GMS Coloring Prism item, 5782000. Double-clicking it
 opens a window with a live avatar preview and three sliders: Hue, Chroma, and Value.
 
-**Equip** and **Effects** dye whatever you drag onto the well, under separate keys, so a
-glow recolours independently of the blade it hangs off. The well takes **any equip**, cash
-or not, and also **cash effect items** (5010000..5019999), the ones that sit in the Cash
-tab and play an effect around your character.
+**Items** dyes whatever you drag onto the well. An item carries two independent colours
+under separate keys, its own sprite and the effect art hanging off it, so a glow recolours
+independently of the blade it hangs off; a pair of chips on the preview pane picks which one
+the sliders edit. The well takes **any equip**, cash or not, and also **cash effect items**
+(5010000..5019999), the ones that sit in the Cash tab and play an effect around your character.
+
+**Skills** dyes a skill you drag in from the skill window: the cast, the buff effect on the
+caster, the mob-hit art and every projectile in a volley. The preview plays the cast so you
+can judge the colour before spending anything, and other players see your colours when you
+cast.
 
 **Hair**, **Eyes** and **Skin** dye your own look and need no drop. Skin rotates the body,
 arm and head canvases (`Character/000020NN.img` and `000120NN.img`) on top of whichever
@@ -49,7 +55,7 @@ Three kinds of art sit outside that hook and each needed its own path:
 | cash effects | `Item/Cash/0501.img/<id>/effect` | two client Detours, `0x0093BEB9` and `0x0093C218` |
 
 An item's **effect art** is dyed separately from its body, under the key
-`itemId + 10000000`, which is what the Effects tab writes. In this client that art is
+`itemId + 10000000`, which is what the flame chip on the Items tab writes. In this client that art is
 almost always a leaf canvas named `effect` sitting beside the `weapon` canvas in each
 animation frame: 922 of the 923 equips that have any, against a single one that uses a
 folder of them. Both shapes are handled, and the canvas test has to come first, because
@@ -69,8 +75,9 @@ wz/client/                     .img fragments to merge into the client
 wz/server/                     the same data in the server's XML form
 ```
 
-The backdrop ships only as a finished canvas, inside `wz/client/UI/ColorPrism.img`. There
-is no layered source file in the package, so a redraw starts from that canvas.
+The backdrop ships only as a finished canvas, inside
+`wz/client/UI/UIWindow/ColorPrism.img`. There is no layered source file in the package, so a
+redraw starts from that canvas.
 
 ## The five tabs
 
@@ -101,14 +108,17 @@ merge**, nothing else:
 
 | file | merge into |
 |---|---|
-| `wz/client/UI/ColorPrism.img` | `UI/UIWindow.img`, as a new `ColorPrism` node |
+| `wz/client/UI/UIWindow/ColorPrism.img` | `UI/UIWindow.img`, as a new `ColorPrism` node |
 | `wz/client/String/Cash.img` | `String/Cash.img` (the item's name and description) |
 | `wz/client/Item/Cash/0578.img` | `Item/Cash/0578.img` (the item's icons and `cash` flag) |
 
-`ColorPrism.img` holds the four canvases the window loads: `backgrnd`, the 301x406
+`ColorPrism.img` holds eleven canvases. Four are required: `backgrnd`, the 301x406
 hand-drawn backdrop, and `trackTone` / `trackChroma` / `trackBright`, the three 176x8
 slider gradients. No v83 client has a hue ramp as a standalone canvas, so those three were
-generated rather than lifted.
+generated rather than lifted. Six more are the layer chips,
+`LayerBt/{item,glow}/{normal,on,off}`, the 14x14 sword and flame badges the Items tab draws
+under the preview; without them the tab still works but neither chip is visible, so the
+sliders appear to edit an arbitrary one of the two keys.
 
 The backdrop **bakes the window title and the three row labels** `HUE` / `CHROMA` /
 `VALUE`. Everything else is drawn at runtime, including the banner copy and the tab labels,
@@ -117,14 +127,14 @@ backdrop and those two pieces of baked text are yours to carry over; the layout 
 at the top of `coloringprism.cpp` were measured off this exact canvas and have to be
 re-measured with it.
 
-A fifth canvas, `backgrndLook`, is **optional**. Hair, Eyes and Skin have nothing to drag
+The eleventh, `backgrndLook`, is **optional**. Hair, Eyes and Skin have nothing to drag
 in, so if that node exists the window swaps to it on those three tabs, for a frame with
 no drop well; if it is absent every tab keeps `backgrnd`. Their copy is laid out for it
 either way: two lines instead of three, centred on the whole blue band (interior
 x8..290) rather than the x76 column that clears the icon.
 
 Everything else the window draws is stock: `Basic.img/BtOK2`, `BtCancel2`, `Tab2`,
-`Slider/thumb*` and `UIWindow.img/Bag/BtClose`.
+`Slider/thumb*` and `BtClose`.
 
 `wz/server/` carries the same String and Item entries in the server's XML form.
 The client `.img` and the server XML are **two copies of the same data and must stay in
@@ -139,10 +149,15 @@ unrelated systems, so they are described rather than bundled.
 **Client**
 
 - Build both `.cpp`; call `AttachWeaponTintMod()` and `AttachColoringPrismMod()` at DLL
-  startup. `coloringprism.cpp` Detours nothing at all. `weapontint.cpp` owns **four**
-  addresses: `0x00453AD1` (`PrepareActionLayer`, the body), `0x00453696` (the face
-  builder, which is what makes the Eyes tab work), and `0x0093BEB9` / `0x0093C218` (the
-  two cash-effect builders). The one-owner rule applies to every one of them.
+  startup. The two together own **six** addresses. `weapontint.cpp` takes five:
+  `0x00453AD1` (`PrepareActionLayer`, the body), `0x00453696` (the face builder, which is
+  what makes the Eyes tab work), `0x00933990` (`CUser::ShowSkillEffect`, the whole Skills
+  tab, for local and remote casts alike), and `0x0093BEB9` / `0x0093C218` (the two
+  cash-effect builders). `coloringprism.cpp` takes the sixth, `0x004FAA22`
+  (`CDraggableSkill::OnDropped`), which is how a skill reaches the well. The one-owner rule
+  applies to every one of them.
+- `0x00933990` takes **five** stack args (`__thiscall`, `ret 0x14`). A four-arg declaration
+  compiles and corrupts the stack at runtime rather than failing at link time.
 - Call `WeaponTint_Tick()` once per frame from the update hook.
 - Route inbound opcode `0x372F` to `WeaponTint_HandleSync(CInPacket*)`.
 - Dispatch the double-click from the three cash-use addresses, `0x00A0A63F` /
@@ -166,7 +181,10 @@ unrelated systems, so they are described rather than bundled.
   to -100..100.
 - `Character`: nine fields plus `getHairTint*` / `getFaceTint*` / `getSkinTint*` and the
   matching `set` / `clear` / `is...Tinted` for all three. Load them in the character
-  `SELECT` and write them in the save path.
+  `SELECT` and write them in the save path. Also a `skillTints` map with
+  `getSkillTints` / `isSkillTinted` / `setSkillTint` / `clearSkillTint`, loaded from
+  `skilltints` and written back in the SAME transaction as the rest of the save, so a
+  rollback cannot leave the colours and the character disagreeing.
 - `ItemFactory`: the six equip columns and the three `efftint*` item columns, on the
   INSERTs and on the readers, so a tint survives a relog. Cosmic prepares **each** of
   those two statements in two places, `saveItemsCommon` and `saveItemsMerchant`; bind all
@@ -185,10 +203,17 @@ else. Stock Cosmic's `changelog-root.xml` already ends with `includeAll path="ex
 so adding an `<include>` on top of that registers every changeset twice and Liquibase
 aborts the server at boot.
 
-Eighteen columns in four changesets, no new tables and no foreign keys: six tint columns
-on `inventoryequipment` (the item's own colour, then its effect sprites'), nine on
-`characters` (hair, eyes, then skin), three on `inventoryitems` (cash effect items), and
-an optional shop row you can retarget or delete.
+Eighteen columns and one table, in five changesets: six tint columns on
+`inventoryequipment` (the item's own colour, then its effect sprites'), nine on `characters`
+(hair, eyes, then skin), three on `inventoryitems` (cash effect items), the `skilltints`
+table, and an optional shop row you can retarget or delete.
+
+`skilltints` is the one piece of new schema, and it exists because skills are the one target
+with nowhere to put a colour: a character has exactly one hair and one skin, so those are
+columns, and an item carries its colours on its own inventory row, but a skill has no row and
+a character may dye any number of them. It is keyed `(characterid, skillid)` with a foreign
+key to `characters(id)` that cascades on delete, so a deleted character takes its palettes
+with it rather than leaving them for whoever next gets that id. No row means vanilla.
 
 The columns append at the end of each table rather than pinning a position, so nothing
 here depends on your column order. Make sure your equipment INSERT names its columns
