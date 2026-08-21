@@ -3298,5 +3298,5 @@ void AttachWeaponTintMod() {
         }
     };
     
-    // ATTACH_HOOK(CClientSocket_ProcessPacket, LocalHook::CClientSocket_ProcessPacket_tint_hook);
+    ATTACH_HOOK(CClientSocket_ProcessPacket, LocalHook::CClientSocket_ProcessPacket_tint_hook);
 }
