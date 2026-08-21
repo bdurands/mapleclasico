@@ -3289,7 +3289,7 @@ void AttachWeaponTintMod() {
     struct LocalHook {
         static void __fastcall CClientSocket_ProcessPacket_tint_hook(void* pThis, void* edx, CInPacket* pPacket) {
             if (pPacket && pPacket->CanRead(2)) {
-                if (*reinterpret_cast<const unsigned short*>(pPacket->CurrentPublic()) == kWeaponTintActionOpcode) {
+                if (*reinterpret_cast<const unsigned short*>(pPacket->CurrentPublic()) == kWeaponTintSyncOpcode) {
                     WeaponTint_HandleSync(pPacket);
                     return;
                 }
@@ -3298,5 +3298,5 @@ void AttachWeaponTintMod() {
         }
     };
     
-    ATTACH_HOOK(CClientSocket_ProcessPacket, LocalHook::CClientSocket_ProcessPacket_tint_hook);
+    // ATTACH_HOOK(CClientSocket_ProcessPacket, LocalHook::CClientSocket_ProcessPacket_tint_hook);
 }

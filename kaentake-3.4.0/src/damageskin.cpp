@@ -532,6 +532,12 @@ void Send_DamageSkinPurchase(int nSkinId) {
 // ---------------------------------------------------------------------------
 static void OnPacket_Catalog(CInPacket* p) {
     uint16_t n = InPacket_Decode2(p);
+    FILE* f = nullptr;
+    fopen_s(&f, "damageskin_catalog.txt", "a");
+    if (f) {
+        fprintf(f, "OnPacket_Catalog: received %d skins\n", n);
+        fclose(f);
+    }
     g_vShopCatalog.clear();
     g_vShopCatalog.reserve(n);
     for (uint16_t i = 0; i < n; ++i) {
