@@ -24,7 +24,7 @@ def main():
 
     for root_dir, dirs, files in os.walk(SOURCE_DIR):
         for file in files:
-            if file == "downloads.xml":
+            if file == "downloads.xml" or file == "beauty_debug":
                 continue
             
             filepath = os.path.join(root_dir, file)

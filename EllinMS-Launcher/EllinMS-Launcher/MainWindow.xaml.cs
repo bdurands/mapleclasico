@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Net.Sockets;
+using System.Windows.Threading;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading;
@@ -60,6 +62,29 @@ namespace EllinMS_Launcher
 
         // ── Fade-in animation on load ────────────────────────────────────────
 
+        private DispatcherTimer _bgTimer;
+        private bool _isPlaying = false;
+        private bool _isServerOnline = false;
+
+        private void UpdateButtonState()
+        {
+            if (_isPlaying)
+            {
+                btnPlay.Content = "JUGANDO...";
+                btnPlay.IsEnabled = false;
+            }
+            else if (_busy)
+            {
+                btnPlay.Content = "CANCEL";
+                btnPlay.IsEnabled = true;
+            }
+            else
+            {
+                btnPlay.Content = "PLAY";
+                btnPlay.IsEnabled = _isServerOnline;
+            }
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Smooth fade-in + slight scale animation
@@ -68,6 +93,71 @@ namespace EllinMS_Launcher
                 EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
             };
             this.BeginAnimation(OpacityProperty, fadeIn);
+
+            _bgTimer = new DispatcherTimer();
+            _bgTimer.Interval = TimeSpan.FromSeconds(5);
+            _bgTimer.Tick += BgTimer_Tick;
+            _bgTimer.Start();
+            
+            Task.Run(() => CheckServerStatusAsync());
+        }
+
+        private async void BgTimer_Tick(object sender, EventArgs e)
+        {
+            bool isRunning = false;
+            try
+            {
+                isRunning = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(EXE_NAME)).Length > 0;
+            }
+            catch { }
+
+            if (isRunning != _isPlaying)
+            {
+                _isPlaying = isRunning;
+                UpdateButtonState();
+            }
+
+            await Task.Run(() => CheckServerStatusAsync());
+        }
+
+        private void CheckServerStatusAsync()
+        {
+            bool online = false;
+            try
+            {
+                using (var client = new TcpClient())
+                {
+                    var result = client.BeginConnect("144.217.7.30", 8484, null, null);
+                    var success = result.AsyncWaitHandle.WaitOne(TimeSpan.FromSeconds(2));
+                    if (success)
+                    {
+                        client.EndConnect(result);
+                        online = true;
+                    }
+                }
+            }
+            catch { }
+
+            Dispatcher.InvokeAsync(() =>
+            {
+                _isServerOnline = online;
+                UpdateButtonState();
+
+                if (online)
+                {
+                    lblServerStatus.Text = "EllinMS - ONLINE";
+                    elServerStatus.Fill = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFrom("#FF2ECC40");
+                    dsServerStatus.Color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FF2ECC40");
+                    dsServerStatus.Opacity = 1.0;
+                }
+                else
+                {
+                    lblServerStatus.Text = "EllinMS - OFFLINE";
+                    elServerStatus.Fill = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFrom("#FF888888");
+                    dsServerStatus.Color = System.Windows.Media.Colors.Black;
+                    dsServerStatus.Opacity = 0.5;
+                }
+            });
         }
 
         // ── UI events ────────────────────────────────────────────────────────
@@ -169,6 +259,38 @@ namespace EllinMS_Launcher
                 }
                 SetStatus("¡Descarga completa!", 100);
                 lblFileCount.Text = "";
+            }
+
+            // ── Phase 2.1: Self-Updater Check ────────────────────────────────
+            string launcherExeName = Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName);
+            string newLauncherPath = Path.Combine(GameDir, launcherExeName + ".new");
+            if (File.Exists(newLauncherPath))
+            {
+                SetStatus("Actualizando el Launcher...", 100);
+                await Task.Delay(500);
+
+                string batPath = Path.Combine(GameDir, "update_launcher.bat");
+                string batCode = 
+$@"@echo off
+:loop
+taskkill /F /IM ""{launcherExeName}"" >nul 2>&1
+timeout /t 1 /nobreak >nul
+del ""{launcherExeName}"" >nul 2>&1
+if exist ""{launcherExeName}"" goto loop
+ren ""{launcherExeName}.new"" ""{launcherExeName}""
+start """" ""{launcherExeName}""
+del ""%~f0""
+";
+                File.WriteAllText(batPath, batCode);
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = batPath,
+                    CreateNoWindow = true,
+                    UseShellExecute = true,
+                    WorkingDirectory = GameDir
+                });
+                Environment.Exit(0);
+                return;
             }
 
             // ── Phase 2.5: Anti-Cheat Integrity Check ────────────────────────
@@ -396,9 +518,18 @@ namespace EllinMS_Launcher
                 var localPath = Path.Combine(dir, entry.Name.Replace('/', '\\'));
                 bool needsDownload = false;
 
-                // NUNCA intentar actualizar o borrar el propio Launcher mientras está corriendo
-                if (localPath.Equals(launcherPath, StringComparison.OrdinalIgnoreCase))
+                bool isLauncherEntry = entry.Name.Equals("EllinMS Launcher.exe", StringComparison.OrdinalIgnoreCase);
+
+                if (isLauncherEntry)
                 {
+                    string computedHash = ComputeMd5(launcherPath);
+                    if (computedHash != entry.Hash)
+                    {
+                        var newEntry = entry;
+                        string runningName = Path.GetFileName(launcherPath);
+                        newEntry.Name = runningName + ".new"; 
+                        toDownload.Add(newEntry);
+                    }
                     needsDownload = false;
                 }
                 else if (!File.Exists(localPath))
@@ -622,7 +753,8 @@ namespace EllinMS_Launcher
         /// </summary>
         private async Task DownloadFileWithProgress(FileEntry f, string localPath, Action<int> onBytesDownloaded, CancellationToken ct)
         {
-            using (var response = await _httpClient.GetAsync(f.Url, HttpCompletionOption.ResponseHeadersRead, ct))
+            string urlWithCb = f.Url + (f.Url.Contains("?") ? "&" : "?") + "cb=" + f.Hash;
+            using (var response = await _httpClient.GetAsync(urlWithCb, HttpCompletionOption.ResponseHeadersRead, ct))
             {
                 response.EnsureSuccessStatusCode();
 
@@ -712,7 +844,7 @@ namespace EllinMS_Launcher
         {
             const int BUFFER = 1024 * 1024;
             using (var fs  = new FileStream(path, FileMode.Open, FileAccess.Read,
-                                FileShare.Read, BUFFER, FileOptions.SequentialScan))
+                                FileShare.ReadWrite, BUFFER, FileOptions.SequentialScan))
             using (var md5 = MD5.Create())
             {
                 return BitConverter.ToString(md5.ComputeHash(fs))
@@ -723,13 +855,12 @@ namespace EllinMS_Launcher
 
         private void SetBusy(bool busy)
         {
-            _busy             = busy;
-            btnPlay.IsEnabled = true; // Always enabled — toggles between PLAY and CANCEL
+            _busy = busy;
 
             // Toggle button text
             Dispatcher.Invoke(() =>
             {
-                btnPlay.Content = busy ? "CANCEL" : "PLAY";
+                UpdateButtonState();
             });
         }
 

@@ -187,12 +187,12 @@
                     <!-- ===== TITLE BAR ===== -->
                     <Grid Grid.Row="0" Margin="16,0">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Ellipse Width="10" Height="10" Fill="#FF2ECC40" Margin="0,0,8,0">
+                            <Ellipse x:Name="elServerStatus" Width="10" Height="10" Fill="#FF888888" Margin="0,0,8,0">
                                 <Ellipse.Effect>
-                                    <DropShadowEffect Color="#FF2ECC40" BlurRadius="8" ShadowDepth="0"/>
+                                    <DropShadowEffect x:Name="dsServerStatus" Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.5"/>
                                 </Ellipse.Effect>
                             </Ellipse>
-                            <TextBlock Text="EllinMS Launcher" Foreground="White"
+                            <TextBlock x:Name="lblServerStatus" Text="Comprobando servidor..." Foreground="White"
                                        FontFamily="Segoe UI" FontSize="13" FontWeight="SemiBold"
                                        VerticalAlignment="Center" Opacity="0.9"/>
                         </StackPanel>
@@ -222,7 +222,7 @@
 
                         <!-- Version info bottom-right of content area -->
                         <TextBlock x:Name="lblVersion"
-                                   Text="v1.0.0"
+                                   Text="v1.0.2"
                                    FontFamily="Segoe UI"
                                    FontSize="11"
                                    Foreground="#66FFFFFF"
