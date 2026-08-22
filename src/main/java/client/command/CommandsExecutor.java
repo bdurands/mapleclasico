@@ -355,7 +355,7 @@ public class CommandsExecutor {
         addCommand("equiplv", EquipLvCommand.class);
         addCommand("showrates", ShowRatesCommand.class);
         addCommand("rates", RatesCommand.class);
-        addCommand("online", OnlineCommand.class);
+        //addCommand("online",6, OnlineCommand.class);
         addCommand("gm", GmCommand.class);
         addCommand("reportbug", ReportBugCommand.class);
         addCommand("points", ReadPointsCommand.class);
@@ -426,8 +426,8 @@ public class CommandsExecutor {
         addCommand("job", 2, JobCommand.class);
         addCommand("unbug", 2, UnBugCommand.class);
         addCommand("id", 2, IdCommand.class);
-        addCommand("gachalist", GachaListCommand.class);
-        addCommand("loot", LootCommand.class);
+        //addCommand("gachalist", GachaListCommand.class);
+        //addCommand("loot", LootCommand.class);
         addCommand("mobskill", MobSkillCommand.class);
 
         commandsNameDesc.add(levelCommandsCursor);
