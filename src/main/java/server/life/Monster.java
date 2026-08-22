@@ -778,6 +778,39 @@ public class Monster extends AbstractLoadedLife {
     public Character killBy(final Character killer) {
         distributeExperience(killer != null ? killer.getId() : 0);
 
+        // Custom Boss Points system
+        int bossPointsReward = 0;
+        switch (this.getId()) {
+            case 8820001: // Pink Bean
+                bossPointsReward = 50;
+                break;
+            case 8810018: // Horntail
+                bossPointsReward = 30;
+                break;
+            case 8800002: // Zakum 3
+                bossPointsReward = 20;
+                break;
+            case 8830000: // Scarlion
+            case 8830001: // Targa
+            case 8830002: // Furious Scarlion
+            case 8830003: // Furious Targa
+                bossPointsReward = 15;
+                break;
+            case 8500001: // Papulatus Clock
+            case 8500002: // Papulatus
+                bossPointsReward = 10;
+                break;
+        }
+
+        if (bossPointsReward > 0 && map != null) {
+            for (Character chr : map.getCharacters()) {
+                if (chr.isAlive()) {
+                    chr.gainBossPoints(bossPointsReward);
+                    chr.dropMessage(5, "¡Has recibido " + bossPointsReward + " Boss Points por derrotar a este Jefe!");
+                }
+            }
+        }
+
         final Pair<Character, Boolean> lastController = aggroRemoveController();
         final List<Integer> toSpawn = this.getRevives();
         if (toSpawn != null) {

@@ -20,8 +20,8 @@ function action(mode, type, selection) {
         var votePoints = cm.getClient().getVotePoints();
         var pqPoints = cm.getPlayer().getPqPoints();
         
-        // Boss points no existen de forma nativa con ese nombre en tu source.
-        var bossPoints = "N/A (Falta implementar en el Source)";
+        // Boss points ahora implementados en el Source
+        var bossPoints = cm.getPlayer().getBossPoints();
         
         // Donor Points = Maple Points (Tipo 2 en el CashShop)
         var donorPoints = cm.getPlayer().getCashShop().getCash(2);

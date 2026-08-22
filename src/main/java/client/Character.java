@@ -235,6 +235,7 @@ public class Character extends AbstractCharacterObject {
     private transient long checkinSessionStartTime = System.currentTimeMillis();
     private static final long CHECKIN_PERIOD_MS = 86_400_000L;   // 24h
     private int pqPoints = 0;
+    private int bossPoints = 0;
 
 
     public int getCheckinDay()       { return checkinDay; }
@@ -275,6 +276,7 @@ public class Character extends AbstractCharacterObject {
     }
     
     public int getPqPoints() { return pqPoints; }
+    public int getBossPoints() { return bossPoints; }
 
     public int getWeeklyRuns(String runName) {
         int count = 0;
@@ -318,6 +320,28 @@ public class Character extends AbstractCharacterObject {
         this.pqPoints += points; 
         try (Connection con = DatabaseConnection.getConnection(); PreparedStatement ps = con.prepareStatement("UPDATE characters SET pqPoints = ? WHERE id = ?")) {
             ps.setInt(1, this.pqPoints);
+            ps.setInt(2, this.id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setBossPoints(int points) { 
+        this.bossPoints = points; 
+        try (Connection con = DatabaseConnection.getConnection(); PreparedStatement ps = con.prepareStatement("UPDATE characters SET bossPoints = ? WHERE id = ?")) {
+            ps.setInt(1, this.bossPoints);
+            ps.setInt(2, this.id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void gainBossPoints(int points) { 
+        this.bossPoints += points; 
+        try (Connection con = DatabaseConnection.getConnection(); PreparedStatement ps = con.prepareStatement("UPDATE characters SET bossPoints = ? WHERE id = ?")) {
+            ps.setInt(1, this.bossPoints);
             ps.setInt(2, this.id);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -7075,6 +7099,7 @@ public class Character extends AbstractCharacterObject {
                     } catch (Exception ignore) {}
                     try {
                         ret.pqPoints = rs.getInt("pqPoints");
+                        ret.bossPoints = rs.getInt("bossPoints");
                     } catch (Exception ignore) {}
                     ret.checkinSessionStartTime = System.currentTimeMillis();
                     ret.level = rs.getInt("level");
@@ -8908,6 +8933,12 @@ public class Character extends AbstractCharacterObject {
                     psPq.setInt(1, pqPoints);
                     psPq.setInt(2, id);
                     psPq.executeUpdate();
+                } catch (Exception e) {}
+
+                try (PreparedStatement psBoss = con.prepareStatement("UPDATE characters SET bossPoints = ? WHERE id = ?")) {
+                    psBoss.setInt(1, bossPoints);
+                    psBoss.setInt(2, id);
+                    psBoss.executeUpdate();
                 } catch (Exception e) {}
 
                 if (cashshop != null) {
