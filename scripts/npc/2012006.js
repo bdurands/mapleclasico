@@ -1,8 +1,8 @@
 var status = -1;
 var sel;
 
-var destinations = ["Ellinia", "Ludibrium", "Leafre", "Mu Lung", "Ariant", "Ereve"];
-var boatType = ["the ship", "the train", "the bird", "Hak", "Genie", "the ship"];
+var destinations = ["Ellinia", "Ludibrium", "Leafre", "Mu Lung", "Ariant"];
+var boatType = ["the ship", "the train", "the bird", "Hak", "Genie"];
 
 function start() {
     var message = "Orbis Station has lots of platforms available to choose from. You need to choose the one that'll take you to the destination of your choice. Which platform will you take?\r\n";
