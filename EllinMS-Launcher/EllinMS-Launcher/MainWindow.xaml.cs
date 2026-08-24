@@ -24,7 +24,7 @@ namespace EllinMS_Launcher
         private const string MANIFEST_URL = "https://cdn.ellinms.com/downloads.xml";
         private const string EXE_NAME     = "MapleStory.exe";
         private const string DLL_NAME     = "kaentake.dll";
-        private const string USER_AGENT   = "EllinMS-Launcher/1.0";
+        private const string USER_AGENT   = "EllinMS-Launcher/1.03";
         private const int    MAX_RETRIES  = 3;
         // ─────────────────────────────────────────────
 
@@ -55,8 +55,8 @@ namespace EllinMS_Launcher
 
         public MainWindow()
         {
-            // Force TLS 1.2 for Cloudflare CDN
-            ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
+            // Force TLS 1.2 (TLS 1.3 flag causes NullReferenceException in .NET Framework on Win10)
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             InitializeComponent();
         }
 
@@ -469,9 +469,7 @@ del ""%~f0""
 
             ct.ThrowIfCancellationRequested();
 
-            string xml;
-            using (var wc = MakeWebClient())
-                xml = wc.DownloadString(MANIFEST_URL);
+            string xml = _httpClient.GetStringAsync(MANIFEST_URL).GetAwaiter().GetResult();
 
             progress.Report(("Leyendo lista de archivos...", ""));
 
@@ -830,14 +828,6 @@ del ""%~f0""
             client.DefaultRequestHeaders.UserAgent.ParseAdd(USER_AGENT);
             client.Timeout = TimeSpan.FromMinutes(10);
             return client;
-        }
-
-        // WebClient is still used for the small manifest download (simple & sync-friendly)
-        private WebClient MakeWebClient()
-        {
-            var wc = new WebClient();
-            wc.Headers.Add("User-Agent", USER_AGENT);
-            return wc;
         }
 
         private static string ComputeMd5(string path)

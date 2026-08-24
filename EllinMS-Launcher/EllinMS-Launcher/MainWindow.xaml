@@ -222,7 +222,7 @@
 
                         <!-- Version info bottom-right of content area -->
                         <TextBlock x:Name="lblVersion"
-                                   Text="v1.0.2"
+                                   Text="v1.03"
                                    FontFamily="Segoe UI"
                                    FontSize="11"
                                    Foreground="#66FFFFFF"
