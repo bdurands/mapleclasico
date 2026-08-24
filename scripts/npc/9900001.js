@@ -23,7 +23,8 @@ function start() {
         "#L4#Hair Styles (Part 4)#l\r\n" +
         "#L5#Hair Styles (Part 5)#l\r\n" +
         "#L6#Hair Styles (Part 6)#l\r\n" +
-        "#L7#Hair Color#l");
+        "#L7#Hair Color#l\r\n" +
+        "#L8#Level Up!#l");
 }
 
 function action(mode, type, selection) {
@@ -47,6 +48,14 @@ function action(mode, type, selection) {
                 pushIfItemExists(haircolor, baseHair + k);
             }
             cm.sendStyle("Pick one?", haircolor);
+        } else if (selection == 8) {
+            if (cm.getPlayer().getLevel() < 255) {
+                cm.getPlayer().levelUp(false);
+                cm.sendOk("You have leveled up!");
+            } else {
+                cm.sendOk("You are already max level!");
+            }
+            cm.dispose();
         }
     } else if (status == 2) {
         if (beauty >= 1 && beauty <= 6) {
