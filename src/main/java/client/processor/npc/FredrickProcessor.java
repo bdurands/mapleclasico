@@ -93,6 +93,9 @@ public class FredrickProcessor {
     }
 
     public static int timestampElapsedDays(Timestamp then, long timeNow) {
+        if (then == null) {
+            return 0;
+        }
         return (int) ((timeNow - then.getTime()) / DAYS.toMillis(1));
     }
 
