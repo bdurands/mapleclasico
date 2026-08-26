@@ -160,18 +160,9 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
         }
 
         if (player.isGM() && player.gmLevel() <= 4) {
-            boolean isBossMap = false;
-            for (MapObject mo : map.getMapObjects()) {
-                if (mo.getType() == MapObjectType.MONSTER && ((Monster) mo).isBoss()) {
-                    isBossMap = true;
-                    break;
-                }
-            }
-            if (isBossMap) {
-                player.dropMessage(1, "Los GM de nivel 4 o menor no pueden atacar en mapas de boss.");
-                player.getClient().sendPacket(PacketCreator.enableActions());
-                return;
-            }
+            player.dropMessage(1, "Los GM de nivel 4 o menor no pueden atacar en ningún momento.");
+            player.getClient().sendPacket(PacketCreator.enableActions());
+            return;
         }
 
         Skill theSkill = null;
