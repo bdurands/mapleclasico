@@ -4,6 +4,7 @@
  */
 var status = 0;
 var category = -1;
+var mainSelection = -1;
 var price = 10000000; // 10 Millones
 
 // Arrays de estilos VIP
@@ -16,6 +17,8 @@ var style_list;
 
 function start() {
     status = -1;
+    category = -1;
+    mainSelection = -1;
     action(1, 0, 0);
 }
 
@@ -30,80 +33,95 @@ function action(mode, type, selection) {
     }
 
     if (status == 0) {
-        var text = "¡Hola! Soy el estilista de #bEllinMS#k. \r\nCualquier cambio estético cuesta #r10,000,000 Mesos (10M)#k.\r\n¿Qué te gustaría cambiar hoy?\r\n\r\n";
-        text += "#L0##bCambiar estilo de Cabello#k#l\r\n";
-        text += "#L1##dTeñir el Cabello (Color)#k#l\r\n";
-        text += "#L2##rCambiar Ojos/Rostro (Face)#k#l\r\n";
-        text += "#L3##gCambiar color de Ojos#k#l\r\n";
-        text += "#L4##bReclamar Smegas Gratis (x50)#k#l\r\n";
+        var text = "¡Hola! Soy el estilista de #bEllinMS#k. \r\n¿Qué te gustaría hacer hoy?\r\n\r\n";
+        text += "#L0##bCambiar mi estilo#k#l\r\n";
+        text += "#L1##dReclamar Premios Gratis#k#l\r\n";
         cm.sendSimple(text);
         
     } else if (status == 1) {
-        category = selection;
+        mainSelection = selection;
         
-        if (category != 4 && cm.getMeso() < price) {
-            cm.sendOk("Lo siento, necesitas al menos #r10,000,000 Mesos#k para cualquier cambio de look.");
-            cm.dispose();
-            return;
-        }
-
-        if (category == 0) { // Cabello
-            style_list = (cm.getPlayer().getGender() == 0) ? hair_m : hair_f;
-            cm.sendStyle("Elige el estilo de cabello que más te guste:", style_list);
-            
-        } else if (category == 1) { // Color de Cabello
-            var currentHair = cm.getPlayer().getHair();
-            var baseHair = Math.floor(currentHair / 10) * 10;
-            style_list = [];
-            for (var i = 0; i < 8; i++) {
-                style_list.push(baseHair + i);
-            }
-            cm.sendStyle("Elige el color que deseas para tu cabello actual:", style_list);
-            
-        } else if (category == 2) { // Face
-            style_list = (cm.getPlayer().getGender() == 0) ? face_m : face_f;
-            cm.sendStyle("Elige el estilo de rostro que más te guste:", style_list);
-            
-        } else if (category == 3) { // Color de Face
-            var currentFace = cm.getPlayer().getFace();
-            var faceType = currentFace % 100; // Extrae el ID base de la cara (0 a 99)
-            var genderFaceBase = (cm.getPlayer().getGender() == 0) ? 20000 : 21000;
-            
-            style_list = [];
-            for (var i = 0; i < 8; i++) {
-                // En MS, los colores de cara aumentan de a 100 (20000, 20100, 20200...)
-                style_list.push(genderFaceBase + (i * 100) + faceType);
-            }
-            cm.sendStyle("Elige el color que deseas para tus ojos:", style_list);
-        } else if (category == 4) { // Reclamar Smegas
-            var smegaId = 5390001;
-            var currentSmegas = cm.getItemQuantity(smegaId);
-            if (currentSmegas <= 5) {
-                if (cm.canHold(smegaId, 50)) {
-                    cm.gainItem(smegaId, 50);
-                    cm.sendOk("¡Aquí tienes tus 50 Smegas gratis! Úsalos sabiamente.");
-                } else {
-                    cm.sendOk("No tienes espacio suficiente en tu inventario Cash.");
-                }
-            } else {
-                cm.sendOk("Ya tienes suficientes Smegas. Solo puedes reclamar más si tienes 5 o menos en tu inventario.");
-            }
-            cm.dispose();
+        if (mainSelection == 0) { // Estilos
+            var text = "Cualquier cambio estético cuesta #r10,000,000 Mesos (10M)#k.\r\n¿Qué te gustaría cambiar?\r\n\r\n";
+            text += "#L0##bCambiar estilo de Cabello#k#l\r\n";
+            text += "#L1##dTeñir el Cabello (Color)#k#l\r\n";
+            text += "#L2##rCambiar Ojos/Rostro (Face)#k#l\r\n";
+            text += "#L3##gCambiar color de Ojos#k#l\r\n";
+            cm.sendSimple(text);
+        } else if (mainSelection == 1) { // Premios
+            var text = "¿Qué premio gratuito deseas reclamar?\r\n\r\n";
+            text += "#L0##bReclamar Smegas Gratis (x50)#k#l\r\n";
+            cm.sendSimple(text);
         }
         
     } else if (status == 2) {
-        if (cm.getMeso() >= price) {
-            cm.gainMeso(-price);
+        if (mainSelection == 0) { // Estilos -> Send Style
+            category = selection;
             
-            if (category == 0 || category == 1) {
-                cm.setHair(style_list[selection]);
-            } else if (category == 2 || category == 3) {
-                cm.setFace(style_list[selection]);
+            if (cm.getMeso() < price) {
+                cm.sendOk("Lo siento, necesitas al menos #r10,000,000 Mesos#k para cualquier cambio de look.");
+                cm.dispose();
+                return;
             }
-            
-            cm.sendOk("¡Disfruta tu nuevo estilo VIP!");
-        } else {
-            cm.sendOk("Hubo un error con tus mesos.");
+
+            if (category == 0) { // Cabello
+                style_list = (cm.getPlayer().getGender() == 0) ? hair_m : hair_f;
+                cm.sendStyle("Elige el estilo de cabello que más te guste:", style_list);
+            } else if (category == 1) { // Color de Cabello
+                var currentHair = cm.getPlayer().getHair();
+                var baseHair = Math.floor(currentHair / 10) * 10;
+                style_list = [];
+                for (var i = 0; i < 8; i++) {
+                    style_list.push(baseHair + i);
+                }
+                cm.sendStyle("Elige el color que deseas para tu cabello actual:", style_list);
+            } else if (category == 2) { // Face
+                style_list = (cm.getPlayer().getGender() == 0) ? face_m : face_f;
+                cm.sendStyle("Elige el estilo de rostro que más te guste:", style_list);
+            } else if (category == 3) { // Color de Face
+                var currentFace = cm.getPlayer().getFace();
+                var faceType = currentFace % 100; // Extrae el ID base de la cara (0 a 99)
+                var genderFaceBase = (cm.getPlayer().getGender() == 0) ? 20000 : 21000;
+                
+                style_list = [];
+                for (var i = 0; i < 8; i++) {
+                    style_list.push(genderFaceBase + (i * 100) + faceType);
+                }
+                cm.sendStyle("Elige el color que deseas para tus ojos:", style_list);
+            }
+        } else if (mainSelection == 1) { // Premios -> Reclamar
+            if (selection == 0) { // Smegas
+                var smegaId = 5390001;
+                var currentSmegas = cm.getItemQuantity(smegaId);
+                if (currentSmegas <= 5) {
+                    if (cm.canHold(smegaId, 50)) {
+                        cm.gainItem(smegaId, 50);
+                        cm.sendOk("¡Aquí tienes tus 50 Smegas gratis! Úsalos sabiamente.");
+                    } else {
+                        cm.sendOk("No tienes espacio suficiente en tu inventario Cash.");
+                    }
+                } else {
+                    cm.sendOk("Ya tienes suficientes Smegas. Solo puedes reclamar más si tienes 5 o menos en tu inventario.");
+                }
+            }
+            cm.dispose();
+        }
+        
+    } else if (status == 3) {
+        if (mainSelection == 0) { // Estilos -> Aplicar
+            if (cm.getMeso() >= price) {
+                cm.gainMeso(-price);
+                
+                if (category == 0 || category == 1) {
+                    cm.setHair(style_list[selection]);
+                } else if (category == 2 || category == 3) {
+                    cm.setFace(style_list[selection]);
+                }
+                
+                cm.sendOk("¡Disfruta tu nuevo estilo VIP!");
+            } else {
+                cm.sendOk("Hubo un error con tus mesos.");
+            }
         }
         cm.dispose();
     }
