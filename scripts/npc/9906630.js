@@ -136,13 +136,6 @@ function action(mode, type, selection) {
             hairnew = [];
             haircolor = [];
             
-            var donorPoints = cm.getPlayer().getCashShop().getCash(2);
-            if (donorPoints < donorPrice) {
-                cm.sendOk("Lo siento, necesitas al menos #r" + donorPrice + " Donor Points#k para usar la sección VIP.");
-                cm.dispose();
-                return;
-            }
-            
             if (donorCategory >= 0 && donorCategory <= 5) { // Part 1 to 6
                 var chunk = Math.ceil(allHairs.length / 6);
                 var selectedHair = allHairs.slice(donorCategory * chunk, (donorCategory + 1) * chunk);
@@ -174,7 +167,7 @@ function action(mode, type, selection) {
                 
                 cm.sendOk("¡Disfruta tu nuevo estilo VIP!");
             } else {
-                cm.sendOk("Hubo un error con tus mesos.");
+                cm.sendOk("Lo siento, necesitas al menos #r10,000,000 Mesos#k para realizar este cambio.");
             }
         } else if (mainSelection == 2) { // DONOR -> Aplicar
             var donorPoints = cm.getPlayer().getCashShop().getCash(2);
@@ -189,7 +182,7 @@ function action(mode, type, selection) {
                     cm.sendOk("¡Disfruta tu nuevo color de DONOR!");
                 }
             } else {
-                cm.sendOk("Hubo un error con tus Donor Points.");
+                cm.sendOk("Lo siento, necesitas al menos #r" + donorPrice + " Donor Points#k para realizar este cambio.");
             }
         }
         cm.dispose();
