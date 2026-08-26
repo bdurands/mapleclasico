@@ -46,11 +46,11 @@ function action(mode, type, selection) {
             status--;
         }
         if (status == 0 && cm.haveItem(ticketId)) {
-            if (cm.canHold(1302000) && cm.canHold(2000000) && cm.canHold(3010001) && cm.canHold(4000000)) { // One free slot in every inventory.
+            if (cm.getInventory(1).getNumFreeSlot() >= 2 && cm.getInventory(2).getNumFreeSlot() >= 2 && cm.getInventory(3).getNumFreeSlot() >= 2 && cm.getInventory(4).getNumFreeSlot() >= 2 && cm.getInventory(5).getNumFreeSlot() >= 2) { // Two free slots in every inventory.
                 cm.gainItem(ticketId, -1);
                 cm.doGachapon();
             } else {
-                cm.sendOk("Please have at least one slot in your #rEQUIP, USE, SET-UP, #kand #rETC#k inventories free.");
+                cm.sendOk("Please have at least two empty slots in your #rEQUIP, USE, SET-UP, ETC, #kand #rCASH#k inventories.");
             }
         } else {
             cm.dispose();

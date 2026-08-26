@@ -52,13 +52,20 @@ var coinId = 4001158;
 var coins = 0;
 
 var hasCoin = false;
-var currentTier;
-var curItemQty;
-var curItemSel;
+var currentTier = -1;
+var curItemQty = 0;
+var curItemSel = -1;
 var advance = true;
 
 function start() {
     status = -1;
+    tickets = [0, 0, 0, 0, 0, 0];
+    coins = 0;
+    hasCoin = false;
+    currentTier = -1;
+    curItemQty = 0;
+    curItemSel = -1;
+    advance = true;
     action(1, 0, 0);
 }
 
@@ -237,26 +244,36 @@ function givePrize() {
         lvQty = itemQty_lv6;
     }
 
-    if (!hasRewardSlot(lvTarget, lvQty)) {
-        cm.sendOk("Check for an available space on your inventory before retrieving a prize.");
-    } else {
-        var rnd = Math.floor(Math.random() * lvTarget.length);
+    // Pick the random reward first
+    var rnd = Math.floor(Math.random() * lvTarget.length);
 
-        for (var i = 0; i < tickets.length; i++) {
+    // Only check if the player can hold the specifically chosen item
+    if (!cm.canHold(lvTarget[rnd], lvQty[rnd])) {
+        cm.sendOk("Please check your inventory, you don't have enough space for the prize.");
+        return;
+    }
+
+    // Security check: verify they actually still have the erasers/coins they committed
+    for (var i = 0; i < tickets.length; i++) {
+        if (tickets[i] > 0 && !cm.haveItem(4001009 + i, tickets[i])) {
+            cm.sendOk("You don't have enough erasers. Please try again.");
+            return;
+        }
+    }
+    if (coins > 0 && !cm.haveItem(coinId, coins)) {
+        cm.sendOk("You don't have enough feathers. Please try again.");
+        return;
+    }
+
+    // Now it's safe to take the items
+    for (var i = 0; i < tickets.length; i++) {
+        if (tickets[i] > 0) {
             cm.gainItem(4001009 + i, -1 * tickets[i]);
         }
+    }
+    if (coins > 0) {
         cm.gainItem(coinId, -1 * coins);
-
-        cm.gainItem(lvTarget[rnd], lvQty[rnd]);
-    }
-}
-
-function hasRewardSlot(lvTarget, lvQty) {
-    for (var i = 0; i < lvTarget.length; i++) {
-        if (!cm.canHold(lvTarget[i], lvQty[i])) {
-            return false;
-        }
     }
 
-    return true;
+    cm.gainItem(lvTarget[rnd], lvQty[rnd]);
 }

@@ -35,12 +35,13 @@ function action(mode, type, selection) {
         text += "#L1##dTeñir el Cabello (Color)#k#l\r\n";
         text += "#L2##rCambiar Ojos/Rostro (Face)#k#l\r\n";
         text += "#L3##gCambiar color de Ojos#k#l\r\n";
+        text += "#L4##bReclamar Smegas Gratis (x50)#k#l\r\n";
         cm.sendSimple(text);
         
     } else if (status == 1) {
         category = selection;
         
-        if (cm.getMeso() < price) {
+        if (category != 4 && cm.getMeso() < price) {
             cm.sendOk("Lo siento, necesitas al menos #r10,000,000 Mesos#k para cualquier cambio de look.");
             cm.dispose();
             return;
@@ -74,6 +75,20 @@ function action(mode, type, selection) {
                 style_list.push(genderFaceBase + (i * 100) + faceType);
             }
             cm.sendStyle("Elige el color que deseas para tus ojos:", style_list);
+        } else if (category == 4) { // Reclamar Smegas
+            var smegaId = 5390001;
+            var currentSmegas = cm.getItemQuantity(smegaId);
+            if (currentSmegas <= 5) {
+                if (cm.canHold(smegaId, 50)) {
+                    cm.gainItem(smegaId, 50);
+                    cm.sendOk("¡Aquí tienes tus 50 Smegas gratis! Úsalos sabiamente.");
+                } else {
+                    cm.sendOk("No tienes espacio suficiente en tu inventario Cash.");
+                }
+            } else {
+                cm.sendOk("Ya tienes suficientes Smegas. Solo puedes reclamar más si tienes 5 o menos en tu inventario.");
+            }
+            cm.dispose();
         }
         
     } else if (status == 2) {
