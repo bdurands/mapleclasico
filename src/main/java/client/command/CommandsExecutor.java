@@ -355,7 +355,7 @@ public class CommandsExecutor {
         addCommand("equiplv", EquipLvCommand.class);
         addCommand("showrates", ShowRatesCommand.class);
         addCommand("rates", RatesCommand.class);
-        //addCommand("online",6, OnlineCommand.class);
+        //
         addCommand("gm", GmCommand.class);
         addCommand("reportbug", ReportBugCommand.class);
         addCommand("points", ReadPointsCommand.class);
@@ -394,8 +394,9 @@ public class CommandsExecutor {
 
         addCommand("recharge", 2, RechargeCommand.class);
         addCommand("whereami", 2, WhereaMiCommand.class);
-        addCommand("hide", 2, HideCommand.class);
-        addCommand("unhide", 2, UnHideCommand.class);
+        addCommand("online", 2, OnlineCommand.class);
+        addCommand("hide", 3, HideCommand.class);
+        addCommand("unhide", 3, UnHideCommand.class);
         addCommand("sp", 2, SpCommand.class);
         addCommand("ap", 2, ApCommand.class);
         addCommand("empowerme", 2, EmpowerMeCommand.class);
@@ -412,7 +413,7 @@ public class CommandsExecutor {
         addCommand("gmshop", 2, GmShopCommand.class);
         addCommand("heal", 2, HealCommand.class);
         addCommand("item", 2, ItemCommand.class);
-        addCommand("drop", 2, ItemDropCommand.class);
+        addCommand("drop", 3, ItemDropCommand.class);
         addCommand("level", 2, LevelCommand.class);
         addCommand("levelpro", 2, LevelProCommand.class);
         addCommand("setslot", 2, SetSlotCommand.class);
