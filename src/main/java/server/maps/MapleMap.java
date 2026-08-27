@@ -1881,7 +1881,8 @@ public class MapleMap {
     public void spawnMonsterOnGroundBelow(Monster mob, Point pos) {
         Point spos = new Point(pos.x, pos.y - 1);
         spos = calcPointBelow(spos);
-        spos.y--;
+        if (spos == null) spos = new Point(pos.x, pos.y);
+        else spos.y--;
         mob.setPosition(spos);
         spawnMonster(mob);
     }
@@ -1889,7 +1890,8 @@ public class MapleMap {
     public void spawnCPQMonster(Monster mob, Point pos, int team) {
         Point spos = new Point(pos.x, pos.y - 1);
         spos = calcPointBelow(spos);
-        spos.y--;
+        if (spos == null) spos = new Point(pos.x, pos.y);
+        else spos.y--;
         mob.setPosition(spos);
         mob.setTeam(team);
         spawnMonster(mob);
@@ -1908,7 +1910,8 @@ public class MapleMap {
     public Point getGroundBelow(Point pos) {
         Point spos = new Point(pos.x, pos.y - 14); // Using -14 fixes spawning pets causing a lot of issues.
         spos = calcPointBelow(spos);
-        spos.y--;//shouldn't be null!
+        if (spos == null) spos = new Point(pos.x, pos.y);
+        else spos.y--;//shouldn't be null!
         return spos;
     }
 
