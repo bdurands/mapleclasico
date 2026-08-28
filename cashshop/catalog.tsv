@@ -1809,3 +1809,7 @@
 5910000	100	    1	7	0	0	2	1	Skin Damage
 5920000	100	    1	7	0	0	2	1	Salon save
 5590001	500	    1	7	0	7	2	1	Hyper Rock  7 day
+5530000	4000	1	5	2	0	2	Equip Slot Expansion (8 slots)
+5530001	4000	1	5	2	0	2	Use Slot Expansion (8 slots)
+5530002	4000	1	5	2	0	2	Setup Slot Expansion (8 slots)
+5530003	4000	1	5	2	0	2	Etc Slot Expansion (8 slots)
