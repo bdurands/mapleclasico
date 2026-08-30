@@ -301,8 +301,8 @@ function action(mode, type, selection) {
 function getSlotPurchaseCount(invType) {
     var qId = SLOT_QUEST_BASE + invType - 1; // 9999101=Equip, 9999102=Use, 9999103=Setup, 9999104=Etc
     var record = cm.getQuestRecord(qId);
-    if (record != null && record.getCustomData() != null && !record.getCustomData().equals("")) {
-        return parseInt(record.getCustomData());
+    if (record != null && record.getCustomData() != null && ("" + record.getCustomData()) != "") {
+        return parseInt("" + record.getCustomData());
     }
     return 0;
 }

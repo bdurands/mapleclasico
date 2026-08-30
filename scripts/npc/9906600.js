@@ -162,7 +162,7 @@ function action(mode, type, selection) {
 // Funciones Auxiliares para manejo de progreso
 function isTierCompleted(qId) {
     var record = cm.getQuestRecord(qId);
-    return record != null && record.getCustomData() != null && record.getCustomData().equals("done");
+    return record != null && record.getCustomData() != null && ("" + record.getCustomData()) == "done";
 }
 
 function setTierCompleted(qId) {
