@@ -102,7 +102,7 @@ function action(mode, type, selection) {
         var hasMeso = cm.getMeso() >= tier.meso;
         
         text += (hasItem ? "#b" : "#r") + " - " + tier.count + "x #i" + tier.item + "# #t" + tier.item + "##k\r\n";
-        text += (hasMeso ? "#b" : "#r") + " - " + cm.formatNumber(tier.meso) + " Mesos#k\r\n\r\n";
+        text += (hasMeso ? "#b" : "#r") + " - " + tier.meso.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " Mesos#k\r\n\r\n";
         
         text += "¿Tienes todo listo para el intercambio?";
         
