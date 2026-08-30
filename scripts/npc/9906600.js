@@ -58,6 +58,11 @@ var tiers = [
 ];
 
 function start() {
+    if (cm.getPlayer().gmLevel() <= 2) {
+        cm.sendOk("Este NPC no está disponible en este momento.");
+        cm.dispose();
+        return;
+    }
     status = -1;
     action(1, 0, 0);
 }
