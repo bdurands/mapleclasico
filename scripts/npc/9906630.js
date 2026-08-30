@@ -78,7 +78,7 @@ function action(mode, type, selection) {
         text += "#L0##bCambiar mi estilo#k#l\r\n";
         text += "#L1##dReclamar Premios Gratis#k#l\r\n";
         text += "#L2##rCambiar mi estilo (DONOR)#k#l\r\n";
-        text += "#L3##gComprar Inventario Slots#k#l\r\n";
+        text += "#L3##dComprar Inventario Slots#k#l\r\n";
         cm.sendSimple(text);
         
     } else if (status == 1) {
