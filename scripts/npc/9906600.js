@@ -117,21 +117,22 @@ function action(mode, type, selection) {
             cm.gainItem(tier.item, -tier.count);
             cm.gainMeso(-tier.meso);
             
-            // Aumentar HP y MP
-            var newHp = cm.getPlayer().getMaxHp() + tier.hp;
-            var newMp = cm.getPlayer().getMaxMp() + tier.mp;
+            // Calcular nuevos valores de MaxHP y MaxMP
+            var newMaxHp = cm.getPlayer().getMaxHp() + tier.hp;
+            var newMaxMp = cm.getPlayer().getMaxMp() + tier.mp;
             
-            cm.getPlayer().setMaxHp(newHp);
-            cm.getPlayer().setMaxMp(newMp);
+            // Aplicar el incremento usando el método correcto del engine
+            // updateMaxHpMaxMp actualiza internamente: maxhp, maxmp, localmaxhp, localmaxmp
+            // y envía el paquete de stats al cliente automáticamente
+            cm.getPlayer().updateMaxHpMaxMp(newMaxHp, newMaxMp);
             
-            // Actualizar stats visualmente para el jugador
-            cm.getPlayer().updateSingleStat(Packages.client.Stat.MAXHP, newHp);
-            cm.getPlayer().updateSingleStat(Packages.client.Stat.MAXMP, newMp);
+            // Guardar en base de datos para que persista al relogear
+            cm.getPlayer().saveCharToDB();
             
-            // Marcar tier como completado usando QuestRecord (muy seguro en Kaentake/v83)
+            // Marcar tier como completado usando QuestRecord
             setTierCompleted(tier.questId);
             
-            // Efecto visual y de sonido opcional
+            // Mensaje al jugador
             cm.getPlayer().dropMessage(5, "¡Tus límites físicos han aumentado! +" + tier.hp + " MaxHP / +" + tier.mp + " MaxMP.");
             
             cm.sendOk("¡La poción ha sido un éxito! Siente cómo la energía recorre tus venas. Tu HP y MP máximo han aumentado de forma permanente.");
