@@ -196,6 +196,33 @@ function action(mode, type, selection) {
             } else {
                 cm.dispose();
             }
+        } else if (mainSelection == 3) { // Inventario Slots -> Confirmar compra
+            slotSelection = selection;
+            var invType = slotTypes[slotSelection];
+            var currentSlots = cm.getPlayer().getSlots(invType);
+            
+            if (currentSlots >= SLOT_MAX) {
+                cm.sendOk("Ya tienes el máximo de #r" + SLOT_MAX + " slots#k en tu inventario de #b" + slotNames[slotSelection] + "#k. No puedes comprar más.");
+                cm.dispose();
+                return;
+            }
+            
+            var purchaseCount = getSlotPurchaseCount(invType);
+            var nxCost = SLOT_BASE_PRICE + (purchaseCount * SLOT_PRICE_INCREMENT);
+            var nxAvailable = cm.getPlayer().getCashShop().getCash(1);
+            
+            if (nxAvailable < nxCost) {
+                cm.sendOk("No tienes suficiente NX. Necesitas #r" + formatNumber(nxCost) + " NX#k pero solo tienes #b" + formatNumber(nxAvailable) + " NX#k.");
+                cm.dispose();
+                return;
+            }
+            
+            var text = "¿Estás seguro que deseas comprar #b+" + SLOT_AMOUNT + " " + slotNames[slotSelection] + " Slots#k?\r\n\r\n";
+            text += "Slots actuales: #b" + currentSlots + "#k → #g" + (currentSlots + SLOT_AMOUNT) + "#k\r\n";
+            text += "Costo: #r" + formatNumber(nxCost) + " NX#k\r\n";
+            text += "Tu NX: #b" + formatNumber(nxAvailable) + " NX#k";
+            
+            cm.sendYesNo(text);
         }
         
     } else if (status == 3) {
@@ -230,36 +257,7 @@ function action(mode, type, selection) {
                 cm.sendOk("Lo siento, necesitas al menos #r" + donorPrice + " Donor Points#k para realizar este cambio.");
             }
             cm.dispose();
-        } else if (mainSelection == 3) { // Inventario Slots -> Confirmar compra
-            slotSelection = selection;
-            var invType = slotTypes[slotSelection];
-            var currentSlots = cm.getPlayer().getSlots(invType);
-            
-            if (currentSlots >= SLOT_MAX) {
-                cm.sendOk("Ya tienes el máximo de #r" + SLOT_MAX + " slots#k en tu inventario de #b" + slotNames[slotSelection] + "#k. No puedes comprar más.");
-                cm.dispose();
-                return;
-            }
-            
-            var purchaseCount = getSlotPurchaseCount(invType);
-            var nxCost = SLOT_BASE_PRICE + (purchaseCount * SLOT_PRICE_INCREMENT);
-            var nxAvailable = cm.getPlayer().getCashShop().getCash(1);
-            
-            if (nxAvailable < nxCost) {
-                cm.sendOk("No tienes suficiente NX. Necesitas #r" + formatNumber(nxCost) + " NX#k pero solo tienes #b" + formatNumber(nxAvailable) + " NX#k.");
-                cm.dispose();
-                return;
-            }
-            
-            var text = "¿Estás seguro que deseas comprar #b+" + SLOT_AMOUNT + " " + slotNames[slotSelection] + " Slots#k?\r\n\r\n";
-            text += "Slots actuales: #b" + currentSlots + "#k → #g" + (currentSlots + SLOT_AMOUNT) + "#k\r\n";
-            text += "Costo: #r" + formatNumber(nxCost) + " NX#k\r\n";
-            text += "Tu NX: #b" + formatNumber(nxAvailable) + " NX#k";
-            
-            cm.sendYesNo(text);
-        }
-    } else if (status == 4) {
-        if (mainSelection == 3) { // Inventario Slots -> Ejecutar compra
+        } else if (mainSelection == 3) { // Inventario Slots -> Ejecutar compra
             var invType = slotTypes[slotSelection];
             var currentSlots = cm.getPlayer().getSlots(invType);
             var purchaseCount = getSlotPurchaseCount(invType);
@@ -292,8 +290,8 @@ function action(mode, type, selection) {
             
             var newSlots = cm.getPlayer().getSlots(invType);
             cm.sendOk("¡Compra exitosa! Tu inventario de #b" + slotNames[slotSelection] + "#k ahora tiene #g" + newSlots + " slots#k.\r\n\r\nVuelve cuando quieras expandir más.");
+            cm.dispose();
         }
-        cm.dispose();
     }
 }
 
