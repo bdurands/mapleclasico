@@ -6,8 +6,18 @@ var status = 0;
 var category = -1;
 var mainSelection = -1;
 var donorCategory = -1;
+var slotSelection = -1;
 var price = 10000000; // 10 Millones
 var donorPrice = 50; // Costo en MaplePoints (Donor Points)
+
+// Inventario Slots config
+var SLOT_QUEST_BASE = 9999101; // Quest IDs: 9999101 (Equip), 9999102 (Use), 9999103 (Setup), 9999104 (Etc)
+var SLOT_BASE_PRICE = 4000; // Primera compra: 4000 NX
+var SLOT_PRICE_INCREMENT = 2000; // Incremento por compra: +2000
+var SLOT_AMOUNT = 8; // Slots por compra
+var SLOT_MAX = 96; // Máximo de slots
+var slotNames = ["Equip", "Use", "Setup", "Etc"];
+var slotTypes = [1, 2, 3, 4]; // InventoryType indices
 
 // Arrays de estilos VIP normales
 var hair_m = [30030, 30020, 30000, 30130, 30190, 30110, 30180, 30050, 30040, 30160, 30230, 30240, 30290, 30350, 30450];
@@ -32,6 +42,7 @@ function start() {
     category = -1;
     mainSelection = -1;
     donorCategory = -1;
+    slotSelection = -1;
     hairnew = [];
     haircolor = [];
     action(1, 0, 0);
@@ -52,6 +63,7 @@ function action(mode, type, selection) {
         text += "#L0##bCambiar mi estilo#k#l\r\n";
         text += "#L1##dReclamar Premios Gratis#k#l\r\n";
         text += "#L2##rCambiar mi estilo (DONOR)#k#l\r\n";
+        text += "#L3##gComprar Inventario Slots#k#l\r\n";
         cm.sendSimple(text);
         
     } else if (status == 1) {
@@ -77,6 +89,23 @@ function action(mode, type, selection) {
             text += "#L4#Hair Styles (Part 5)#l\r\n";
             text += "#L5#Hair Styles (Part 6)#l\r\n";
             text += "#L6#Hair Color#l\r\n";
+            cm.sendSimple(text);
+        } else if (mainSelection == 3) { // Inventario Slots
+            var text = "#e#b[ Comprar Inventario Slots ]#k#n\r\n\r\n";
+            text += "Puedes expandir tu inventario en #b+" + SLOT_AMOUNT + " slots#k por pestaña.\r\nEl precio aumenta con cada compra. Máximo #r" + SLOT_MAX + " slots#k por pestaña.\r\n\r\n";
+            
+            for (var i = 0; i < slotTypes.length; i++) {
+                var currentSlots = cm.getPlayer().getSlots(slotTypes[i]);
+                var purchaseCount = getSlotPurchaseCount(slotTypes[i]);
+                var nextPrice = SLOT_BASE_PRICE + (purchaseCount * SLOT_PRICE_INCREMENT);
+                
+                if (currentSlots >= SLOT_MAX) {
+                    text += "#L" + i + "##r[MÁXIMO] " + slotNames[i] + " Slots (" + currentSlots + "/" + SLOT_MAX + ")#k#l\r\n";
+                } else {
+                    text += "#L" + i + "##b" + slotNames[i] + " Slots +" + SLOT_AMOUNT + "#k (Actual: " + currentSlots + "/" + SLOT_MAX + ") - #r" + nextPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " NX#k#l\r\n";
+                }
+            }
+            
             cm.sendSimple(text);
         }
         
@@ -169,6 +198,7 @@ function action(mode, type, selection) {
             } else {
                 cm.sendOk("Lo siento, necesitas al menos #r10,000,000 Mesos#k para realizar este cambio.");
             }
+            cm.dispose();
         } else if (mainSelection == 2) { // DONOR -> Aplicar
             var donorPoints = cm.getPlayer().getCashShop().getCash(2);
             if (donorPoints >= donorPrice) {
@@ -184,7 +214,89 @@ function action(mode, type, selection) {
             } else {
                 cm.sendOk("Lo siento, necesitas al menos #r" + donorPrice + " Donor Points#k para realizar este cambio.");
             }
+            cm.dispose();
+        } else if (mainSelection == 3) { // Inventario Slots -> Confirmar compra
+            slotSelection = selection;
+            var invType = slotTypes[slotSelection];
+            var currentSlots = cm.getPlayer().getSlots(invType);
+            
+            if (currentSlots >= SLOT_MAX) {
+                cm.sendOk("Ya tienes el máximo de #r" + SLOT_MAX + " slots#k en tu inventario de #b" + slotNames[slotSelection] + "#k. No puedes comprar más.");
+                cm.dispose();
+                return;
+            }
+            
+            var purchaseCount = getSlotPurchaseCount(invType);
+            var nxCost = SLOT_BASE_PRICE + (purchaseCount * SLOT_PRICE_INCREMENT);
+            var nxAvailable = cm.getPlayer().getCashShop().getCash(1);
+            
+            if (nxAvailable < nxCost) {
+                cm.sendOk("No tienes suficiente NX. Necesitas #r" + nxCost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " NX#k pero solo tienes #b" + nxAvailable.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " NX#k.");
+                cm.dispose();
+                return;
+            }
+            
+            var text = "¿Estás seguro que deseas comprar #b+" + SLOT_AMOUNT + " " + slotNames[slotSelection] + " Slots#k?\r\n\r\n";
+            text += "Slots actuales: #b" + currentSlots + "#k → #g" + (currentSlots + SLOT_AMOUNT) + "#k\r\n";
+            text += "Costo: #r" + nxCost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " NX#k\r\n";
+            text += "Tu NX: #b" + nxAvailable.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " NX#k";
+            
+            cm.sendYesNo(text);
+        }
+    } else if (status == 4) {
+        if (mainSelection == 3) { // Inventario Slots -> Ejecutar compra
+            var invType = slotTypes[slotSelection];
+            var currentSlots = cm.getPlayer().getSlots(invType);
+            var purchaseCount = getSlotPurchaseCount(invType);
+            var nxCost = SLOT_BASE_PRICE + (purchaseCount * SLOT_PRICE_INCREMENT);
+            var nxAvailable = cm.getPlayer().getCashShop().getCash(1);
+            
+            // Doble verificación de seguridad
+            if (currentSlots >= SLOT_MAX) {
+                cm.sendOk("Ya alcanzaste el máximo de slots.");
+                cm.dispose();
+                return;
+            }
+            if (nxAvailable < nxCost) {
+                cm.sendOk("No tienes suficiente NX.");
+                cm.dispose();
+                return;
+            }
+            if (!cm.getPlayer().canGainSlots(invType, SLOT_AMOUNT)) {
+                cm.sendOk("No puedes exceder el máximo de #r" + SLOT_MAX + " slots#k.");
+                cm.dispose();
+                return;
+            }
+            
+            // Cobrar NX y dar slots
+            cm.getPlayer().getCashShop().gainCash(1, -nxCost);
+            cm.getPlayer().gainSlots(invType, SLOT_AMOUNT);
+            
+            // Registrar la compra
+            incrementSlotPurchaseCount(invType);
+            
+            var newSlots = cm.getPlayer().getSlots(invType);
+            cm.sendOk("¡Compra exitosa! Tu inventario de #b" + slotNames[slotSelection] + "#k ahora tiene #g" + newSlots + " slots#k.\r\n\r\nVuelve cuando quieras expandir más.");
         }
         cm.dispose();
+    }
+}
+
+// Funciones auxiliares para el sistema de Inventario Slots
+function getSlotPurchaseCount(invType) {
+    var qId = SLOT_QUEST_BASE + invType - 1; // 9999101=Equip, 9999102=Use, 9999103=Setup, 9999104=Etc
+    var record = cm.getQuestRecord(qId);
+    if (record != null && record.getCustomData() != null && !record.getCustomData().equals("")) {
+        return parseInt(record.getCustomData());
+    }
+    return 0;
+}
+
+function incrementSlotPurchaseCount(invType) {
+    var qId = SLOT_QUEST_BASE + invType - 1;
+    var count = getSlotPurchaseCount(invType) + 1;
+    var record = cm.getQuestRecord(qId);
+    if (record != null) {
+        record.setCustomData("" + count);
     }
 }
