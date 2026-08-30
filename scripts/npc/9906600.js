@@ -4,6 +4,20 @@ var selectionTier = -1;
 // ID base para los registros de progreso de la misión
 var QUEST_BASE_ID = 9999000;
 
+// Función auxiliar para formatear números con comas (GraalVM no soporta regex literals)
+function formatNumber(num) {
+    var str = "" + num;
+    var result = "";
+    var count = 0;
+    for (var i = str.length - 1; i >= 0; i--) {
+        result = str.charAt(i) + result;
+        count++;
+        if (count % 3 == 0 && i > 0) {
+            result = "," + result;
+        }
+    }
+    return result;
+}
 var tiers = [
     { 
         level: 50, 
@@ -102,7 +116,7 @@ function action(mode, type, selection) {
         var hasMeso = cm.getMeso() >= tier.meso;
         
         text += (hasItem ? "#b" : "#r") + " - " + tier.count + "x #i" + tier.item + "# #t" + tier.item + "##k\r\n";
-        text += (hasMeso ? "#b" : "#r") + " - " + tier.meso.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " Mesos#k\r\n\r\n";
+        text += (hasMeso ? "#b" : "#r") + " - " + formatNumber(tier.meso) + " Mesos#k\r\n\r\n";
         
         text += "¿Tienes todo listo para el intercambio?";
         

@@ -19,6 +19,21 @@ var SLOT_MAX = 96; // Máximo de slots
 var slotNames = ["Equip", "Use", "Setup", "Etc"];
 var slotTypes = [1, 2, 3, 4]; // InventoryType indices
 
+// Función auxiliar para formatear números con comas (GraalVM no soporta regex literals)
+function formatNumber(num) {
+    var str = "" + num;
+    var result = "";
+    var count = 0;
+    for (var i = str.length - 1; i >= 0; i--) {
+        result = str.charAt(i) + result;
+        count++;
+        if (count % 3 == 0 && i > 0) {
+            result = "," + result;
+        }
+    }
+    return result;
+}
+
 // Arrays de estilos VIP normales
 var hair_m = [30030, 30020, 30000, 30130, 30190, 30110, 30180, 30050, 30040, 30160, 30230, 30240, 30290, 30350, 30450];
 var hair_f = [31040, 31000, 31050, 31030, 31070, 31150, 31160, 31100, 31120, 31140, 31230, 31270, 31480, 31590, 31690];
@@ -102,7 +117,7 @@ function action(mode, type, selection) {
                 if (currentSlots >= SLOT_MAX) {
                     text += "#L" + i + "##r[MÁXIMO] " + slotNames[i] + " Slots (" + currentSlots + "/" + SLOT_MAX + ")#k#l\r\n";
                 } else {
-                    text += "#L" + i + "##b" + slotNames[i] + " Slots +" + SLOT_AMOUNT + "#k (Actual: " + currentSlots + "/" + SLOT_MAX + ") - #r" + nextPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " NX#k#l\r\n";
+                    text += "#L" + i + "##b" + slotNames[i] + " Slots +" + SLOT_AMOUNT + "#k (Actual: " + currentSlots + "/" + SLOT_MAX + ") - #r" + formatNumber(nextPrice) + " NX#k#l\r\n";
                 }
             }
             
@@ -231,15 +246,15 @@ function action(mode, type, selection) {
             var nxAvailable = cm.getPlayer().getCashShop().getCash(1);
             
             if (nxAvailable < nxCost) {
-                cm.sendOk("No tienes suficiente NX. Necesitas #r" + nxCost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " NX#k pero solo tienes #b" + nxAvailable.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " NX#k.");
+                cm.sendOk("No tienes suficiente NX. Necesitas #r" + formatNumber(nxCost) + " NX#k pero solo tienes #b" + formatNumber(nxAvailable) + " NX#k.");
                 cm.dispose();
                 return;
             }
             
             var text = "¿Estás seguro que deseas comprar #b+" + SLOT_AMOUNT + " " + slotNames[slotSelection] + " Slots#k?\r\n\r\n";
             text += "Slots actuales: #b" + currentSlots + "#k → #g" + (currentSlots + SLOT_AMOUNT) + "#k\r\n";
-            text += "Costo: #r" + nxCost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " NX#k\r\n";
-            text += "Tu NX: #b" + nxAvailable.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " NX#k";
+            text += "Costo: #r" + formatNumber(nxCost) + " NX#k\r\n";
+            text += "Tu NX: #b" + formatNumber(nxAvailable) + " NX#k";
             
             cm.sendYesNo(text);
         }
