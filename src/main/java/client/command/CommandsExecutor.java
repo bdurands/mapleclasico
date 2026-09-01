@@ -24,6 +24,7 @@
 package client.command;
 
 import client.Client;
+import client.command.commands.gm0.CashStorageCommand;
 import client.command.commands.gm0.ChangeLanguageCommand;
 import client.command.commands.gm0.CheckinCommand;
 import client.command.commands.gm0.DisposeCommand;
@@ -345,6 +346,7 @@ public class CommandsExecutor {
 
         addCommand(new String[]{"help", "commands"}, HelpCommand.class);
         addCommand(new String[]{"checkin", "daily"}, CheckinCommand.class);
+        addCommand(new String[]{"cashstorage", "baulcash"}, CashStorageCommand.class);
         addCommand("droplimit", DropLimitCommand.class);
         addCommand("time", TimeCommand.class);
         addCommand("credits", StaffCommand.class);
