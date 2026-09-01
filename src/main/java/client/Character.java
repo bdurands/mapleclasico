@@ -7676,7 +7676,62 @@ public class Character extends AbstractCharacterObject {
         sendPacket(PacketCreator.sendYellowTip(m));
     }
 
+    private void checkKrillinLevel50Quest(int mobId) {
+        if (this.getLevel() < 50) {
+            return;
+        }
+        
+        server.quest.Quest q = server.quest.Quest.getInstance(9999050);
+        QuestStatus qs = getQuestNAdd(q);
+        
+        if (qs != null && qs.getCustomData() != null && qs.getCustomData().equals("done")) {
+            return;
+        }
+        
+        int[] requiredMobs = {5100004, 5130104, 5100002, 5300100, 5120501, 5100003, 5150000, 5130103, 5150001, 5130105, 5130108, 5130101, 5130100};
+        String[] mobNames = {"Samiho", "Hector", "Firebomb", "Malady", "Bellflower Root", "Hodori", "Mixed Golem", "Croco", "Skeleton Soldier", "Dark Jr. Yeti", "Miner Zombie", "Stone Golem", "Drake"};
+        
+        int mobIndex = -1;
+        for (int i = 0; i < requiredMobs.length; i++) {
+            if (requiredMobs[i] == mobId) {
+                mobIndex = i;
+                break;
+            }
+        }
+        
+        if (mobIndex == -1) return;
+        
+        String data = qs.getCustomData();
+        int[] counts = new int[requiredMobs.length];
+        
+        if (data != null && !data.isEmpty() && !data.equals("done")) {
+            String[] parts = data.split(",");
+            for (int i = 0; i < parts.length && i < counts.length; i++) {
+                try {
+                    counts[i] = Integer.parseInt(parts[i]);
+                } catch (Exception e) {}
+            }
+        }
+        
+        if (counts[mobIndex] < 100) {
+            counts[mobIndex]++;
+            
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < counts.length; i++) {
+                sb.append(counts[i]);
+                if (i < counts.length - 1) sb.append(",");
+            }
+            qs.setCustomData(sb.toString());
+            
+            String msg = mobNames[mobIndex] + " eliminados: " + counts[mobIndex] + " / 100";
+            dropMessage(5, msg);
+            client.sendPacket(tools.PacketCreator.sendYellowTip(msg));
+        }
+    }
+
     public void raiseQuestMobCount(int id) {
+        checkKrillinLevel50Quest(id);
+        
         // It seems nexon uses monsters that don't exist in the WZ (except string) to merge multiple mobs together for these 3 monsters.
         // We also want to run mobKilled for both since there are some quest that don't use the updated ID...
         if (id == MobId.GREEN_MUSHROOM || id == MobId.DEJECTED_GREEN_MUSHROOM) {

@@ -117,11 +117,43 @@ function action(mode, type, selection) {
         var text = "#e#b[ Bono Nivel " + tier.level + " ]#k#n\r\n\r\n";
         text += "Para preparar la poción de este nivel que te dará #r+" + tier.hp + " MaxHP#k y #b+" + tier.mp + " MaxMP#k, necesito que me consigas lo siguiente:\r\n\r\n";
         
-        var hasItem = cm.haveItem(tier.item, tier.count);
         var hasMeso = cm.getMeso() >= tier.meso;
+        var reqMet = hasMeso;
         
-        text += (hasItem ? "#b" : "#r") + " - " + tier.count + "x #i" + tier.item + "# #t" + tier.item + "##k\r\n";
+        if (tier.level == 50) {
+            text += "Demuestra tu fuerza derrotando a 100 de los siguientes monstruos:\r\n";
+            var record = cm.getQuestRecord(tier.questId);
+            var data = record != null ? ("" + record.getCustomData()) : "";
+            var counts = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+            if (data != "" && data != "done") {
+                var parts = data.split(",");
+                for (var j = 0; j < parts.length && j < 13; j++) {
+                    counts[j] = parseInt(parts[j]) || 0;
+                }
+            }
+            
+            var allKilled = true;
+            var mobNamesArr = ["Samiho", "Hector", "Firebomb", "Malady", "Bellflower Root", "Hodori", "Mixed Golem", "Croco", "Skeleton Soldier", "Dark Jr. Yeti", "Miner Zombie", "Stone Golem", "Drake"];
+            for (var k = 0; k < 13; k++) {
+                var c = counts[k];
+                if (c < 100) allKilled = false;
+                text += (c >= 100 ? "#b" : "#r") + " - " + mobNamesArr[k] + " (" + c + " / 100)#k\r\n";
+            }
+            text += "\r\n";
+            reqMet = reqMet && allKilled;
+        } else {
+            var hasItem = cm.haveItem(tier.item, tier.count);
+            reqMet = reqMet && hasItem;
+            text += (hasItem ? "#b" : "#r") + " - " + tier.count + "x #i" + tier.item + "# #t" + tier.item + "##k\r\n";
+        }
+        
         text += (hasMeso ? "#b" : "#r") + " - " + formatNumber(tier.meso) + " Mesos#k\r\n\r\n";
+        
+        if (!reqMet) {
+            cm.sendOk(text + "Aún no cumples con los requisitos. Regresa cuando estés listo.");
+            cm.dispose();
+            return;
+        }
         
         text += "¿Tienes todo listo para el intercambio?";
         
@@ -129,11 +161,35 @@ function action(mode, type, selection) {
         
     } else if (status == 2) {
         var tier = tiers[selectionTier];
+        var reqMet = cm.getMeso() >= tier.meso;
         
-        if (cm.haveItem(tier.item, tier.count) && cm.getMeso() >= tier.meso) {
+        if (tier.level == 50) {
+            var record = cm.getQuestRecord(tier.questId);
+            var data = record != null ? ("" + record.getCustomData()) : "";
+            var allKilled = true;
+            if (data != "" && data != "done") {
+                var parts = data.split(",");
+                if (parts.length >= 13) {
+                    for (var k = 0; k < 13; k++) {
+                        if ((parseInt(parts[k]) || 0) < 100) allKilled = false;
+                    }
+                } else {
+                    allKilled = false;
+                }
+            } else {
+                allKilled = false;
+            }
+            reqMet = reqMet && allKilled;
+        } else {
+            reqMet = reqMet && cm.haveItem(tier.item, tier.count);
+        }
+        
+        if (reqMet) {
             
-            // Consumir items y mesos
-            cm.gainItem(tier.item, -tier.count);
+            // Consumir items (solo si no es nivel 50) y mesos
+            if (tier.level != 50) {
+                cm.gainItem(tier.item, -tier.count);
+            }
             cm.gainMeso(-tier.meso);
             
             // Calcular nuevos valores de MaxHP y MaxMP
