@@ -402,7 +402,7 @@ public class CommandsExecutor {
         addCommand("sp", 2, SpCommand.class);
         addCommand("ap", 2, ApCommand.class);
         addCommand("empowerme", 2, EmpowerMeCommand.class);
-        addCommand("buffmap", 2, BuffMapCommand.class);
+        addCommand("buffmap", 3, BuffMapCommand.class);
         addCommand("buff", 2, BuffCommand.class);
         addCommand("bomb", 2, BombCommand.class);
         addCommand("dc", 2, DcCommand.class);
@@ -410,11 +410,11 @@ public class CommandsExecutor {
         addCommand("clearslot", 2, ClearSlotCommand.class);
         addCommand("clearsavelocs", 2, ClearSavedLocationsCommand.class);
         addCommand("warp", 2, WarpCommand.class);
-        addCommand(new String[]{"warphere", "summon"}, 2, SummonCommand.class);
-        addCommand(new String[]{"warpto", "reach", "follow"}, 2, ReachCommand.class);
+        addCommand(new String[]{"warphere", "summon"}, 3, SummonCommand.class);
+        addCommand(new String[]{"warpto", "reach", "follow"}, 3, ReachCommand.class);
         addCommand("gmshop", 2, GmShopCommand.class);
         addCommand("heal", 2, HealCommand.class);
-        addCommand("item", 2, ItemCommand.class);
+        addCommand("item", 3, ItemCommand.class);
         addCommand("drop", 3, ItemDropCommand.class);
         addCommand("level", 2, LevelCommand.class);
         addCommand("levelpro", 2, LevelProCommand.class);
