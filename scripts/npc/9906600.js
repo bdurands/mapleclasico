@@ -41,16 +41,7 @@ var tiers = [
         mp: 1000, 
         meso: 2000000, 
         questId: QUEST_BASE_ID + 90 
-    },
-    { 
-        level: 100, 
-        hp: 1500, 
-        mp: 1500, 
-        item: 4000313, // Piece of Time
-        count: 1, // Extremadamente raro
-        meso: 5000000, 
-        questId: QUEST_BASE_ID + 100 
-    },
+
     { 
         level: 110, 
         hp: 2000, 
