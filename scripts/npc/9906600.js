@@ -41,7 +41,7 @@ var tiers = [
         mp: 1000, 
         meso: 2000000, 
         questId: QUEST_BASE_ID + 90 
-
+    },
     { 
         level: 110, 
         hp: 2000, 
