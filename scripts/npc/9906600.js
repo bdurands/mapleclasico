@@ -32,8 +32,6 @@ var tiers = [
         level: 70, 
         hp: 1000, 
         mp: 1000, 
-        item: 4000024, // Hector's Tail
-        count: 1000, 
         meso: 1000000, 
         questId: QUEST_BASE_ID + 70 
     },
@@ -41,8 +39,6 @@ var tiers = [
         level: 90, 
         hp: 1000, 
         mp: 1000, 
-        item: 4000273, // Squid Tentacle
-        count: 1000, 
         meso: 2000000, 
         questId: QUEST_BASE_ID + 90 
     },
@@ -54,6 +50,13 @@ var tiers = [
         count: 1, // Extremadamente raro
         meso: 5000000, 
         questId: QUEST_BASE_ID + 100 
+    },
+    { 
+        level: 110, 
+        hp: 2000, 
+        mp: 2000, 
+        meso: 10000000, 
+        questId: QUEST_BASE_ID + 110 
     }
 ];
 
@@ -120,24 +123,43 @@ function action(mode, type, selection) {
         var hasMeso = cm.getMeso() >= tier.meso;
         var reqMet = hasMeso;
         
-        if (tier.level == 50) {
-            text += "Demuestra tu fuerza derrotando a 100 de los siguientes monstruos:\r\n";
+        if (tier.level == 50 || tier.level == 70 || tier.level == 90 || tier.level == 110) {
+            text += "Demuestra tu fuerza derrotando a los siguientes monstruos:\r\n";
             var record = cm.getQuestRecord(tier.questId);
             var data = record != null ? ("" + record.getCustomData()) : "";
-            var counts = [0,0,0,0,0,0,0,0,0,0,0,0,0];
+            
+            var mobNamesArr = [];
+            var reqCounts = [];
+            if (tier.level == 50) {
+                mobNamesArr = ["Samiho", "Hector", "Firebomb", "Malady", "Bellflower Root", "Hodori", "Mixed Golem", "Croco", "Skeleton Soldier", "Dark Jr. Yeti", "Miner Zombie", "Stone Golem", "Drake"];
+                for (var i = 0; i < mobNamesArr.length; i++) reqCounts.push(100);
+            } else if (tier.level == 70) {
+                mobNamesArr = ["Commander Skeleton", "Captain", "Yellow King Goblin", "Cerebes", "Dark Rash", "Taurospear", "Tauromacis", "Rash", "Klock", "Green King Goblin", "Blue King Goblin"];
+                for (var i = 0; i < mobNamesArr.length; i++) reqCounts.push(100);
+            } else if (tier.level == 90) {
+                mobNamesArr = ["Spirit Viking", "Rexton", "Risell Squid", "Red Wyvern", "Brexton", "Blue Dragon Turtle", "Red Dragon Turtle", "Gigantic Spirit Viking", "Phantom Watch"];
+                for (var i = 0; i < mobNamesArr.length; i++) reqCounts.push(100);
+            } else if (tier.level == 110) {
+                mobNamesArr = ["Griffey", "Manon", "Dark Cornian", "Nest Golem", "Skelegon", "Blue Wyvern", "Dark Wyvern"];
+                reqCounts = [10, 10, 100, 100, 100, 100, 100];
+            }
+            
+            var counts = [];
+            for (var k = 0; k < mobNamesArr.length; k++) counts.push(0);
+            
             if (data != "" && data != "done") {
                 var parts = data.split(",");
-                for (var j = 0; j < parts.length && j < 13; j++) {
+                for (var j = 0; j < parts.length && j < mobNamesArr.length; j++) {
                     counts[j] = parseInt(parts[j]) || 0;
                 }
             }
             
             var allKilled = true;
-            var mobNamesArr = ["Samiho", "Hector", "Firebomb", "Malady", "Bellflower Root", "Hodori", "Mixed Golem", "Croco", "Skeleton Soldier", "Dark Jr. Yeti", "Miner Zombie", "Stone Golem", "Drake"];
-            for (var k = 0; k < 13; k++) {
+            for (var k = 0; k < mobNamesArr.length; k++) {
                 var c = counts[k];
-                if (c < 100) allKilled = false;
-                text += (c >= 100 ? "#b" : "#r") + " - " + mobNamesArr[k] + " (" + c + " / 100)#k\r\n";
+                var req = reqCounts[k];
+                if (c < req) allKilled = false;
+                text += (c >= req ? "#b" : "#r") + " - " + mobNamesArr[k] + " (" + c + " / " + req + ")#k\r\n";
             }
             text += "\r\n";
             reqMet = reqMet && allKilled;
@@ -163,15 +185,23 @@ function action(mode, type, selection) {
         var tier = tiers[selectionTier];
         var reqMet = cm.getMeso() >= tier.meso;
         
-        if (tier.level == 50) {
+        if (tier.level == 50 || tier.level == 70 || tier.level == 90 || tier.level == 110) {
             var record = cm.getQuestRecord(tier.questId);
             var data = record != null ? ("" + record.getCustomData()) : "";
             var allKilled = true;
+            
+            var reqLength = 0;
+            var reqCounts = [];
+            if (tier.level == 50) { reqLength = 13; for(var i=0;i<13;i++) reqCounts.push(100); }
+            else if (tier.level == 70) { reqLength = 11; for(var i=0;i<11;i++) reqCounts.push(100); }
+            else if (tier.level == 90) { reqLength = 9; for(var i=0;i<9;i++) reqCounts.push(100); }
+            else if (tier.level == 110) { reqLength = 7; reqCounts = [10, 10, 100, 100, 100, 100, 100]; }
+            
             if (data != "" && data != "done") {
                 var parts = data.split(",");
-                if (parts.length >= 13) {
-                    for (var k = 0; k < 13; k++) {
-                        if ((parseInt(parts[k]) || 0) < 100) allKilled = false;
+                if (parts.length >= reqLength) {
+                    for (var k = 0; k < reqLength; k++) {
+                        if ((parseInt(parts[k]) || 0) < reqCounts[k]) allKilled = false;
                     }
                 } else {
                     allKilled = false;
@@ -186,8 +216,8 @@ function action(mode, type, selection) {
         
         if (reqMet) {
             
-            // Consumir items (solo si no es nivel 50) y mesos
-            if (tier.level != 50) {
+            // Consumir items y mesos
+            if (tier.level != 50 && tier.level != 70 && tier.level != 90 && tier.level != 110) {
                 cm.gainItem(tier.item, -tier.count);
             }
             cm.gainMeso(-tier.meso);

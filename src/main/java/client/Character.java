@@ -7729,8 +7729,171 @@ public class Character extends AbstractCharacterObject {
         }
     }
 
+    private void checkKrillinLevel70Quest(int mobId) {
+        if (this.getLevel() < 70) {
+            return;
+        }
+        
+        server.quest.Quest q = server.quest.Quest.getInstance(9999070);
+        QuestStatus qs = getQuestNAdd(q);
+        
+        if (qs != null && qs.getCustomData() != null && qs.getCustomData().equals("done")) {
+            return;
+        }
+        
+        int[] requiredMobs = {7130103, 7130104, 7130400, 7130001, 7130501, 7130101, 7130100, 7130500, 8140200, 7130402, 7130401};
+        String[] mobNames = {"Commander Skeleton", "Captain", "Yellow King Goblin", "Cerebes", "Dark Rash", "Taurospear", "Tauromacis", "Rash", "Klock", "Green King Goblin", "Blue King Goblin"};
+        
+        int mobIndex = -1;
+        for (int i = 0; i < requiredMobs.length; i++) {
+            if (requiredMobs[i] == mobId) {
+                mobIndex = i;
+                break;
+            }
+        }
+        
+        if (mobIndex == -1) return;
+        
+        String data = qs.getCustomData();
+        int[] counts = new int[requiredMobs.length];
+        
+        if (data != null && !data.isEmpty() && !data.equals("done")) {
+            String[] parts = data.split(",");
+            for (int i = 0; i < parts.length && i < counts.length; i++) {
+                try {
+                    counts[i] = Integer.parseInt(parts[i]);
+                } catch (Exception e) {}
+            }
+        }
+        
+        if (counts[mobIndex] < 100) {
+            counts[mobIndex]++;
+            
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < counts.length; i++) {
+                sb.append(counts[i]);
+                if (i < counts.length - 1) sb.append(",");
+            }
+            qs.setCustomData(sb.toString());
+            
+            String msg = mobNames[mobIndex] + " eliminados: " + counts[mobIndex] + " / 100";
+            dropMessage(5, msg);
+            client.sendPacket(tools.PacketCreator.sendYellowTip(msg));
+        }
+    }
+
+    private void checkKrillinLevel90Quest(int mobId) {
+        if (this.getLevel() < 90) {
+            return;
+        }
+        
+        server.quest.Quest q = server.quest.Quest.getInstance(9999090);
+        QuestStatus qs = getQuestNAdd(q);
+        
+        if (qs != null && qs.getCustomData() != null && qs.getCustomData().equals("done")) {
+            return;
+        }
+        
+        int[] requiredMobs = {8141000, 8140702, 8142100, 8150300, 8140703, 8140700, 8140701, 8141100, 8142000};
+        String[] mobNames = {"Spirit Viking", "Rexton", "Risell Squid", "Red Wyvern", "Brexton", "Blue Dragon Turtle", "Red Dragon Turtle", "Gigantic Spirit Viking", "Phantom Watch"};
+        
+        int mobIndex = -1;
+        for (int i = 0; i < requiredMobs.length; i++) {
+            if (requiredMobs[i] == mobId) {
+                mobIndex = i;
+                break;
+            }
+        }
+        
+        if (mobIndex == -1) return;
+        
+        String data = qs.getCustomData();
+        int[] counts = new int[requiredMobs.length];
+        
+        if (data != null && !data.isEmpty() && !data.equals("done")) {
+            String[] parts = data.split(",");
+            for (int i = 0; i < parts.length && i < counts.length; i++) {
+                try {
+                    counts[i] = Integer.parseInt(parts[i]);
+                } catch (Exception e) {}
+            }
+        }
+        
+        if (counts[mobIndex] < 100) {
+            counts[mobIndex]++;
+            
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < counts.length; i++) {
+                sb.append(counts[i]);
+                if (i < counts.length - 1) sb.append(",");
+            }
+            qs.setCustomData(sb.toString());
+            
+            String msg = mobNames[mobIndex] + " eliminados: " + counts[mobIndex] + " / 100";
+            dropMessage(5, msg);
+            client.sendPacket(tools.PacketCreator.sendYellowTip(msg));
+        }
+    }
+
+    private void checkKrillinLevel110Quest(int mobId) {
+        if (this.getLevel() < 110) {
+            return;
+        }
+        
+        server.quest.Quest q = server.quest.Quest.getInstance(9999110);
+        QuestStatus qs = getQuestNAdd(q);
+        
+        if (qs != null && qs.getCustomData() != null && qs.getCustomData().equals("done")) {
+            return;
+        }
+        
+        int[] requiredMobs = {8180001, 8180000, 8150201, 8190005, 8190003, 8150301, 8150302};
+        String[] mobNames = {"Griffey", "Manon", "Dark Cornian", "Nest Golem", "Skelegon", "Blue Wyvern", "Dark Wyvern"};
+        int[] requiredCounts = {10, 10, 100, 100, 100, 100, 100};
+        
+        int mobIndex = -1;
+        for (int i = 0; i < requiredMobs.length; i++) {
+            if (requiredMobs[i] == mobId) {
+                mobIndex = i;
+                break;
+            }
+        }
+        
+        if (mobIndex == -1) return;
+        
+        String data = qs.getCustomData();
+        int[] counts = new int[requiredMobs.length];
+        
+        if (data != null && !data.isEmpty() && !data.equals("done")) {
+            String[] parts = data.split(",");
+            for (int i = 0; i < parts.length && i < counts.length; i++) {
+                try {
+                    counts[i] = Integer.parseInt(parts[i]);
+                } catch (Exception e) {}
+            }
+        }
+        
+        if (counts[mobIndex] < requiredCounts[mobIndex]) {
+            counts[mobIndex]++;
+            
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < counts.length; i++) {
+                sb.append(counts[i]);
+                if (i < counts.length - 1) sb.append(",");
+            }
+            qs.setCustomData(sb.toString());
+            
+            String msg = mobNames[mobIndex] + " eliminados: " + counts[mobIndex] + " / " + requiredCounts[mobIndex];
+            dropMessage(5, msg);
+            client.sendPacket(tools.PacketCreator.sendYellowTip(msg));
+        }
+    }
+
     public void raiseQuestMobCount(int id) {
         checkKrillinLevel50Quest(id);
+        checkKrillinLevel70Quest(id);
+        checkKrillinLevel90Quest(id);
+        checkKrillinLevel110Quest(id);
         
         // It seems nexon uses monsters that don't exist in the WZ (except string) to merge multiple mobs together for these 3 monsters.
         // We also want to run mobKilled for both since there are some quest that don't use the updated ID...
