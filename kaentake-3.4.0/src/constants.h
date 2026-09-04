@@ -12,3 +12,5 @@
 
 extern char* g_sServerHost;
 extern long g_nServerPort;
+
+#define CONSTANTS_DAMAGE_CAP 2147483647.0

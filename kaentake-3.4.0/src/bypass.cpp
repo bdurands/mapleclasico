@@ -445,4 +445,23 @@ void AttachClientBypass() {
     // Allow Paste
     PatchNop(0x004CAE7D, 0x004CAE7D + 2); 
     Patch1(0x004CAE8F, 0xEB); 
+
+    // Super Tubi
+    PatchNop(0x00485C01, 0x00485C01 + 2);
+    PatchNop(0x00485C21, 0x00485C21 + 2);
+    PatchNop(0x00485C32, 0x00485C32 + 2);
+
+    // Damage Cap
+    // Credits Rain
+    double dDamageCap = CONSTANTS_DAMAGE_CAP;
+    int nDamageCap = static_cast<int>(dDamageCap < 0 ? dDamageCap - 0.5 : dDamageCap + 0.5);
+    PatchMemory(TO_PVOID(0x00AFE8A0), &dDamageCap, sizeof(double));
+    Patch4(0x008C3304 + 1, nDamageCap);
+
+    // Close Range removed (i.e no whack on bow or claw.)
+    Patch1(0x009516C2, 0xE9);
+    Patch1(0x009516C2 + 1, 0xc8);
+    Patch1(0x009516C2 + 2, 0xfc);
+    Patch1(0x009516C2 + 3, 0xff);
+    Patch1(0x009516C2 + 4, 0xff);
 }
