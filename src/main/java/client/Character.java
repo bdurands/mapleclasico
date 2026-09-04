@@ -7683,6 +7683,9 @@ public class Character extends AbstractCharacterObject {
         
         server.quest.Quest q = server.quest.Quest.getInstance(9999050);
         QuestStatus qs = getQuestNAdd(q);
+        if (qs.getStatus() == QuestStatus.Status.NOT_STARTED) {
+            qs.setStatus(QuestStatus.Status.STARTED);
+        }
         
         if (qs != null && qs.getCustomData() != null && qs.getCustomData().equals("done")) {
             return;
@@ -7736,6 +7739,9 @@ public class Character extends AbstractCharacterObject {
         
         server.quest.Quest q = server.quest.Quest.getInstance(9999070);
         QuestStatus qs = getQuestNAdd(q);
+        if (qs.getStatus() == QuestStatus.Status.NOT_STARTED) {
+            qs.setStatus(QuestStatus.Status.STARTED);
+        }
         
         if (qs != null && qs.getCustomData() != null && qs.getCustomData().equals("done")) {
             return;
@@ -7789,6 +7795,9 @@ public class Character extends AbstractCharacterObject {
         
         server.quest.Quest q = server.quest.Quest.getInstance(9999090);
         QuestStatus qs = getQuestNAdd(q);
+        if (qs.getStatus() == QuestStatus.Status.NOT_STARTED) {
+            qs.setStatus(QuestStatus.Status.STARTED);
+        }
         
         if (qs != null && qs.getCustomData() != null && qs.getCustomData().equals("done")) {
             return;
@@ -7842,6 +7851,9 @@ public class Character extends AbstractCharacterObject {
         
         server.quest.Quest q = server.quest.Quest.getInstance(9999110);
         QuestStatus qs = getQuestNAdd(q);
+        if (qs.getStatus() == QuestStatus.Status.NOT_STARTED) {
+            qs.setStatus(QuestStatus.Status.STARTED);
+        }
         
         if (qs != null && qs.getCustomData() != null && qs.getCustomData().equals("done")) {
             return;
