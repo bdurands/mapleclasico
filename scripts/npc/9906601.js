@@ -48,7 +48,7 @@ function action(mode, type, selection) {
 
         if (currentDate < limitDate && cm.getPlayer().getLevel() >= 30) {
             var record = cm.getQuestRecord(questId);
-            var isCompleted = (record != null && (record.getStatus() == 2 || (record.getCustomData() != null && ("" + record.getCustomData()) == "done")));
+            var isCompleted = (record != null && (record.getStatus().getId() == 2 || (record.getCustomData() != null && ("" + record.getCustomData()) == "done")));
             if (!isCompleted) {
                 text += "#L1# #r[Evento]#k Canjear 200 Maple Leafs por el Artefacto Saiyajin#l\r\n";
             } else {
