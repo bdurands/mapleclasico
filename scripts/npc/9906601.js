@@ -102,7 +102,7 @@ function action(mode, type, selection) {
                     }
 
                     equip.setLevel(0);
-                    Packages.client.inventory.manipulator.InventoryManipulator.addFromDrop(cm.getC(), equip, true);
+                    Packages.client.inventory.manipulator.InventoryManipulator.addFromDrop(cm.getClient(), equip, true);
                     cm.forceCompleteQuest(questId);
 
                     cm.sendOk("Aquí tienes. Úsalo bien y no me avergüences.");
@@ -156,7 +156,7 @@ function action(mode, type, selection) {
                 return;
             }
 
-            Packages.client.inventory.manipulator.InventoryManipulator.removeFromSlot(cm.getC(), Packages.client.inventory.InventoryType.EQUIP, targetSlot, 1, false);
+            Packages.client.inventory.manipulator.InventoryManipulator.removeFromSlot(cm.getClient(), Packages.client.inventory.InventoryType.EQUIP, targetSlot, 1, false);
             cm.gainPqPoints(-cost);
 
             var jobId = cm.getPlayer().getJob().getId();
@@ -202,7 +202,7 @@ function action(mode, type, selection) {
             }
 
             newEquip.setLevel(currentLevel + 1);
-            Packages.client.inventory.manipulator.InventoryManipulator.addFromDrop(cm.getC(), newEquip, true);
+            Packages.client.inventory.manipulator.InventoryManipulator.addFromDrop(cm.getClient(), newEquip, true);
 
             cm.sendOk("¡El artefacto ha incrementado su poder! (Nivel " + (currentLevel + 1) + "/3)");
             cm.dispose();
