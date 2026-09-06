@@ -33,7 +33,7 @@ function playerEntry(eim, player) {
     player.changeMap(onRide, onRide.getPortal(0));
 
     const PacketCreator = Java.type('tools.PacketCreator');
-    player.sendPacket(PacketCreator.getClock(rideTime / 1000));
+    player.sendPacket(PacketCreator.getClock(Math.floor(rideTime / 1000)));
     eim.schedule("timeOut", rideTime);
 }
 

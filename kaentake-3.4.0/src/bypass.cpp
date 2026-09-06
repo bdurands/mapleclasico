@@ -458,10 +458,4 @@ void AttachClientBypass() {
     PatchMemory(TO_PVOID(0x00AFE8A0), &dDamageCap, sizeof(double));
     Patch4(0x008C3304 + 1, nDamageCap);
 
-    // Close Range removed (i.e no whack on bow or claw.)
-    Patch1(0x009516C2, 0xE9);
-    Patch1(0x009516C2 + 1, 0xc8);
-    Patch1(0x009516C2 + 2, 0xfc);
-    Patch1(0x009516C2 + 3, 0xff);
-    Patch1(0x009516C2 + 4, 0xff);
 }
