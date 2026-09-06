@@ -103,6 +103,7 @@ function action(mode, type, selection) {
 
                     equip.setLevel(0);
                     Packages.client.inventory.manipulator.InventoryManipulator.addFromDrop(cm.getClient(), equip, true);
+                    cm.forceStartQuest(questId);
                     var r = cm.getQuestRecord(questId);
                     if (r != null) r.setCustomData("done");
                     cm.forceCompleteQuest(questId);
