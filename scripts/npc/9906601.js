@@ -1,5 +1,5 @@
 var status = 0;
-var questId = 9999901;
+var questId = 32100; // Must fit in Java short (max 32767)
 var rewardItem = 1112940; // The item ID requested
 var reqItem = 4001126; // Maple Leaf
 var reqAmount = 200;
