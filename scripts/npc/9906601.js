@@ -104,9 +104,9 @@ function action(mode, type, selection) {
                     equip.setLevel(0);
                     Packages.client.inventory.manipulator.InventoryManipulator.addFromDrop(cm.getClient(), equip, true);
                     cm.forceStartQuest(questId);
+                    cm.forceCompleteQuest(questId);
                     var r = cm.getQuestRecord(questId);
                     if (r != null) r.setCustomData("done");
-                    cm.forceCompleteQuest(questId);
 
                     cm.sendOk("Aquí tienes. Úsalo bien y no me avergüences.");
                     cm.dispose();
