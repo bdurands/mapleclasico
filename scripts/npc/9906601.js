@@ -20,7 +20,7 @@ function action(mode, type, selection) {
         cm.dispose();
         return;
     }
-    
+
     if (mode == 1) {
         status++;
     }
@@ -33,19 +33,19 @@ function action(mode, type, selection) {
 
         var text = "\t\t\t\t#d#e ¡Centro de Puntos EllinMS! #n#k\r\n\r\n";
         text += "¡Hola, #b#h ##k! Aquí tienes el resumen detallado de tus puntos acumulados. ¡Sigue así!\r\n\r\n";
-        
+
         text += " " + voteIcon + " #e#bVotación:#n#k \t\t" + votePoints + " Puntos\r\n";
         text += " " + pqIcon + " #e#dParty Quest:#n#k \t" + pqPoints + " Puntos\r\n";
         text += " " + bossIcon + " #e#rBoss Points:#n#k \t" + bossPoints + " Puntos\r\n";
         text += " " + donorIcon + " #e#gDonador:#n#k \t\t" + donorPoints + " Puntos\r\n\r\n";
-        
+
         text += "#b------------------------------------------------------#k\r\n";
-        text += "#L0# " + nxIcon + " #eCanjear#n 10 Puntos de Votación por #b5,000 NX Credit#k#l\r\n";
-        
+        text += "#L0# " + nxIcon + " #eCanjear#n 10 Puntos de Votación por #b4,000 NX Credit#k#l\r\n";
+
         // Agregar la opción del evento si cumple fecha y nivel
-        var limitDate = new Date(2026, 8, 25, 23, 59, 59).getTime(); 
+        var limitDate = new Date(2026, 8, 25, 23, 59, 59).getTime();
         var currentDate = new Date().getTime();
-        
+
         if (currentDate < limitDate && cm.getPlayer().getLevel() >= 30) {
             var record = cm.getQuestRecord(questId);
             var isCompleted = (record != null && record.getStatus() == 2);
@@ -62,8 +62,8 @@ function action(mode, type, selection) {
             var votePoints = cm.getClient().getVotePoints();
             if (votePoints >= 10) {
                 cm.getClient().useVotePoints(10);
-                cm.getPlayer().getCashShop().gainCash(1, 5000); // 1 = NX Credit
-                cm.sendOk(nxIcon + " ¡Felicidades! Has canjeado #r10 Puntos de Votación#k por #b5,000 NX Credit#k.\r\n\r\n¡Disfrútalos en el Cash Shop!");
+                cm.getPlayer().getCashShop().gainCash(1, 4000); // 1 = NX Credit
+                cm.sendOk(nxIcon + " ¡Felicidades! Has canjeado #r10 Puntos de Votación#k por #b4,000 NX Credit#k.\r\n\r\n¡Disfrútalos en el Cash Shop!");
                 cm.dispose();
             } else {
                 cm.sendOk(voteIcon + " Lo siento, no tienes suficientes #b10 Puntos de Votación#k.\r\n\r\nActualmente tienes: #r" + votePoints + "#k.");
@@ -73,13 +73,13 @@ function action(mode, type, selection) {
             if (cm.haveItem(reqItem, reqAmount)) {
                 if (cm.canHold(rewardItem)) {
                     cm.gainItem(reqItem, -reqAmount);
-                    
+
                     var ii = Packages.server.ItemInformationProvider.getInstance();
                     var equip = ii.getEquipById(rewardItem);
-                    
+
                     var jobId = cm.getPlayer().getJob().getId();
                     var jobBase = Math.floor(jobId / 100);
-                    
+
                     if (jobBase == 1 || jobBase == 3 || jobBase == 5) {
                         equip.setStr(10);
                         equip.setDex(10);
@@ -96,15 +96,15 @@ function action(mode, type, selection) {
                         equip.setWatk(2);
                         equip.setWdef(5);
                         equip.setMdef(10);
-                    } else { 
+                    } else {
                         equip.setStr(5); equip.setDex(5); equip.setInt(5); equip.setLuk(5);
                         equip.setWatk(1); equip.setMatk(1); equip.setWdef(5); equip.setMdef(5);
                     }
-                    
-                    equip.setLevel(0); 
+
+                    equip.setLevel(0);
                     Packages.client.inventory.manipulator.InventoryManipulator.addFromDrop(cm.getC(), equip, true);
                     cm.forceCompleteQuest(questId);
-                    
+
                     cm.sendOk("Aquí tienes. Úsalo bien y no me avergüences.");
                     cm.dispose();
                 } else {
@@ -120,7 +120,7 @@ function action(mode, type, selection) {
             var found = false;
             var targetEquip = null;
             var targetSlot = 0;
-            
+
             var iter = inv.list().iterator();
             while (iter.hasNext()) {
                 var it = iter.next();
@@ -131,52 +131,52 @@ function action(mode, type, selection) {
                     break;
                 }
             }
-            
+
             if (!found) {
                 cm.sendOk("No encuentro el artefacto en tu inventario de Equipos. Asegúrate de tenerlo allí y NO tenerlo equipado. Si lo tienes puesto, quítatelo primero.");
                 cm.dispose();
                 return;
             }
-            
+
             var currentLevel = targetEquip.getLevel();
             if (currentLevel >= 3) {
                 cm.sendOk("El artefacto ya ha alcanzado su máximo poder, ya no hay nada más que hacer.");
                 cm.dispose();
                 return;
             }
-            
+
             var cost = 0;
             if (currentLevel == 0) cost = 5;
             else if (currentLevel == 1) cost = 10;
             else if (currentLevel == 2) cost = 10;
-            
+
             if (cm.getPqPoints() < cost) {
                 cm.sendOk("Necesitas #r" + cost + " PQ Points#k para esta mejora. Solo tienes " + cm.getPqPoints() + ".");
                 cm.dispose();
                 return;
             }
-            
+
             Packages.client.inventory.manipulator.InventoryManipulator.removeFromSlot(cm.getC(), Packages.client.inventory.InventoryType.EQUIP, targetSlot, 1, false);
             cm.gainPqPoints(-cost);
-            
+
             var jobId = cm.getPlayer().getJob().getId();
             var jobBase = Math.floor(jobId / 100);
             var newEquip = targetEquip.copy();
-            
+
             if (currentLevel == 0) {
                 if (jobBase == 2) newEquip.setMatk(newEquip.getMatk() + 1);
                 else newEquip.setWatk(newEquip.getWatk() + 1);
 
-                if (jobBase == 4) { 
+                if (jobBase == 4) {
                     newEquip.setWdef(newEquip.getWdef() + 2);
                     newEquip.setMdef(newEquip.getMdef() + 3);
-                } else { 
+                } else {
                     newEquip.setWdef(newEquip.getWdef() + 3);
                     newEquip.setMdef(newEquip.getMdef() + 2);
                 }
                 newEquip.setAcc(newEquip.getAcc() + 2);
-            } 
-            else if (currentLevel == 1) { 
+            }
+            else if (currentLevel == 1) {
                 if (jobBase == 2) newEquip.setMatk(newEquip.getMatk() + 2);
                 else newEquip.setWatk(newEquip.getWatk() + 2);
 
@@ -190,7 +190,7 @@ function action(mode, type, selection) {
                 newEquip.setAcc(newEquip.getAcc() + 2);
                 newEquip.setSpeed(newEquip.getSpeed() + 5);
             }
-            else if (currentLevel == 2) { 
+            else if (currentLevel == 2) {
                 if (jobBase == 2) newEquip.setMatk(newEquip.getMatk() + 2);
                 else newEquip.setWatk(newEquip.getWatk() + 2);
 
@@ -200,10 +200,10 @@ function action(mode, type, selection) {
                 newEquip.setSpeed(newEquip.getSpeed() + 5);
                 newEquip.setJump(newEquip.getJump() + 5);
             }
-            
+
             newEquip.setLevel(currentLevel + 1);
             Packages.client.inventory.manipulator.InventoryManipulator.addFromDrop(cm.getC(), newEquip, true);
-            
+
             cm.sendOk("¡El artefacto ha incrementado su poder! (Nivel " + (currentLevel + 1) + "/3)");
             cm.dispose();
         }
