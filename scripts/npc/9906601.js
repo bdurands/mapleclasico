@@ -159,12 +159,14 @@ function action(mode, type, selection) {
                 return;
             }
 
-            Packages.client.inventory.manipulator.InventoryManipulator.removeFromSlot(cm.getClient(), Packages.client.inventory.InventoryType.EQUIP, targetSlot, 1, false);
-            cm.gainPqPoints(-cost);
-
+            // Copiar el ítem ANTES de eliminarlo
             var jobId = cm.getPlayer().getJob().getId();
             var jobBase = Math.floor(jobId / 100);
             var newEquip = targetEquip.copy();
+
+            // Ahora sí eliminar el original
+            Packages.client.inventory.manipulator.InventoryManipulator.removeFromSlot(cm.getClient(), Packages.client.inventory.InventoryType.EQUIP, targetSlot, 1, false);
+            cm.gainPqPoints(-cost);
 
             if (currentLevel == 0) {
                 if (jobBase == 2) newEquip.setMatk(newEquip.getMatk() + 1);
