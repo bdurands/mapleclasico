@@ -7932,6 +7932,29 @@ public class Character extends AbstractCharacterObject {
                             announceUpdateQuest(DelayedQuestUpdate.UPDATE, qs, true);
                         }
                     }
+
+                    // Dynamic Custom Kill Tracker
+                    String cd = qs.getCustomData();
+                    if (cd != null && cd.startsWith(id + ":")) {
+                        String[] parts = cd.split(":");
+                        if (parts.length >= 3) {
+                            try {
+                                int current = Integer.parseInt(parts[1]);
+                                int target = Integer.parseInt(parts[2]);
+                                if (current < target) {
+                                    current++;
+                                    qs.setCustomData(id + ":" + current + ":" + target);
+                                    if (current >= target) {
+                                        dropMessage(5, "Has completado las muertes requeridas para la mision!");
+                                    } else {
+                                        dropMessage(5, "Progreso de mision: " + current + " / " + target);
+                                    }
+                                }
+                            } catch (Exception ex) {
+                                // Ignore parse errors
+                            }
+                        }
+                    }
                 }
             }
         } catch (Exception e) {

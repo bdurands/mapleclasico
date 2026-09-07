@@ -539,17 +539,20 @@ const CatDef kCats[] = {
     // Tab 1 ("Special": New / Event) is gone. It was never a home category -- v83 used it
     // as a promotional CROSS-LISTING, so everything in it also sits in its real category,
     // which made it a second copy of the shop rather than a section of it.
-    { 2, 0,  "Hat"        }, { 2, 1,  "Face"       }, { 2, 2,  "Eye"     },
+    { 2, 0,  "Hat"        }, //{ 2, 1,  "Face"       }, 
+    //{ 2, 2,  "Eye"     },
     { 2, 3,  "Overall"    }, { 2, 4,  "Top"        }, { 2, 5,  "Bottom"  },
     { 2, 6,  "Shoes"      }, { 2, 7,  "Glove"      }, { 2, 8,  "Weapon"  },
     { 2, 9,  "Ring"       }, { 2, 11, "Cape"       },
     // (2,10) "Premium" removed: zero rows in v83 AND zero in the modern catalogue -- it has
     // never had merchandise in either source.
-    { 3, 1,  "Messenger"  }, { 3, 2,  "Weather"    },   // (3,0) "Scroll" removed
-    { 5, 0,  "Beauty Parlor" }, { 5, 1, "Store"    }, { 5, 2,  "Game"    },
-    { 5, 3,  "Facial Expression" }, { 5, 4, "Wedding" }, { 5, 5, "Effect" },
-    { 5, 6,  "Character"  },
-    { 6, 0,  "Pet"        }, { 6, 1,  "Pet Equip." }, { 6, 2,  "Pet Use" },
+    //{ 3, 1,  "Messenger"  }, { 3, 2,  "Weather"    },   // (3,0) "Scroll" removed
+    //{ 5, 0,  "Beauty Parlor" }, { 5, 1, "Store"    }, { 5, 2,  "Game"    },
+   // { 5, 3,  "Facial Expression" }, { 5, 4, "Wedding" }, { 5, 5, "Effect" },
+    //{ 5, 6,  "Character"  },
+    { 6, 0,  "Pet"        }, 
+    //{ 6, 1,  "Pet Equip." }, 
+    //{ 6, 2,  "Pet Use" },
     { 7, 0,  "Package"    },
     // Tab 8 ("Guide": How to Use / How to Gift) is deliberately absent. It sold nothing --
     // in v83 its only members are four 403xxxx manual items -- and a tab of instructions
@@ -560,7 +563,9 @@ constexpr int kCatCount = static_cast<int>(_countof(kCats));
 // Tab ids in display order, with the labels the stock shop uses for each group.
 struct TabDef { int id; const char* name; };
 const TabDef kTabs[] = {
-    { 2, "Equip" }, { 3, "Use" }, { 5, "Setup" }, { 6, "Pet" }, { 7, "Package" },
+    { 2, "Equip" }, //{ 3, "Use" },
+    //{ 5, "Setup" },
+    { 6, "Pet" }, { 7, "Package" },
 };
 constexpr int kTabCount = static_cast<int>(_countof(kTabs));
 

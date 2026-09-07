@@ -249,8 +249,11 @@ public class FredrickProcessor {
                         ps.setInt(2, cid.getLeft().getLeft());
                         ps.addBatch();
 
-                        String msg = fredrickReminderMessage(cid.getRight() - 1);
-                        noteService.sendNormal(msg, "FREDRICK", cid.getLeft().getRight());
+                        String name = cid.getLeft().getRight();
+                        if (name != null) {
+                            String msg = fredrickReminderMessage(cid.getRight() - 1);
+                            noteService.sendNormal(msg, "FREDRICK", name);
+                        }
                     }
 
                     ps.executeBatch();
