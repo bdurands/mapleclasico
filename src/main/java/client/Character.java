@@ -7400,6 +7400,13 @@ public class Character extends AbstractCharacterObject {
 
                             status.setForfeited(rs.getInt("forfeited"));
                             status.setCompleted(rs.getInt("completed"));
+                            
+                            try {
+                                status.setCustomData(rs.getString("customData"));
+                            } catch (Exception e) {
+                                // Ignore in case the column hasn't been added to the database yet
+                            }
+                            
                             ret.quests.put(q.getId(), status);
                             loadedQuestStatus.put(rs.getInt("queststatusid"), status);
                         }
@@ -9115,7 +9122,7 @@ public class Character extends AbstractCharacterObject {
                 deleteQuestProgressWhereCharacterId(con, id);
 
                 // Quests and medals
-                try (PreparedStatement psStatus = con.prepareStatement("INSERT INTO queststatus (`queststatusid`, `characterid`, `quest`, `status`, `time`, `expires`, `forfeited`, `completed`) VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+                try (PreparedStatement psStatus = con.prepareStatement("INSERT INTO queststatus (`queststatusid`, `characterid`, `quest`, `status`, `time`, `expires`, `forfeited`, `completed`, `customData`) VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
                      PreparedStatement psProgress = con.prepareStatement("INSERT INTO questprogress VALUES (DEFAULT, ?, ?, ?, ?)");
                      PreparedStatement psMedal = con.prepareStatement("INSERT INTO medalmaps VALUES (DEFAULT, ?, ?, ?)")) {
                     psStatus.setInt(1, id);
@@ -9127,6 +9134,7 @@ public class Character extends AbstractCharacterObject {
                         psStatus.setLong(5, qs.getExpirationTime());
                         psStatus.setInt(6, qs.getForfeited());
                         psStatus.setInt(7, qs.getCompleted());
+                        psStatus.setString(8, qs.getCustomData());
                         psStatus.executeUpdate();
 
                         try (ResultSet rs = psStatus.getGeneratedKeys()) {

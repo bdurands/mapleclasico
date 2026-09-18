@@ -37,6 +37,7 @@ CREATE TABLE queststatus
     forfeited     INT          NOT NULL DEFAULT '0',
     completed     INT          NOT NULL DEFAULT '0',
     info          TINYINT      NOT NULL DEFAULT '0',
+    customData    VARCHAR(255) DEFAULT NULL,
     PRIMARY KEY (queststatusid)
 );
 
