@@ -277,7 +277,11 @@ public class Family {
 
         for (World world : Server.getInstance().getWorlds()) {
             for (Family family : world.getFamilies()) {
-                family.getLeader().doFullCount();
+                if (family.getLeader() != null) {
+                    family.getLeader().doFullCount();
+                } else {
+                    log.error("Family {} has no leader in world {}. Cannot do full count.", family.getID(), world.getId());
+                }
             }
         }
     }

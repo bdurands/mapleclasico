@@ -1966,7 +1966,9 @@ public class Server {
         TimerManager.getInstance().stop();
 
         log.info("Worlds and channels are offline.");
-        loginServer.stop();
+        if (loginServer != null) {
+            loginServer.stop();
+        }
         if (!restart) {  // shutdown hook deadlocks if System.exit() method is used within its body chores, thanks MIKE for pointing that out
             // We disabled log4j's shutdown hook in the config file, so we have to manually shut it down here,
             // after our last log statement.
