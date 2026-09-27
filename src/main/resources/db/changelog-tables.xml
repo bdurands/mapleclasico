@@ -26,6 +26,7 @@
     </changeSet>
 
     <changeSet id="6" author="Ponk">
+        <validCheckSum>9:ce8295cba1088a4195ca0ddb3847ca94</validCheckSum>
         <sqlFile path="db/tables/006-quest.sql"/>
     </changeSet>
 

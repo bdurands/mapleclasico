@@ -64,10 +64,12 @@ public class ThreadManager {
     }
 
     public void stop() {
-        tpe.shutdown();
-        try {
-            tpe.awaitTermination(5, MINUTES);
-        } catch (InterruptedException ie) {
+        if (tpe != null) {
+            tpe.shutdown();
+            try {
+                tpe.awaitTermination(5, MINUTES);
+            } catch (InterruptedException ie) {
+            }
         }
     }
 
